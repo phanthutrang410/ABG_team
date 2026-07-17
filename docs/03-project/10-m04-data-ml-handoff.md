@@ -1,6 +1,6 @@
 # M04 — Handoff kỹ thuật Data/ML cho Hoàng (recovery 18/7)
 
-> **Trạng thái:** handoff Duy → Hoàng để mở `H10`. Đây là đề xuất kỹ thuật, **không** phải contract nguồn chuẩn (Hoàng chốt trong H10) và **không đồng nghĩa dữ liệu đã được duyệt** (M05b riêng). Mốc 03:30 trên board đã trễ — ghi nhận, không lùi ngày. Nguồn: [EPU contract](../04-engineering/04-epu-data-integration-contract.md), [catalog EPU](../04-engineering/03-epu-reference-data-fields.md), Sprint §2.
+> **Trạng thái:** **Done (artifact)** — handoff Duy → Hoàng đã khóa trong `H10` / [decision #17](04-decisions.md). Đây từng là đề xuất kỹ thuật; contract nguồn chuẩn sau H10: [EPU](../04-engineering/04-epu-data-integration-contract.md) + [Data-ML](../04-engineering/08-data-ml-scoring-fairness-contract.md). **Không** đồng nghĩa dữ liệu đã được duyệt (M05b riêng). Mốc 03:30 trên board đã trễ — ghi nhận. Nguồn gốc: catalog EPU, Sprint §2.
 
 ## 1. Input cho baseline (M02) — hai nhánh evidence độc lập
 
@@ -43,7 +43,7 @@ Fail-closed từng lớp; gate fail ⇒ zero output, không nạp một phần:
 | PII exclusion | Không xuất `Họ và tên`, `MSSV`, `Ngày sinh`, `Email`, `Số ĐT`, `token`; pseudonym `student_ref`/`advisor_ref` sinh ngoài repo | Chặn export |
 | Schema/parse | UTF-8, trim/chuẩn hóa; `Học kỳ` → `YYYY-YYYY-Tn`; điểm parse được và trong miền; khóa `(student_ref, term_code, course_ref)` unique | Reject row → đếm vào `data_quality_report` |
 | Quality report | Row/reject counts, missingness theo trường, term coverage, freshness, reason codes | Báo cáo luôn phát hành, kể cả khi gate fail |
-| Status taxonomy | `Thôi học`/`Buộc thôi học` → `is_dropout_outcome=true`; `Đang học` → `false`; `Rút học phí`/`Bảo lưu`/khác → `unknown` (chờ owner chốt — **open decision cho H10**) | `unknown` loại khỏi mẫu số evaluation |
+| Status taxonomy | `Thôi học`/`Buộc thôi học` → `is_dropout_outcome=true`; `Đang học` → `false`; `Rút học phí`/`Bảo lưu`/khác → `unknown` (**H10 chốt**) | `unknown` loại khỏi mẫu số evaluation |
 
 ## 3. Threshold, FPR và evaluation semantics
 
@@ -70,10 +70,10 @@ Fail-closed từng lớp; gate fail ⇒ zero output, không nạp một phần:
 | Threshold/band | Mapping band đúng theo `tau_*`; sweep thay đổi số case đơn điệu |
 | Fairness fail-closed | Không có audit attr → `insufficient_data`; khi có: mẫu số đúng định nghĩa, nhóm < 10 → `insufficient_group_data` |
 
-## 6. Open decisions cho H10 (Hoàng chốt)
+## 6. Open decisions — **đã chốt H10**
 
-1. Taxonomy `Trạng thái` cuối: `Rút học phí`/`Bảo lưu` = `unknown` hay tách riêng.
-2. Vị trí sinh/lưu pseudonym map (ngoài repo) và ai giữ quyền.
-3. Cửa sổ quan sát + số mốc tối thiểu cho attendance (đưa vào contract H15).
-4. Copy UI cho hai trạng thái: nhánh attendance thiếu nguồn; fairness audit chưa đủ dữ liệu (H12a).
-5. **Dọn artifact stale từ thiết kế synthetic cũ** (tôi không sửa vì là canonical/đã giao lane docs cho Hoàng): [`05-data-ml-fairness-contract.md`](../04-engineering/05-data-ml-fairness-contract.md) cần banner superseded (synthetic GT §3/§7 và n=120 không còn áp dụng; semantics coverage/threshold/small-N §5–§8 tái dùng được); trùng số file với `05-system-architecture.md` — cần rename một trong hai. `backend/app/contracts/fairness.py` + fixture (H06c cũ) sẽ được tôi rework sau H10 theo hướng fail-closed; `backend/app/ml/early_warning/synthetic.py` thuộc M01 reopen.
+1. Taxonomy: `Rút học phí`/`Bảo lưu` = `unknown` (decision #17) — không tách evaluation bucket riêng ngoài `status_code`.
+2. Pseudonym map: ngoài repo; data owner + Admin kỹ thuật/Data-ML giữ quyền.
+3. Cửa sổ/mốc attendance: default trong Data-ML §2.2; refine ở `H15` khi có nguồn.
+4. Copy UI: keys trong Data-ML §6 → implement `H12a`.
+5. Artifact synthetic: superseded → [`09-synthetic-…`](../04-engineering/09-synthetic-data-ml-fairness-contract-superseded.md); canonical → [`08-…`](../04-engineering/08-data-ml-scoring-fairness-contract.md). `H06c`/fairness.py rework sau H10; `synthetic.py` thuộc M01 reopen.

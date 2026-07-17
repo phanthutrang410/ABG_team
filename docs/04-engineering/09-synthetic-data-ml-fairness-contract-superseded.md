@@ -1,6 +1,16 @@
-# Data / ML / Fairness Contract — Silent Shield (M04)
+# Data / ML / Fairness Contract — SUPERSEDED (synthetic era)
 
-> Nguồn chuẩn semantics cho scoring, ground truth, threshold và fairness trên **dữ liệu synthetic**. Schema Pydantic (H06/H06c) phải mã hóa đúng tài liệu này; khi lệch nhau, sửa schema hoặc mở decision — không âm thầm chọn một bản. Phạm vi sản phẩm theo [PRD](../02-product/04-prd.md) §4, §7 (FR-02/03/09/10) và [Ethics](../02-product/05-ethics.md) §5–6.
+> **SUPERSEDED bởi H10 (18/7/2026).** Không dùng làm nguồn chuẩn MVP.
+>
+> - Contract sống: [`08-data-ml-scoring-fairness-contract.md`](08-data-ml-scoring-fairness-contract.md) + [`04-epu-data-integration-contract.md`](04-epu-data-integration-contract.md).
+> - Quyết định: [#17](../03-project/04-decisions.md).
+> - File này giữ lại chỉ để đối chiếu lịch sử. Synthetic GT (§3/§7 cũ), `dataset_version` synthetic, n=120 và group attrs synth **không** áp dụng trên MVP path. Semantics coverage/threshold/small-N có thể đã được tái diễn giải trong contract 08 — nếu lệch, ưu tiên 08 + EPU.
+>
+> Đổi tên từ `05-data-ml-fairness-contract.md` vì số `05` đã thuộc [kiến trúc hệ thống](05-system-architecture.md).
+
+# (Lịch sử) Data / ML / Fairness Contract — Silent Shield (M04 synthetic)
+
+> Nguồn chuẩn semantics cho scoring, ground truth, threshold và fairness trên **dữ liệu synthetic** (không còn hiệu lực cho MVP). Schema Pydantic (H06/H06c) phải theo contract **08** sau H10. Phạm vi sản phẩm theo [PRD](../02-product/04-prd.md) §4, §7 (FR-02/03/09/10) và [Ethics](../02-product/05-ethics.md) §5–6.
 
 ## 1. Versioning bắt buộc
 

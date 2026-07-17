@@ -1,10 +1,12 @@
-# Hợp đồng tích hợp dữ liệu EPU — giao Hoàng
+# Hợp đồng tích hợp dữ liệu EPU — Silent Shield (H10)
 
-> **Trạng thái:** Contract mục tiêu cho M05–M06, H19–H20 và H08; chưa đồng nghĩa dữ liệu nguồn đã được duyệt để deploy. Nguồn trường: [catalog EPU](03-epu-reference-data-fields.md). Không commit reference-Learning-Analytics-AI/, raw export, PII hay mapping danh tính vào repo.
+> **Owner:** Hoàng · **Task:** H10 · **Trạng thái:** Contract nguồn chuẩn cho M05–M06, H19–H20 và H08 — **chưa** đồng nghĩa dữ liệu nguồn đã được duyệt để deploy (`M05b` riêng). Nguồn trường: [catalog EPU](03-epu-reference-data-fields.md). Scoring/fairness semantics: [08 Data-ML](08-data-ml-scoring-fairness-contract.md). Quyết định khóa: [decision #17](../03-project/04-decisions.md). Không commit reference-Learning-Analytics-AI/, raw export, PII hay mapping danh tính vào repo.
 
 ## 1. Quyết định và phạm vi
 
 Silent Shield không dùng hoặc sinh dữ liệu synthetic. Pipeline chỉ nhận bản trích xuất EPU/điểm danh đã được data owner phê duyệt, pseudonymize và kiểm tra theo contract này. Điểm danh theo thời gian thuộc MVP (`H15`). Khi thiếu một nguồn hay một điều kiện chất lượng, API trả `insufficient_data`; không tạo chuỗi tuần, nhãn outcome, thuộc tính fairness hoặc mapping GVCN giả.
+
+**Source gate ≠ approved data:** `M05a` (build register/hash/PII gate) Done không đồng nghĩa snapshot đã duyệt. Chỉ `M05b` + artifact owner mới mở `M06`/`H20`.
 
 Các ứng viên đã quan sát trong reference local:
 
@@ -36,23 +38,35 @@ M06 xuất một dataset tách bảng logic, có cùng `student_ref` pseudonymou
 
 1. Đọc UTF-8; trim, chuẩn hóa Unicode và giá trị rỗng trước khi parse số. Lưu `source_id`/hash, không lưu `token` crawl.
 2. Chuẩn hóa `Học kỳ` như `HK1 (2022-2023)` thành `2022-2023-T1`; một bản ghi điểm chỉ hợp lệ khi có `student_ref`, `term_code`, `course_ref` và điểm số trong miền đã công bố.
-3. Map `Trạng thái`: `Thôi học` và `Buộc thôi học` → `is_dropout_outcome=true`; `Đang học` → `false`; giá trị khác → `unknown` cho tới khi owner chốt. Outcome chỉ dùng trong test/evaluation của source snapshot, không biến thành nhãn trên UI.
-4. Không tạo `attendance_event`/chuỗi tuần, nhóm kinh tế/dân tộc hay email GVCN khi source không cấp. Thiếu field là trạng thái dữ liệu → `insufficient_data`; sau `H15` thì nạp theo schema đã duyệt, không bù bằng heuristic/synthetic.
-5. Chỉ tính trend điểm khi một `student_ref` có tối thiểu hai `term_code` hợp lệ. Trend chuyên cần chỉ khi có đủ mốc `attendance_event` theo contract `H15`. Nguồn chỉ có một kỳ, status unknown, grade lỗi/quá cũ, thiếu điểm danh đã duyệt, hoặc mapping GVCN thiếu phải sinh reason `insufficient_data` đúng nhánh.
-6. Fairness chỉ chạy khi có thuộc tính audit đã được phê duyệt, nhãn outcome, cỡ mẫu/mẫu số và định nghĩa nhóm. Hiện catalog không có thuộc tính này; contract trả `insufficient_data`, không dùng proxy ngành/giới tính.
+3. **Taxonomy `Trạng thái` (H10 / decision #17):**
 
-## 4. Handoff cho Hoàng
+| Giá trị nguồn | `status_code` (chuẩn hóa) | `is_dropout_outcome` | Ghi chú |
+|:--|:--|:--|:--|
+| `Thôi học`, `Buộc thôi học` | giữ nghĩa tương ứng | `true` | Positive evaluation nội bộ |
+| `Đang học` | `dang_hoc` | `false` | Mẫu số FPR |
+| `Rút học phí` | `rut_hoc_phi` | `unknown` | **Không** gộp vào positive; loại khỏi mẫu số |
+| `Bảo lưu` | `bao_luu` | `unknown` | Không mặc định = dropout; loại khỏi mẫu số |
+| Khác / thiếu | `other` / thiếu | `unknown` | Loại khỏi mẫu số |
 
-Trước khi Hoàng nối API, Khánh Duy bàn giao một fixture đã validate và bốn artifact sau:
+Outcome chỉ dùng trong test/evaluation của source snapshot; **không** vào `ScoringFeatures`, public `ReviewCase`, hay agent context.
+
+4. **Pseudonym custody (H10):** `student_ref` / `advisor_ref` sinh trong môi trường nhập có kiểm soát. Bảng map `MSSV`↔`student_ref` (và tên cố vấn↔`advisor_ref`) lưu **ngoài repo**, path cấu hình env (không commit). Quyền giữ: **data owner** (phê duyệt) + **Admin kỹ thuật/Data-ML** (vận hành). Không xuất map sang fixture, log, API public, slide hoặc video.
+5. Không tạo `attendance_event`/chuỗi tuần, nhóm kinh tế/dân tộc hay email GVCN khi source không cấp. Thiếu field → `insufficient_data`. Trước `H15` approval: toàn nhánh attendance = `insufficient_data(attendance_source_unapproved)`. Sau `H15`: nạp theo schema đã duyệt + cửa sổ/mốc tối thiểu trong [Data-ML §2.2](08-data-ml-scoring-fairness-contract.md); không bù heuristic/synthetic.
+6. Chỉ tính trend điểm khi một `student_ref` có tối thiểu hai `term_code` hợp lệ. Trend chuyên cần chỉ khi đủ mốc theo Data-ML §2.2. Nguồn chỉ một kỳ, status unknown (evaluation), grade lỗi/quá cũ, thiếu điểm danh đã duyệt, hoặc mapping GVCN thiếu phải sinh `reason_code` đúng nhánh.
+7. Fairness chỉ chạy khi có thuộc tính audit đã được phê duyệt, nhãn outcome, cỡ mẫu/mẫu số và định nghĩa nhóm. Hiện catalog không có thuộc tính này; contract trả `insufficient_data(no_approved_audit_attribute)`, không dùng proxy ngành/giới tính.
+
+## 4. Handoff cho pipeline (sau H10)
+
+Trước khi nối API/`dwh`, Khánh Duy bàn giao fixture đã validate và bốn artifact:
 
 1. `source_manifest.json` và `data_quality_report.json` không có PII;
-2. dataset chuẩn hóa hoặc fixture gồm bảng domain điểm (`student_dimension`, `term_grade`, `academic_status`, `advisor_assignment`) **và** `attendance_event` khi `H15` sẵn sàng + hai artifact meta ở mục (1), dùng `student_ref`/`advisor_ref`;
-3. data dictionary: nguồn field, nullable semantics, taxonomy `Trạng thái`, snapshot hash và giới hạn coverage;
-4. test kết quả: row count/reject count, uniqueness khóa, valid term/grade, cấm PII/token và expected `insufficient_data`.
+2. dataset chuẩn hóa gồm bảng domain điểm (`student_dimension`, `term_grade`, `academic_status`, `advisor_assignment`) **và** `attendance_event` khi `H15` sẵn sàng + hai artifact meta ở mục (1), dùng `student_ref`/`advisor_ref`;
+3. data dictionary: nguồn field, nullable semantics, taxonomy `Trạng thái` (§3.3), snapshot hash và giới hạn coverage;
+4. test kết quả: row count/reject count, uniqueness khóa, valid term/grade, cấm PII/token và expected `insufficient_data` / `reason_code`.
 
 **M05a** (build source gate) khác **M05b** (approved source available): H10/M05a Done không đồng nghĩa snapshot đã được data owner duyệt. M06 chỉ chạy khi có artifact duyệt ở M05b.
 
-`H19` tạo persistence `dwh` từ [schema vật lý MVP](07-mvp-persistence-schema.md) trên DB rỗng; chỉ mapping metadata của DWH legacy, không copy schema/row/reference cũ. `H20` nạp fixture M06 vào transaction sau khi kiểm tra M05b; `H08` mới đọc `dwh` thành `NormalizedStudentRecord`/`ScoringFeatures`.
+`H19` tạo persistence `dwh` từ [schema vật lý MVP](07-mvp-persistence-schema.md) trên DB rỗng; chỉ mapping metadata của DWH legacy, không copy schema/row/reference cũ. `H20` nạp fixture M06 vào transaction sau khi kiểm tra M05b; `H08` mới đọc `dwh` thành `NormalizedStudentRecord`/`ScoringFeatures` theo [Data-ML](08-data-ml-scoring-fairness-contract.md).
 
 Hoàng nhận input `NormalizedStudentRecord`/`ScoringFeatures` chỉ gồm pseudonymous ID, feature điểm theo kỳ, feature chuyên cần theo thời gian (khi có), coverage/freshness và provenance. `academic_status.is_dropout_outcome`, raw `MSSV`, tên, email, SĐT, `Cố vấn học tập` gốc và field fairness không nằm trong scoring public, `ReviewCase`, hay agent context — outcome chỉ evaluation nội bộ.
 
