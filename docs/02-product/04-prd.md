@@ -19,17 +19,17 @@ Các điểm đã diễn giải hoặc chưa thống nhất với scaffold hiệ
 
 ### Mục tiêu MVP
 
-- Chứng minh có thể phát hiện thay đổi theo thời gian từ dữ liệu synthetic, không cần nội dung riêng tư.
+- Chứng minh có thể phân tích thay đổi điểm theo học kỳ từ bản trích xuất EPU đã pseudonymize, không cần nội dung riêng tư.
 - Cho Ban Lãnh đạo xem danh sách tín hiệu cần rà soát, lý do, độ phủ và độ mới của dữ liệu.
 - Cho phép con người phê duyệt, loại bỏ hoặc hoãn trước khi bàn giao.
-- Hiển thị kiểm soát báo động giả và fairness bằng metric thật trên dữ liệu synthetic.
+- Hiển thị kiểm soát báo động giả trên snapshot có nhãn; fairness chỉ hiển thị metric khi data gate có nhóm audit được phê duyệt, nhãn và cỡ mẫu đủ.
 - Cho agent giải thích đầu ra có sẵn mà không tự tạo điểm hoặc suy đoán nguyên nhân.
 
 ### Không tuyên bố trong MVP
 
 - Không tuyên bố phát hiện trầm cảm, bắt nạt, khủng hoảng tâm lý hay nguyên nhân bỏ học.
 - Không tuyên bố hiệu quả trên sinh viên thật hoặc khả năng giảm tỷ lệ bỏ học thực tế.
-- Không coi dữ liệu synthetic là bằng chứng hệ thống công bằng trong triển khai thật.
+- Không suy rộng kết quả từ snapshot reference sang hiệu quả hay công bằng trong triển khai thật.
 
 ## 3. Người dùng và quyền hành động
 
@@ -38,7 +38,7 @@ Các điểm đã diễn giải hoặc chưa thống nhất với scaffold hiệ
 | Ban Lãnh đạo Khoa/Trường | Xem toàn cảnh, rà tín hiệu, xem fairness và điều phối | Là primary system user; phê duyệt/loại/hoãn việc chuyển tiếp, không “phê duyệt sinh viên” |
 | GVCN/Cố vấn học tập | Nhận case đúng phạm vi và lý do đủ để bắt đầu hỗ trợ | Chỉ nhận case đã duyệt; quyết định cách liên hệ; không thấy dữ liệu ngoài case/lớp được giao |
 | Đơn vị hỗ trợ | Tiếp nhận case phù hợp chức năng | Chỉ nhận dữ liệu tối thiểu cần biết; tự đánh giá chuyên môn |
-| Admin kỹ thuật/Data-ML | Nạp dữ liệu, vận hành model và kiểm tra fairness | Chỉ dùng dữ liệu synthetic/pseudonymized; không mặc nhiên có quyền xem danh tính và case |
+| Admin kỹ thuật/Data-ML | Nạp dữ liệu, vận hành model và kiểm tra fairness | Chỉ dùng bản trích xuất EPU đã pseudonymize/được phê duyệt; không mặc nhiên có quyền xem danh tính và case |
 | Sinh viên | Được hỗ trợ và được bảo vệ khỏi kết luận sai | Không phải người dùng dashboard trong MVP; không bị gắn nhãn hoặc nhận thông báo tự động |
 
 Chi tiết trách nhiệm xem [Các bên liên quan](02-stakeholders.md), luồng xử lý xem [Quy trình](03-process.md).
@@ -47,22 +47,25 @@ Chi tiết trách nhiệm xem [Các bên liên quan](02-stakeholders.md), luồn
 
 ### Dữ liệu được nạp
 
-| Tệp synthetic | Trường phục vụ sản phẩm | Mục đích |
-|:---------------|:------------------------|:---------|
-| `students.csv` | mã synthetic, lớp/cohort, nhóm synthetic phục vụ audit | Mapping case và tính fairness; thuộc tính nhóm không đi vào điểm ưu tiên |
-| `grades_timeseries.csv` | mã synthetic, tuần, điểm | Độ biến động và xu hướng điểm theo thời gian |
-| `attendance_timeseries.csv` | mã synthetic, tuần, tỷ lệ chuyên cần | Mức chuyên cần và xu hướng thay đổi theo thời gian |
+MVP chỉ nạp output đã pseudonymize của [hợp đồng tích hợp EPU](../04-engineering/04-epu-data-integration-contract.md), sau data gate về provenance/quyền sử dụng. Raw reference, token crawl, MSSV, tên, ngày sinh, email và SĐT không được vào repo, fixture public, API public, agent context, slide hoặc video.
 
-MVP không dùng GPA, tín chỉ, LMS, nộp bài, CLB, thư viện, Wi-Fi/campus hoặc log dịch vụ hỗ trợ. Đây chỉ là ứng viên hậu MVP và phải qua rà soát mục đích, độ cần thiết, bias và quyền truy cập trước khi dùng.
+| Bảng logic | Trường phục vụ sản phẩm | Mục đích |
+|:-----------|:------------------------|:---------|
+| `student_dimension` | `student_ref`, cohort/khoa/ngành/lớp đã tối thiểu hóa | Scope danh sách và case |
+| `term_grade` | `student_ref`, học kỳ, học phần, tín chỉ, điểm tổng kết | Xu hướng/coverage điểm theo kỳ |
+| `academic_status` | taxonomy `Trạng thái`, label nội bộ (nếu có) | Evaluation nội bộ; không public qua case API |
+| `advisor_assignment` | `student_ref`, `advisor_ref` | Routing chỉ sau human approval |
+| `source_manifest` + `data_quality_report` | provenance, freshness, coverage, reject/missing counts | Chặn import/case khi không đủ căn cứ |
+
+Không có nguồn điểm danh theo tuần, thuộc tính nhóm fairness hay liên hệ GVCN được duyệt trong catalog hiện tại. MVP không tạo các trường này để bù thiếu dữ liệu. LMS, nộp bài, CLB, thư viện, Wi-Fi/campus và log dịch vụ hỗ trợ vẫn ngoài phạm vi.
 
 ### Hợp đồng feature tối thiểu
 
-- biến động điểm trong cửa sổ quan sát;
-- độ dốc xu hướng điểm;
-- tỷ lệ chuyên cần trong cửa sổ quan sát;
-- độ dốc xu hướng chuyên cần;
-- độ phủ dữ liệu và số kỳ quan sát hợp lệ;
-- thuộc tính nhóm synthetic chỉ cho fairness audit, tách khỏi feature chấm điểm.
+- biến động và độ dốc điểm giữa các học kỳ hợp lệ;
+- độ phủ dữ liệu, số học kỳ/học phần hợp lệ và freshness;
+- `advisor_ref` chỉ cho routing sau human review;
+- không có feature chuyên cần/tuần khi source không cấp dữ liệu;
+- thuộc tính audit chỉ có mặt trong fairness report khi đã được phê duyệt, tách khỏi feature chấm điểm.
 
 Mọi đầu ra phải mang `model_version`, thời điểm tính và các yếu tố đóng góp lấy từ model/API. LLM không được tính hoặc thay đổi mức độ ưu tiên.
 
@@ -75,14 +78,14 @@ Ban Lãnh đạo xem được:
 - số tín hiệu mới cần rà soát và số case theo trạng thái;
 - danh sách được sắp theo **mức độ ưu tiên rà soát**, không phải “danh sách sinh viên nguy cơ”;
 - trạng thái/độ mới nguồn dữ liệu;
-- panel fairness ghi rõ dữ liệu synthetic và cỡ mẫu từng nhóm;
+- panel fairness hiển thị cỡ mẫu/phạm vi dữ liệu hoặc trạng thái `insufficient_data`; không hiển thị metric khi thiếu nhóm audit được phê duyệt;
 - ngưỡng đang dùng và tác động của ngưỡng tới báo động giả/khối lượng rà soát.
 
 ### 5.2 Chi tiết tín hiệu
 
 Mỗi tín hiệu hiển thị:
 
-- mã synthetic và phạm vi lớp/cohort;
+- `student_ref` pseudonymous và phạm vi lớp/cohort;
 - điều gì đã thay đổi và trong khoảng thời gian nào;
 - nhóm yếu tố đóng góp có thể kiểm chứng bằng dữ liệu;
 - độ phủ, độ mới và giới hạn dữ liệu;
@@ -111,9 +114,9 @@ Agent có thể tóm tắt biến động, giải thích các yếu tố do mode
 
 ## 6. Luồng demo chuẩn
 
-1. Nạp ba tệp synthetic và hiển thị trạng thái dữ liệu.
-2. Tính feature theo thời gian, độ phủ và đầu ra model/API.
-3. Mở dashboard toàn đơn vị, xem danh sách tín hiệu và fairness.
+1. Nạp snapshot EPU đã qua data gate và hiển thị provenance/coverage.
+2. Tính feature điểm theo kỳ, độ phủ và đầu ra model/API; thiếu hai kỳ hợp lệ thì trả `insufficient_data`.
+3. Mở dashboard toàn đơn vị, xem danh sách tín hiệu và trạng thái fairness.
 4. Mở một case, kiểm tra thay đổi, yếu tố đóng góp và giới hạn dữ liệu.
 5. Hỏi agent “Vì sao case này cần được rà soát?” và nhận câu trả lời bám dữ liệu.
 6. Phê duyệt hoặc loại/hoãn case; nếu phê duyệt thì bàn giao cho người hỗ trợ.
@@ -123,21 +126,21 @@ Agent có thể tóm tắt biến động, giải thích các yếu tố do mode
 
 | ID | Yêu cầu | Acceptance của MVP |
 |:---|:--------|:-------------------|
-| FR-01 | Nạp dữ liệu synthetic | Ba tệp được đọc theo schema; lỗi thiếu trường hoặc dữ liệu không hợp lệ được báo rõ, không âm thầm bỏ qua |
-| FR-02 | Tạo feature theo thời gian | Có ít nhất xu hướng/biến động điểm và xu hướng/tỷ lệ chuyên cần; kết quả tái lập được với cùng dữ liệu/model version |
+| FR-01 | Nạp dữ liệu EPU đã chuẩn hóa | `source_manifest` được duyệt và năm bảng logic được đọc theo schema; lỗi provenance/thiếu trường/dữ liệu không hợp lệ được báo rõ, không âm thầm bỏ qua |
+| FR-02 | Tạo feature theo học kỳ | Có ít nhất xu hướng/biến động điểm giữa các học kỳ hợp lệ; kết quả tái lập được với cùng snapshot/model version |
 | FR-03 | Kiểm tra coverage/freshness | Case hiển thị số kỳ hợp lệ, tình trạng thiếu/cũ; cấu hình có thể chặn tín hiệu khi không đủ căn cứ |
 | FR-04 | Chấm mức ưu tiên | Model/API tạo mức ưu tiên và contributing factors; LLM không nằm trong đường tính điểm |
 | FR-05 | Danh sách và chi tiết | Danh sách sắp theo ưu tiên; chi tiết giải thích thay đổi bằng ngôn ngữ trung lập; không dùng nhãn `High-risk student` |
 | FR-06 | Human review | Có hành động phê duyệt, loại hoặc hoãn và lưu lý do; chưa duyệt thì không bàn giao |
 | FR-07 | Care handoff | Case đã duyệt được gán đúng người/phạm vi và ghi nhận trạng thái tiếp nhận tối thiểu |
 | FR-08 | Agent grounded | Câu trả lời dùng dữ liệu/model output có sẵn, nêu giới hạn và không bịa điểm/chẩn đoán |
-| FR-09 | Fairness audit | Hiển thị ít nhất FPR theo nhóm synthetic, chênh lệch FPR, cỡ mẫu và nhãn “synthetic”; thuộc tính nhóm không tham gia scoring |
+| FR-09 | Fairness audit | Khi có nhóm audit được phê duyệt + ground truth + cỡ mẫu đủ, hiển thị FPR, chênh lệch FPR và mẫu số; nếu chưa có thì trả `insufficient_data`. Thuộc tính nhóm không tham gia scoring |
 | FR-10 | False-alarm control | Demo được tác động của ngưỡng; có luồng loại false positive, ngoại lệ và chống lặp |
 | FR-11 | Privacy/care copy | Dashboard nêu rõ mục đích hỗ trợ, dữ liệu được dùng, dữ liệu bị cấm và quyền quyết định của con người |
 
 ## 8. Non-functional requirements
 
-- **Privacy:** chỉ dùng dữ liệu synthetic trong demo; không đưa PII thật hoặc secrets vào repo/log/video.
+- **Privacy:** chỉ dùng bản trích xuất EPU đã được phê duyệt và pseudonymize; không đưa PII, raw reference hoặc secrets vào repo/log/video.
 - **Explainability:** mọi case có yếu tố đóng góp, coverage và model version; không giải thích bằng suy đoán của LLM.
 - **Fairness:** metric có mẫu số/cỡ mẫu; không kết luận khi nhóm quá nhỏ hoặc không có ground truth.
 - **Reliability:** lỗi nguồn hoặc dữ liệu cũ phải hiện ra; fail closed khi thiếu dữ liệu bắt buộc.
@@ -146,7 +149,7 @@ Agent có thể tóm tắt biến động, giải thích các yếu tố do mode
 
 ## 9. Ngoài phạm vi 48 giờ
 
-- Tích hợp SIS/LMS production và dữ liệu sinh viên thật.
+- Tích hợp SIS/LMS production, điểm danh tuần và dữ liệu liên hệ trực tiếp.
 - Xác thực/RBAC production đầy đủ, retention/deletion automation và quy trình khiếu nại hoàn chỉnh.
 - Huấn luyện/kiểm định trên dữ liệu thật hoặc khẳng định hiệu quả lâm sàng/tâm lý.
 - Dùng các tín hiệu mở rộng hay buffer trong [Danh mục tín hiệu](06-signal-catalog.md).

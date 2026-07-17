@@ -8,17 +8,16 @@ Mỗi tín hiệu phải đi qua bốn cổng trước khi sử dụng: có mụ
 
 ## 2. Phạm vi MVP đã chốt
 
-| ID | Tín hiệu | Biểu diễn trong MVP | Nguồn synthetic | Trạng thái |
+| ID | Tín hiệu | Biểu diễn trong MVP | Nguồn EPU đã duyệt | Trạng thái |
 |:---|:---------|:--------------------|:-----------------|:-----------|
-| CORE-01 | Xu hướng điểm | Độ dốc điểm theo tuần | `grades_timeseries.csv` | MVP |
-| CORE-02 | Biến động điểm | Mức dao động trong cửa sổ quan sát | `grades_timeseries.csv` | MVP |
-| CORE-03 | Mức chuyên cần | Tỷ lệ chuyên cần trong cửa sổ quan sát | `attendance_timeseries.csv` | MVP |
-| CORE-04 | Xu hướng chuyên cần | Độ dốc tỷ lệ chuyên cần theo tuần | `attendance_timeseries.csv` | MVP |
-| META-01 | Độ phủ dữ liệu | Số kỳ hợp lệ, tỷ lệ thiếu và phạm vi thời gian | Cả hai chuỗi thời gian | MVP, không dùng như tín hiệu rủi ro độc lập |
-| AUDIT-01 | Nhóm kinh tế synthetic | Chỉ phân nhóm metric fairness | `students.csv` | Audit only, cấm dùng để scoring |
-| AUDIT-02 | Nhóm dân tộc synthetic | Chỉ phân nhóm metric fairness | `students.csv` | Audit only, cấm dùng để scoring |
+| CORE-01 | Xu hướng điểm theo kỳ | Độ dốc điểm tổng kết giữa các kỳ | `term_grade` từ V59 đã pseudonymize | MVP khi có ≥2 kỳ |
+| CORE-02 | Biến động điểm theo kỳ | Mức dao động điểm theo học phần/kỳ | `term_grade` từ V59 đã pseudonymize | MVP khi coverage đủ |
+| META-01 | Độ phủ dữ liệu | Số kỳ/học phần hợp lệ, tỷ lệ thiếu, freshness và provenance | `data_quality_report` | MVP, không dùng như tín hiệu độc lập |
+| META-02 | Routing được phép | Có `advisor_ref` và scope mapping hợp lệ | `advisor_assignment` | Điều kiện handoff, không dùng scoring |
+| AUDIT-01 | Nhóm kinh tế | Chỉ phân nhóm metric fairness | Không có trong catalog EPU | `insufficient_data`, cấm proxy/scoring |
+| AUDIT-02 | Nhóm dân tộc | Chỉ phân nhóm metric fairness | Không có trong catalog EPU | `insufficient_data`, cấm proxy/scoring |
 
-MVP ưu tiên thay đổi so với lịch sử của chính sinh viên. Ngưỡng tuyệt đối, nếu có, chỉ là điều kiện hỗ trợ và phải được demo cùng tác động tới false positive/false negative.
+MVP ưu tiên thay đổi so với lịch sử của chính sinh viên. Không có nguồn điểm danh tuần được duyệt nên không có CORE chuyên cần trong MVP. Ngưỡng tuyệt đối, nếu có, chỉ là điều kiện hỗ trợ và chỉ được demo với false positive/false negative khi snapshot có nhãn/cỡ mẫu phù hợp.
 
 ## 3. Ứng viên tín hiệu học vụ hậu MVP
 
