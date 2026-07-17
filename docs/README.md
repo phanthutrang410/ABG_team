@@ -33,6 +33,9 @@ docs/
 | 04 | [PRD](02-product/04-prd.md) | Phạm vi và acceptance của MVP 48 giờ |
 | 05 | [Đạo đức và an toàn](02-product/05-ethics.md) | Privacy, care, fairness và false-alarm controls |
 | 06 | [Danh mục tín hiệu](02-product/06-signal-catalog.md) | Tín hiệu MVP, ứng viên hậu MVP, coverage và buffer |
+| 07 | [User research](02-product/07-user-research.md) | Pain point theo đối tượng, nguyên nhân gốc |
+| 08 | [BRD](02-product/08-brd.md) | Yêu cầu nghiệp vụ (BR-01→08), business rules, phân quyền T1/T3/T2, nghiệm thu |
+| 09 | [Scope & To-be](02-product/09-scope-to-be.md) | In/out-of-scope sản phẩm đích, quy trình to-be nghiệp vụ, dependency và rủi ro |
 
 ## 3. Project và delivery
 
