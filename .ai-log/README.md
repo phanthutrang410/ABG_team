@@ -2,18 +2,18 @@
 
 **Owner:** Văn Hải - V· **Mọi thành viên** tự ghi lại việc dùng AI của mình vào đây trước khi nộp.
 
-**Cấm:** commit session thô, API key, `.env`, PII (dữ liệu cá nhân thật). Git log ≠ nhật ký AI mà phải ghi thủ công.
+**Cấm:** commit session thô, API key, `.env`, PII (dữ liệu cá nhân thật). Git log ≠ nhật ký AI → phải ghi thủ công.
 
 ---
 
 ## 1. Vì sao phải làm việc này
 
-BTC (VAIC) yêu cầu chứng minh sản phẩm không làm hoàn toàn bằng AI mà không kiểm soát. Thiếu nhật ký AI = có thể bị loại ở vòng chấm, dù sản phẩm tốt.
+BTC yêu cầu chứng minh sản phẩm không làm hoàn toàn bằng AI mà không kiểm soát.
 
 ## 2. Làm gì:
 
 ### Bước 1: Ghi 1 dòng vào `manifest.csv` sau mỗi phiên làm việc quan trọng
-Mỗi khi bạn dùng AI để hoàn thành một task có ý nghĩa (viết doc, sinh code, debug...), thêm 1 dòng:
+Mỗi khi bạn dùng AI để hoàn thành một task (viết doc, sinh code, debug...) thì thêm 1 dòng:
 
 ```csv
 session_id,member,tool,started_at,ended_at,task_id,purpose,result,artifacts,commit_sha,evidence_type,evidence_ref,screenshot,redactions,review_status
@@ -33,13 +33,13 @@ session_id,member,tool,started_at,ended_at,task_id,purpose,result,artifacts,comm
 | `artifacts` | Đường dẫn file/output tạo ra |
 | `commit_sha` | SHA commit liên quan (nếu có) |
 | `evidence_type` | file / link / screenshot |
-| `evidence_ref` | Link tới bằng chứng (nếu là link) |
+| `evidence_ref` | Link tới nguồn/reference (nếu là link) |
 | `screenshot` | Đường dẫn ảnh chụp (nếu có, để trong Drive private: xem bước 3) |
 | `redactions` | Ghi chú nếu đã che/xoá thông tin nhạy cảm |
 | `review_status` | pending / reviewed |
 
 ### Bước 2: Nếu chat trên web (Claude.ai, ChatGPT web...) → ghi vào `online-chats.md`
-Thêm 1 dòng vào bảng:
+Ví dụ thêm 1 dòng vào bảng:
 
 | session_id | member | tool | share_url | verified_incognito | notes |
 |------------|--------|------|-----------|:------------------:|-------|
