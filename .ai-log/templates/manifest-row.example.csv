@@ -1,0 +1,2 @@
+session_id,member,tool,started_at,ended_at,task_id,purpose,result,artifacts,commit_sha,evidence_type,evidence_ref,screenshot,redactions,review_status
+YYYYMMDD-<TaskID>-<member>-<tool>-NN,<Member>,<Tool>,YYYY-MM-DDTHH:MM,YYYY-MM-DDTHH:MM,<TaskID>,<mục đích ngắn>,done|partial|abandoned,<đường dẫn artifact phân tách ;>,<sha hoặc trống>,file|link|screenshot,<url nếu evidence_type=link>,<link Drive private hoặc trống>,<ghi chú redaction hoặc trống>,pending|reviewed

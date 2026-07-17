@@ -15,11 +15,11 @@ Các điểm đã diễn giải hoặc chưa thống nhất với scaffold hiệ
 
 ## 2. Product statement
 
-> Silent Shield tổng hợp thay đổi trong điểm và chuyên cần theo thời gian để tạo **tín hiệu cần rà soát** cho Ban Lãnh đạo. Hệ thống giúp con người ưu tiên sự quan tâm và chuyển đúng trường hợp tới người hỗ trợ; không chẩn đoán, gắn nhãn hay tự động đưa ra quyết định bất lợi cho sinh viên.
+> Silent Shield tổng hợp thay đổi trong **điểm theo học kỳ** và **điểm danh theo thời gian** để tạo **tín hiệu cần rà soát** cho Ban Lãnh đạo. Hệ thống giúp con người ưu tiên sự quan tâm và chuyển đúng trường hợp tới người hỗ trợ; không chẩn đoán, gắn nhãn hay tự động đưa ra quyết định bất lợi cho sinh viên.
 
 ### Mục tiêu MVP
 
-- Chứng minh có thể phân tích thay đổi điểm theo học kỳ từ bản trích xuất EPU đã pseudonymize, không cần nội dung riêng tư.
+- Chứng minh có thể phân tích thay đổi điểm theo học kỳ và chuyên cần theo thời gian từ bản trích xuất đã duyệt/pseudonymize, không cần nội dung riêng tư.
 - Cho Ban Lãnh đạo xem danh sách tín hiệu cần rà soát, lý do, độ phủ và độ mới của dữ liệu.
 - Cho phép con người phê duyệt, loại bỏ hoặc hoãn trước khi bàn giao.
 - Hiển thị kiểm soát báo động giả trên snapshot có nhãn; fairness chỉ hiển thị metric khi data gate có nhóm audit được phê duyệt, nhãn và cỡ mẫu đủ.
@@ -53,18 +53,20 @@ MVP chỉ nạp output đã pseudonymize của [hợp đồng tích hợp EPU](.
 |:-----------|:------------------------|:---------|
 | `student_dimension` | `student_ref`, cohort/khoa/ngành/lớp đã tối thiểu hóa | Scope danh sách và case |
 | `term_grade` | `student_ref`, học kỳ, học phần, tín chỉ, điểm tổng kết | Xu hướng/coverage điểm theo kỳ |
+| `attendance_event` / chuỗi chuyên cần theo thời gian | `student_ref`, mốc thời gian (buổi/ngày/tuần đã duyệt), hiện diện/vắng, nghỉ có phép (nếu có) | Xu hướng chuyên cần theo thời gian — **MVP** sau `H15` |
 | `academic_status` | taxonomy `Trạng thái`, label nội bộ (nếu có) | Evaluation nội bộ; không public qua case API |
 | `advisor_assignment` | `student_ref`, `advisor_ref` | Routing chỉ sau human approval |
 | `source_manifest` + `data_quality_report` | provenance, freshness, coverage, reject/missing counts | Chặn import/case khi không đủ căn cứ |
 
-Không có nguồn điểm danh theo tuần, thuộc tính nhóm fairness hay liên hệ GVCN được duyệt trong catalog hiện tại. MVP không tạo các trường này để bù thiếu dữ liệu. LMS, nộp bài, CLB, thư viện, Wi-Fi/campus và log dịch vụ hỗ trợ vẫn ngoài phạm vi.
+Điểm danh theo thời gian **thuộc MVP** và cần export được data owner phê duyệt (`H15`). Catalog reference hiện có thể chưa có chuỗi tuần — khi thiếu nguồn đã duyệt, nhánh chuyên cần trả `insufficient_data`, **không** tạo chuỗi giả và **không** đẩy chuyên cần ra Post-MVP. Thuộc tính nhóm fairness hay liên hệ GVCN chưa duyệt cũng không được bịa. LMS, nộp bài, CLB, thư viện, Wi-Fi/campus và log dịch vụ hỗ trợ vẫn ngoài phạm vi.
 
 ### Hợp đồng feature tối thiểu
 
 - biến động và độ dốc điểm giữa các học kỳ hợp lệ;
-- độ phủ dữ liệu, số học kỳ/học phần hợp lệ và freshness;
+- xu hướng/biến động chuyên cần theo thời gian khi có chuỗi điểm danh đã duyệt;
+- độ phủ dữ liệu, số học kỳ/học phần/mốc chuyên cần hợp lệ và freshness;
 - `advisor_ref` chỉ cho routing sau human review;
-- không có feature chuyên cần/tuần khi source không cấp dữ liệu;
+- nhánh chuyên cần trả `insufficient_data` khi source chưa cấp dữ liệu đã duyệt — không impute;
 - thuộc tính audit chỉ có mặt trong fairness report khi đã được phê duyệt, tách khỏi feature chấm điểm.
 
 Mọi đầu ra phải mang `model_version`, thời điểm tính và các yếu tố đóng góp lấy từ model/API. LLM không được tính hoặc thay đổi mức độ ưu tiên.
@@ -94,12 +96,14 @@ Mỗi tín hiệu hiển thị:
 
 ### 5.3 Rà soát và bàn giao
 
+Trạng thái case và chuyển tiếp bắt buộc theo [Process §4](03-process.md) (`New Signal` → … → `Resolved`/`Monitoring`). Không dùng alias `new` / `in_review` / `deferred` / `handed_off`.
+
 Người có thẩm quyền có thể:
 
-- phê duyệt chuyển tới người hỗ trợ;
+- phê duyệt chuyển tới người hỗ trợ (`approve` → `Approved for Follow-up`);
 - loại tín hiệu với lý do chuẩn hóa như dữ liệu sai, nghỉ có phép, đã được hỗ trợ hoặc không đủ căn cứ;
-- hoãn và đặt thời điểm xem lại;
-- bàn giao đúng GVCN/đơn vị hỗ trợ sau khi phê duyệt;
+- hoãn (`defer`): giữ `Pending Review` + `review_at` — không tạo state riêng;
+- bàn giao (`assign`) đúng GVCN/đơn vị hỗ trợ **chỉ khi** có `advisor_ref`; thiếu thì dừng và đưa mapping-repair queue;
 - lưu phản hồi tối thiểu để tránh cảnh báo lặp.
 
 ### 5.4 Agent giải thích có căn cứ
@@ -115,7 +119,7 @@ Agent có thể tóm tắt biến động, giải thích các yếu tố do mode
 ## 6. Luồng demo chuẩn
 
 1. Nạp snapshot EPU đã qua data gate và hiển thị provenance/coverage.
-2. Tính feature điểm theo kỳ, độ phủ và đầu ra model/API; thiếu hai kỳ hợp lệ thì trả `insufficient_data`.
+2. Tính feature điểm theo kỳ và chuyên cần theo thời gian (khi có nguồn), độ phủ và đầu ra model/API; thiếu hai kỳ hợp lệ hoặc thiếu chuỗi điểm danh đã duyệt thì trả `insufficient_data` đúng nhánh.
 3. Mở dashboard toàn đơn vị, xem danh sách tín hiệu và trạng thái fairness.
 4. Mở một case, kiểm tra thay đổi, yếu tố đóng góp và giới hạn dữ liệu.
 5. Hỏi agent “Vì sao case này cần được rà soát?” và nhận câu trả lời bám dữ liệu.
@@ -126,13 +130,13 @@ Agent có thể tóm tắt biến động, giải thích các yếu tố do mode
 
 | ID | Yêu cầu | Acceptance của MVP |
 |:---|:--------|:-------------------|
-| FR-01 | Nạp dữ liệu EPU đã chuẩn hóa | `source_manifest` được duyệt và năm bảng logic được đọc theo schema; lỗi provenance/thiếu trường/dữ liệu không hợp lệ được báo rõ, không âm thầm bỏ qua |
-| FR-02 | Tạo feature theo học kỳ | Có ít nhất xu hướng/biến động điểm giữa các học kỳ hợp lệ; kết quả tái lập được với cùng snapshot/model version |
+| FR-01 | Nạp dữ liệu EPU đã chuẩn hóa | `source_manifest` được duyệt, 4 bảng domain + `data_quality_report` được đọc/import theo schema; lỗi provenance/thiếu trường/dữ liệu không hợp lệ được báo rõ, không âm thầm bỏ qua |
+| FR-02 | Tạo feature theo học kỳ và chuyên cần theo thời gian | Có xu hướng/biến động điểm giữa các học kỳ hợp lệ; có xu hướng chuyên cần theo thời gian khi nguồn điểm danh đã duyệt (`H15`); thiếu nguồn → `insufficient_data` đúng nhánh; kết quả tái lập được với cùng snapshot/model version |
 | FR-03 | Kiểm tra coverage/freshness | Case hiển thị số kỳ hợp lệ, tình trạng thiếu/cũ; cấu hình có thể chặn tín hiệu khi không đủ căn cứ |
 | FR-04 | Chấm mức ưu tiên | Model/API tạo mức ưu tiên và contributing factors; LLM không nằm trong đường tính điểm |
 | FR-05 | Danh sách và chi tiết | Danh sách sắp theo ưu tiên; chi tiết giải thích thay đổi bằng ngôn ngữ trung lập; không dùng nhãn `High-risk student` |
-| FR-06 | Human review | Có hành động phê duyệt, loại hoặc hoãn và lưu lý do; chưa duyệt thì không bàn giao |
-| FR-07 | Care handoff | Case đã duyệt được gán đúng người/phạm vi và ghi nhận trạng thái tiếp nhận tối thiểu |
+| FR-06 | Human review | Có hành động phê duyệt, loại hoặc hoãn (`defer` + `review_at`) và lưu lý do; chưa duyệt thì không bàn giao; state đúng Process §4 |
+| FR-07 | Care handoff | Case đã duyệt được `assign` đúng người/phạm vi khi có `advisor_ref`; thiếu mapping → dừng + mapping-repair; ghi nhận tiếp nhận tối thiểu |
 | FR-08 | Agent grounded | Câu trả lời dùng dữ liệu/model output có sẵn, nêu giới hạn và không bịa điểm/chẩn đoán |
 | FR-09 | Fairness audit | Khi có nhóm audit được phê duyệt + ground truth + cỡ mẫu đủ, hiển thị FPR, chênh lệch FPR và mẫu số; nếu chưa có thì trả `insufficient_data`. Thuộc tính nhóm không tham gia scoring |
 | FR-10 | False-alarm control | Demo được tác động của ngưỡng; có luồng loại false positive, ngoại lệ và chống lặp |
@@ -149,7 +153,7 @@ Agent có thể tóm tắt biến động, giải thích các yếu tố do mode
 
 ## 9. Ngoài phạm vi 48 giờ
 
-- Tích hợp SIS/LMS production, điểm danh tuần và dữ liệu liên hệ trực tiếp.
+- Tích hợp SIS/LMS production đầy đủ và dữ liệu liên hệ trực tiếp; forecasting/gated fusion điểm danh (nghiên cứu hybrid) ngoài nhánh tín hiệu MVP.
 - Xác thực/RBAC production đầy đủ, retention/deletion automation và quy trình khiếu nại hoàn chỉnh.
 - Huấn luyện/kiểm định trên dữ liệu thật hoặc khẳng định hiệu quả lâm sàng/tâm lý.
 - Dùng các tín hiệu mở rộng hay buffer trong [Danh mục tín hiệu](06-signal-catalog.md).

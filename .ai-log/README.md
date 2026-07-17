@@ -17,7 +17,7 @@ Mỗi khi bạn dùng AI để hoàn thành một task (viết doc, sinh code, d
 
 ```csv
 session_id,member,tool,started_at,ended_at,task_id,purpose,result,artifacts,commit_sha,evidence_type,evidence_ref,screenshot,redactions,review_status
-20260717-H01-hoang-codex-01,Hoàng,Claude Code,2026-07-17T22:30,2026-07-17T23:10,H05,Viết architecture doc + mermaid diagram,done,docs/04-engineering/03-system-architecture.md,a1b2c3d,file,,,,pending
+20260717-H01-hoang-codex-01,Hoàng,Claude Code,2026-07-17T22:30,2026-07-17T23:10,H05,Viết architecture doc + mermaid diagram,done,docs/04-engineering/05-system-architecture.md,a1b2c3d,file,,,,pending
 ```
 
 **Giải thích cột:**
@@ -67,3 +67,17 @@ SUBMIT_PRIVATE_URL=<link_drive_private>
 - [ ] Văn Hải đã bàn giao gap audit V08; Hoàng đã hoàn thiện tổng hợp D5 trước khi đóng cổng nộp
 
 **session_id gợi ý:** `20260717-H01-hoang-codex-01`
+
+---
+
+## 4. Templates (H05b → V08 / D5)
+
+Copy từ thư mục [`templates/`](templates/); không thay thế quy trình ở trên.
+
+| File | Dùng khi |
+|:--|:--|
+| [`templates/manifest-row.example.csv`](templates/manifest-row.example.csv) | Thêm dòng vào `manifest.csv` |
+| [`templates/online-chat-row.example.md`](templates/online-chat-row.example.md) | Thêm dòng vào `online-chats.md` |
+| [`templates/v08-audit-gap.template.md`](templates/v08-audit-gap.template.md) | Văn Hải (V08) bàn giao gap cho Hoàng (D5) |
+
+Release-evidence fill pattern (H16): [`docs/03-project/templates/release-evidence-item.template.md`](../docs/03-project/templates/release-evidence-item.template.md).

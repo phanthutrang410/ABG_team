@@ -58,6 +58,9 @@ docs/
 | 02 | [Harness Engineering](04-engineering/02-harness-engineering.html) | HTML snapshot tham khảo về harness engineering; không phải source of truth của sản phẩm |
 | 03 | [EPU reference — catalog trường](04-engineering/03-epu-reference-data-fields.md) | Các trường đang có trong EPU reference (V59, profile, transcript v5); cơ sở chọn/loại nguồn, không phải SIS production |
 | 04 | [Hợp đồng tích hợp EPU](04-engineering/04-epu-data-integration-contract.md) | Chọn nguồn không synthetic, data gate, schema chuẩn hóa và handoff fixture cho Hoàng |
+| 05 | [Kiến trúc hệ thống tối thiểu](04-engineering/05-system-architecture.md) | Container, luồng dữ liệu, care/state boundary MVP; SoT mỏng cho H06b/H10/H07 |
+| 06 | [Deploy / ops runbook](04-engineering/06-deploy-runbook.md) | Env, CORS, seed, health, smoke, rollback — **draft from arch; finalize at D4**; no secrets |
+| 07 | [Persistence schema MVP](04-engineering/07-mvp-persistence-schema.md) | Thiết kế DB `dwh` versioned, mapping metadata legacy và gate import đã duyệt cho H19/H20 |
 
 `02-harness-engineering.html` là trang được lưu từ nguồn bên ngoài và có thể cần network hoặc asset gốc để render đầy đủ. Không dùng nội dung trong đó như requirement nếu chưa được đưa vào PRD/decision.
 

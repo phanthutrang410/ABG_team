@@ -1,8 +1,10 @@
 # Scope & To-be Process — Silent Shield
 
+> **Phạm vi tài liệu:** Mô tả **sản phẩm đích (Target / Post-MVP)**. **MVP 48 giờ** theo [PRD](04-prd.md): điểm theo học kỳ + điểm danh theo thời gian + coverage/freshness; trạng thái case = [Process §4](03-process.md) (`New Signal` … `Resolved`/`Monitoring`). Các mục dưới đây về SIS/LMS đầy đủ, Wellbeing, D0–D3, SLA BR-07 là Target — **không** phải acceptance MVP và **không** thay Process làm SoT state machine.
+
 ## 1. Mục đích tài liệu
 
-Tài liệu chốt **phạm vi nghiệp vụ của sản phẩm đích** (in/out-of-scope) và quy trình to-be ở cấp nghiệp vụ, làm nguồn cho [BRD](08-brd.md). Quy trình vận hành chi tiết (as-is/to-be theo bước, chủ thể, đầu ra) xem [Quy trình](03-process.md); phạm vi demo 48 giờ xem [PRD](04-prd.md).
+Tài liệu chốt **phạm vi nghiệp vụ của sản phẩm đích** (in/out-of-scope) và quy trình to-be ở cấp nghiệp vụ, làm nguồn cho [BRD](08-brd.md). Quy trình vận hành chi tiết (as-is/to-be theo bước, chủ thể, đầu ra) và **state machine MVP** xem [Quy trình](03-process.md); phạm vi demo 48 giờ xem [PRD](04-prd.md).
 
 ## 2. Những vấn đề sản phẩm sẽ giải quyết
 
@@ -36,7 +38,7 @@ Giảm tải cho giảng viên chủ nhiệm không thể theo sát toàn bộ s
 * Explanation & Narrative (AI-Agent): nhận đóng góp của từng tín hiệu (feature contributions) từ bước Scoring, sinh lý do tổng hợp cho từng ca bằng từ vựng kiểm soát (controlled vocabulary — ngôn ngữ hành vi trung tính, không từ ngữ lâm sàng); soạn tóm tắt tình hình cấp chương trình cho báo cáo Ban Lãnh đạo; và soạn sẵn nội dung email giao việc để Ban Lãnh đạo duyệt. Agent hoạt động read-only: không sửa điểm, không suy diễn nguyên nhân đời tư, mọi câu chữ phải truy vết được về tín hiệu gốc (grounding).
 * Presentation: hiển thị báo cáo ưu tiên cho Ban Lãnh đạo theo đúng tầng quyền (T1).
 * Ra quyết định & giao nhiệm vụ: Ban Lãnh đạo xem báo cáo → giao nhiệm vụ cụ thể cho đúng người phụ trách, kèm lý do do tầng Explanation sinh ra (không phải lý do tự viết tay mỗi lần).
-* Theo dõi SLA: hệ thống theo dõi trạng thái từng ca (chờ duyệt → đã phân công → đã tiếp cận → đã ghi nhận kết quả); ca quá hạn được nhắc và escalate theo BR-07.
+* Theo dõi SLA: hệ thống theo dõi trạng thái từng ca theo [Process §4](03-process.md) (`Pending Review` → `Approved for Follow-up` → `Assigned` → …); ca quá hạn được nhắc và escalate theo BR-07 (**Target**; MVP chỉ cần dấu vết quyết định tối thiểu). Không dùng chuỗi informal “chờ duyệt → đã phân công” làm mã API.
 * Tiếp cận: warm check-in (D1/D2) hoặc chuyển tuyến chuyên trách công tác sinh viên (D3/crisis).
 * Feedback: kết quả tiếp cận được ghi nhận, đưa trở lại hệ thống để hiệu chỉnh ngưỡng cảnh báo.
 
