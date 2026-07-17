@@ -1,4 +1,4 @@
-# 📋 Tổng hợp khảo sát thành viên ABG
+# Đội ngũ và phân vai — ABG
 
 Nguồn: `Khảo sát ABG(1-6).xlsx` — **6 phản hồi** (15/07 – 17/07/2026), tự đánh giá kỹ năng theo thang điểm **1 (yếu) → 5 (mạnh)**.
 

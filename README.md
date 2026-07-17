@@ -1,25 +1,28 @@
 # Silent Shield — VAIC 2026 (ABG)
 
-Cảnh báo sớm nguy cơ bỏ học / khủng hoảng từ tín hiệu không xâm phạm — hỗ trợ GV & tư vấn can thiệp, có fairness + privacy.
+Cảnh báo sớm thay đổi học tập cần được quan tâm từ tín hiệu không xâm phạm — giúp Ban Lãnh đạo ưu tiên rà soát và bàn giao cho người hỗ trợ, có fairness + privacy đo được.
 
 ## Docs
 
 | File | Nội dung |
 |:-----|:---------|
 | [AGENTS.md](AGENTS.md) | Goal, lane, do-not, verify (đọc trước khi code) |
-| [docs/README.md](docs/README.md) | Mục lục |
-| [docs/sprint.md](docs/sprint.md) | Board 48h |
-| [docs/prd.md](docs/prd.md) | PRD ngắn |
-| [docs/briefs-analysis.md](docs/briefs-analysis.md) | Chọn đề vs EduInsight |
-| [docs/vaic-2026.md](docs/vaic-2026.md) | Quy chế cuộc thi |
-| [docs/team-survey.md](docs/team-survey.md) | Khảo sát & phân vai |
+| [docs/README.md](docs/README.md) | Mục lục tài liệu có đánh số |
+| [Quy chế VAIC](docs/01-requirements/01-vaic-rules.md) | Ràng buộc cuộc thi |
+| [Problems Brief](docs/01-requirements/02-problems-brief.md) | Nguồn mô tả bài toán và giải pháp |
+| [Truy vết yêu cầu](docs/01-requirements/03-traceability.md) | Ánh xạ brief và các độ lệch còn mở |
+| [PRD](docs/02-product/04-prd.md) | Phạm vi MVP |
+| [Danh mục tín hiệu](docs/02-product/06-signal-catalog.md) | Tín hiệu MVP và ứng viên mở rộng |
+| [Quyết định chọn đề](docs/03-project/01-topic-selection.md) | Cơ sở chọn Silent Shield |
+| [Sprint](docs/03-project/03-sprint.md) | Board 48h |
+| [Đội ngũ](docs/03-project/02-team.md) | Khảo sát và phân vai |
 
 ## Layout
 
 ```text
 backend/     FastAPI
 frontend/    Next.js (scaffold ở G01)
-data/        Synthetic K-12
+data/        Dữ liệu synthetic cho demo
 docs/        Tài liệu team
 scripts/     verify.ps1
 ```

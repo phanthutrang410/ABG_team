@@ -4,7 +4,7 @@
 
 ## Goal (48h)
 
-**Silent Shield:** cảnh báo sớm HS nguy cơ bỏ học/khủng hoảng từ điểm + điểm danh + xu hướng hành vi (không xâm phạm), chỉ hỗ trợ con người, có fairness đo được — demo live trước **11:00 19/7**.
+**Silent Shield:** cảnh báo sớm thay đổi học tập cần được quan tâm từ xu hướng điểm + chuyên cần không xâm phạm; Ban Lãnh đạo rà soát trước khi bàn giao cho người hỗ trợ, có fairness đo được — demo live trước **11:00 19/7**.
 
 ### Nộp đủ 5 hạng mục
 
@@ -23,7 +23,7 @@
 3. Fairness — metric nhóm trên synthetic, hiện trên UI  
 4. Kiểm soát báo động giả + giải thích yếu tố đóng góp  
 
-Chi tiết board: [docs/sprint.md](docs/sprint.md) · PRD: [docs/prd.md](docs/prd.md)
+Chi tiết board: [Sprint](docs/03-project/03-sprint.md) · PRD: [Product Requirements](docs/02-product/04-prd.md)
 
 ## Lanes
 
@@ -42,7 +42,7 @@ Branch: `feature/<id>-<short>` · Commit: `feat:` / `fix:` / `docs:` / `test:` /
 ## Do not
 
 - LLM bịa risk score — chỉ giải thích điểm từ model/API  
-- Đưa PII học sinh thật vào repo  
+- Đưa PII sinh viên thật vào repo
 - Commit `reference-Learning-Analytics-AI/` hoặc secrets  
 - Xây adaptive tutor / OCR / career (ngoài đề)
 

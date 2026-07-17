@@ -1,4 +1,4 @@
-# VAIC 2026 — Vietnam AI Innovation Challenge (Reference)
+# Quy chế VAIC 2026
 
 Tài liệu tham chiếu cho project hackathon. Nguồn: Info Hub chính thức và thư mời BTC.
 

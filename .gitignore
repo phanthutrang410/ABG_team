@@ -34,9 +34,11 @@ Thumbs.db
 *.log
 *.db
 
-# AI collaboration logs (structure tracked, content ignored)
+# AI logs — index in .ai-log/ only; raw sessions stay local / Drive
+.ai-log-private/
 .ai-log/*.jsonl
 .ai-log/**/*.jsonl
+.ai-log/**/*.zip
 
 # Secrets / keys
 *.pem
