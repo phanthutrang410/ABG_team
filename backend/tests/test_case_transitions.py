@@ -1,4 +1,4 @@
-"""Process §4 case transition tests (H06b) — domain + API."""
+"""Process §4 case transition tests (H06b) — domain + API + deploy harden."""
 
 from __future__ import annotations
 
@@ -18,7 +18,11 @@ from app.cases.domain import (
     apply_transition,
 )
 from app.cases.store import store
+from app.config import Settings, get_settings
 from app.main import app
+
+TRUSTED_ACTOR = "leader:demo"
+TRUSTED_KIND = "human"
 
 
 @pytest.fixture(autouse=True)
@@ -26,6 +30,19 @@ def _reset_store() -> None:
     store.clear()
     yield
     store.clear()
+
+
+@pytest.fixture(autouse=True)
+def _default_local_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    """API tests run as local seed-enabled with a fixed trusted actor."""
+    get_settings.cache_clear()
+    monkeypatch.setenv("APP_ENV", "local")
+    monkeypatch.setenv("CASES_TRUSTED_ACTOR", TRUSTED_ACTOR)
+    monkeypatch.setenv("CASES_TRUSTED_ACTOR_KIND", TRUSTED_KIND)
+    monkeypatch.delenv("CASES_SEED_CREATE", raising=False)
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 @pytest.fixture
@@ -37,6 +54,12 @@ def _cmd(action: CaseAction, **kwargs) -> TransitionCommand:
     defaults = {"actor": "leader:hoa", "actor_kind": "human"}
     defaults.update(kwargs)
     return TransitionCommand(action=action, **defaults)
+
+
+def _transition_body(action: str, **extra) -> dict:
+    body = {"action": action, "actor": TRUSTED_ACTOR, "actor_kind": TRUSTED_KIND}
+    body.update(extra)
+    return body
 
 
 def test_happy_path_full_chain() -> None:
@@ -144,17 +167,18 @@ def test_api_happy_path_and_forbidden(client: TestClient) -> None:
     r = client.post("/cases", json={"case_id": "api-1", "state": "new_signal"})
     assert r.status_code == 201
     assert r.json()["state"] == "new_signal"
+    assert "advisor_ref" not in r.json()
 
     r = client.post(
         "/cases/api-1/transitions",
-        json={"action": "queue_for_review", "actor": "system", "actor_kind": "system"},
+        json=_transition_body("queue_for_review"),
     )
     assert r.status_code == 200
     assert r.json()["state"] == "pending_review"
 
     r = client.post(
         "/cases/api-1/transitions",
-        json={"action": "approve", "actor": "leader:1"},
+        json=_transition_body("approve"),
     )
     assert r.status_code == 200
     assert r.json()["state"] == "approved_for_follow_up"
@@ -162,7 +186,7 @@ def test_api_happy_path_and_forbidden(client: TestClient) -> None:
     # Missing advisor_ref → 409, stay approved, mapping-repair queued
     r = client.post(
         "/cases/api-1/transitions",
-        json={"action": "assign", "actor": "coord:1"},
+        json=_transition_body("assign"),
     )
     assert r.status_code == 409
     body = r.json()["detail"]
@@ -173,14 +197,15 @@ def test_api_happy_path_and_forbidden(client: TestClient) -> None:
     got = client.get("/cases/api-1")
     assert got.json()["state"] == "approved_for_follow_up"
     assert got.json()["mapping_repair_queued"] is True
+    assert "advisor_ref" not in got.json()
 
     r = client.post(
         "/cases/api-1/transitions",
-        json={"action": "assign", "actor": "coord:1", "advisor_ref": "adv_9"},
+        json=_transition_body("assign", advisor_ref="adv_9"),
     )
     assert r.status_code == 200
     assert r.json()["state"] == "assigned"
-    assert r.json()["advisor_ref"] == "adv_9"
+    assert "advisor_ref" not in r.json()
     assert r.json()["mapping_repair_queued"] is False
 
 
@@ -188,14 +213,14 @@ def test_api_rejects_forbidden_alias_and_skip(client: TestClient) -> None:
     client.post("/cases", json={"case_id": "api-2", "state": "new_signal"})
     r = client.post(
         "/cases/api-2/transitions",
-        json={"action": "in_review", "actor": "leader:1"},
+        json=_transition_body("in_review"),
     )
     assert r.status_code == 422
     assert r.json()["detail"]["code"] == "forbidden_alias"
 
     r = client.post(
         "/cases/api-2/transitions",
-        json={"action": "assign", "actor": "leader:1", "advisor_ref": "adv_x"},
+        json=_transition_body("assign", advisor_ref="adv_x"),
     )
     assert r.status_code == 409
     assert r.json()["detail"]["code"] == "forbidden_transition"
@@ -205,11 +230,7 @@ def test_api_defer_and_dismiss(client: TestClient) -> None:
     client.post("/cases", json={"case_id": "api-3", "state": "pending_review"})
     r = client.post(
         "/cases/api-3/transitions",
-        json={
-            "action": "defer",
-            "actor": "leader:1",
-            "review_at": "2026-07-21T10:00:00",
-        },
+        json=_transition_body("defer", review_at="2026-07-21T10:00:00"),
     )
     assert r.status_code == 200
     assert r.json()["state"] == "pending_review"
@@ -217,7 +238,7 @@ def test_api_defer_and_dismiss(client: TestClient) -> None:
 
     r = client.post(
         "/cases/api-3/transitions",
-        json={"action": "dismiss", "actor": "leader:1", "reason_code": "exception"},
+        json=_transition_body("dismiss", reason_code="exception"),
     )
     assert r.status_code == 200
     assert r.json()["state"] == "dismissed"
@@ -227,7 +248,11 @@ def test_api_rejects_agent_actor(client: TestClient) -> None:
     client.post("/cases", json={"case_id": "api-4", "state": "pending_review"})
     r = client.post(
         "/cases/api-4/transitions",
-        json={"action": "approve", "actor": "bot", "actor_kind": "agent"},
+        json={
+            "action": "approve",
+            "actor": TRUSTED_ACTOR,
+            "actor_kind": "agent",
+        },
     )
     assert r.status_code == 403
     assert r.json()["detail"]["code"] == "agent_forbidden"
@@ -237,3 +262,80 @@ def test_create_rejects_legacy_state_alias(client: TestClient) -> None:
     r = client.post("/cases", json={"case_id": "bad", "state": "handed_off"})
     assert r.status_code == 422
     assert r.json()["detail"]["code"] == "forbidden_alias"
+
+
+# --- H06b deploy-blocker harden ---
+
+
+def test_api_create_disabled_outside_seed_env(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    get_settings.cache_clear()
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.delenv("CASES_SEED_CREATE", raising=False)
+    get_settings.cache_clear()
+
+    r = client.post("/cases", json={"case_id": "prod-1", "state": "new_signal"})
+    assert r.status_code == 403
+    assert r.json()["detail"]["code"] == "create_disabled"
+
+
+def test_api_create_explicit_seed_flag_override(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    get_settings.cache_clear()
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("CASES_SEED_CREATE", "true")
+    get_settings.cache_clear()
+
+    r = client.post("/cases", json={"case_id": "seed-override", "state": "new_signal"})
+    assert r.status_code == 201
+
+
+def test_api_rejects_actor_spoof(client: TestClient) -> None:
+    client.post("/cases", json={"case_id": "spoof-1", "state": "pending_review"})
+    r = client.post(
+        "/cases/spoof-1/transitions",
+        json={"action": "approve", "actor": "leader:evil", "actor_kind": "human"},
+    )
+    assert r.status_code == 403
+    assert r.json()["detail"]["code"] == "untrusted_actor"
+
+    # Case unchanged
+    got = client.get("/cases/spoof-1")
+    assert got.json()["state"] == "pending_review"
+
+
+def test_api_accepts_omitted_actor_uses_server_identity(client: TestClient) -> None:
+    client.post("/cases", json={"case_id": "omit-1", "state": "pending_review"})
+    r = client.post("/cases/omit-1/transitions", json={"action": "approve"})
+    assert r.status_code == 200
+    assert r.json()["state"] == "approved_for_follow_up"
+
+
+def test_api_public_responses_never_leak_advisor_ref(client: TestClient) -> None:
+    client.post("/cases", json={"case_id": "leak-1", "state": "approved_for_follow_up"})
+    r = client.post(
+        "/cases/leak-1/transitions",
+        json=_transition_body("assign", advisor_ref="adv_secret"),
+    )
+    assert r.status_code == 200
+    payload = r.json()
+    assert payload["state"] == "assigned"
+    assert "advisor_ref" not in payload
+
+    got = client.get("/cases/leak-1")
+    assert "advisor_ref" not in got.json()
+    # Internal store still holds routing ref for care path
+    internal = store.get("leak-1")
+    assert internal is not None
+    assert internal.advisor_ref == "adv_secret"
+
+
+def test_seed_create_helper_defaults() -> None:
+    from app.cases.auth import seed_create_allowed
+
+    assert seed_create_allowed(Settings(app_env="local")) is True
+    assert seed_create_allowed(Settings(app_env="production")) is False
+    assert seed_create_allowed(Settings(app_env="production", cases_seed_create=True)) is True
+    assert seed_create_allowed(Settings(app_env="local", cases_seed_create=False)) is False

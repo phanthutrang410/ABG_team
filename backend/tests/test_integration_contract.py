@@ -64,6 +64,22 @@ def test_agent_context_fixtures_validate(name: str) -> None:
     AgentContextResponse.model_validate(raw)
 
 
+def test_insufficient_fixtures_null_band_empty_factors() -> None:
+    """H06a-r / H11a-r: insufficient → no band; empty factors OK when not ok."""
+    for name in (
+        "case_detail_insufficient.json",
+        "agent_context_insufficient.json",
+    ):
+        raw = _load(name)
+        assert isinstance(raw, dict)
+        case = raw["case"]
+        assert isinstance(case, dict)
+        assert case["review_priority_band"] is None
+        assert case["contributing_factors"] == []
+        assert case["coverage"]["status"] == "insufficient"
+        assert case["data_state"] == "insufficient_data"
+
+
 def test_allowed_display_fields_match_review_case() -> None:
     assert ALLOWED_DISPLAY_FIELDS == frozenset(ReviewCase.model_fields.keys())
     assert not (ALLOWED_DISPLAY_FIELDS & FORBIDDEN_PUBLIC_FIELDS)

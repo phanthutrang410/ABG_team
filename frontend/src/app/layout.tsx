@@ -3,7 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Silent Shield",
-  description: "Cảnh báo sớm — hỗ trợ học sinh cần quan tâm",
+  description:
+    "Tín hiệu cần rà soát từ điểm theo học kỳ và điểm danh theo thời gian — con người duyệt trước bàn giao",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

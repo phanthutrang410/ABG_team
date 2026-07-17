@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -9,6 +10,18 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.cases.router import router as cases_router
 from app.database import check_db, init_schemas
+
+
+def _cors_allow_origins() -> list[str]:
+    """Local UI plus optional Live FE origins (comma-separated CORS_ORIGINS)."""
+    origins = ["http://localhost:3000"]
+    extra = os.environ.get("CORS_ORIGINS", "").strip()
+    if extra:
+        for origin in extra.split(","):
+            origin = origin.strip()
+            if origin and origin not in origins:
+                origins.append(origin)
+    return origins
 
 
 @asynccontextmanager
@@ -29,7 +42,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=_cors_allow_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -113,3 +113,36 @@ def test_unknown_reason_code_rejected() -> None:
     data["coverage"]["reason_codes"] = ["invented_reason"]
     with pytest.raises(ValidationError):
         ScoringFeatures.model_validate(data)
+
+
+def test_coverage_ok_rejects_zero_counts() -> None:
+    """Data-ML §3: coverage counts=0 must not claim status=ok."""
+    with pytest.raises(ValidationError, match="status=ok"):
+        Coverage.model_validate(
+            {
+                "n_valid_terms": 0,
+                "n_courses": 0,
+                "n_attendance_events": 0,
+                "last_term_code": None,
+                "last_attendance_at": None,
+                "status": "ok",
+                "reason_codes": [],
+            }
+        )
+
+
+def test_scoring_features_rejects_coverage_ok_with_zero_counts() -> None:
+    data = load_fixture()
+    data["coverage"] = {
+        "n_valid_terms": 0,
+        "n_courses": 0,
+        "n_attendance_events": 0,
+        "last_term_code": None,
+        "last_attendance_at": None,
+        "status": "ok",
+        "reason_codes": [],
+    }
+    data["grade_trend_slope"] = None
+    data["grade_volatility"] = None
+    with pytest.raises(ValidationError, match="status=ok"):
+        ScoringFeatures.model_validate(data)

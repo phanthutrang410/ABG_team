@@ -3,7 +3,7 @@
     "case_id": "case_pseudo_insuf_001",
     "student_ref": "stu_pseudo_002",
     "case_state": "new_signal",
-    "review_priority_band": "can_ra_soat",
+    "review_priority_band": null,
     "contributing_factors": [],
     "coverage": {
       "n_valid_terms": 0,

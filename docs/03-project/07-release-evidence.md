@@ -18,7 +18,7 @@
 
 | Mục | Owner | Task nguồn | Evidence | Status |
 |:--|:--|:--|:--|:--|
-| Live URL hoạt động (smoke lần 1) | Hoàng | D4 |  | [ ] |
+| Live URL hoạt động (smoke lần 1) | Hoàng | D4a (shell) | **D4a shell 2026-07-18 ~06:05 +07:** FE `http://52.74.255.88:3000` · API `http://52.74.255.88:8000/health` → `{"status":"ok","service":"silent-shield","database":false}` · CORS ACAO=`http://52.74.255.88:3000` · rollback: instance `i-0b0576945d080cb3f`, API digest `sha256:7a6ba16516bcc33beb58f4497f0583b220061e2f502f7ff913656319c523a23b`, FE digest `sha256:58ccf51321418291ba8ac44b9034328e56542963f3dadb3764ef8539554c5973` · runbook [06-deploy-runbook.md](../04-engineering/06-deploy-runbook.md) · **not D4b** product list→case | [x] shell / [ ] D4b |
 | Smoke test ẩn danh độc lập lần 1 | Văn Hải | V07 |  | [ ] |
 | Fix → redeploy → re-smoke | Hoàng | D4r |  | [ ] |
 | GitHub public, PII/secret scan | Hoàng | D3 | [10-d3-github-pii-secret-scan.md](10-d3-github-pii-secret-scan.md) · https://github.com/phanthutrang410/ABG_team | [x] |

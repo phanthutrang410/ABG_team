@@ -51,6 +51,7 @@ docs/
 | 09 | [Stories — Văn Hải](03-project/09-stories-van-hai.md) | P2+ QA release, rehearsal/video và submission, không sửa docs nguồn |
 | 10 | [D3 GitHub / PII-secret scan](03-project/10-d3-github-pii-secret-scan.md) | Evidence CP2: repo public + scan; SĐT đã redact |
 | 12 | [H15 attendance approval prep](03-project/12-h15-attendance-approval-prep.md) | Prep only: chase checklist + amendment outline; H15 vẫn BLOCKED → data-owner |
+| 13 | [H12b asset / claim-copy skeleton](03-project/13-h12b-asset-copy-skeleton.md) | Banner + claim matrix cho Hạ Giang D1; attendance = MVP; forecast/fusion = research/blocked |
 
 ## 4. Engineering
 

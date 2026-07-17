@@ -10,18 +10,27 @@ from pydantic import BaseModel, Field
 
 class TransitionRequest(BaseModel):
     action: str = Field(..., description="Process §4 action code")
-    actor: str = Field(..., min_length=1)
-    actor_kind: str = Field(default="human", description="human | system; agent/llm rejected")
+    # Optional: ignored unless it matches server-derived identity (spoof → reject).
+    actor: Optional[str] = Field(
+        default=None,
+        description="Must match server trusted actor when provided; never authoritative",
+    )
+    actor_kind: Optional[str] = Field(
+        default=None,
+        description="Must match server trusted kind when provided; agent/llm rejected",
+    )
     reason_code: Optional[str] = None
     review_at: Optional[datetime] = None
+    # Input-only for assign; never echoed on public responses.
     advisor_ref: Optional[str] = None
     monitoring_until: Optional[datetime] = None
 
 
 class TransitionResponse(BaseModel):
+    """Public HTTP projection for /cases — must not leak advisor_ref."""
+
     case_id: str
     state: str
-    advisor_ref: Optional[str] = None
     review_at: Optional[datetime] = None
     reason_code: Optional[str] = None
     monitoring_until: Optional[datetime] = None
@@ -38,8 +47,7 @@ class TransitionErrorBody(BaseModel):
 
 
 class CaseCreateRequest(BaseModel):
-    """Minimal seed for transition tests / system New Signal creation."""
+    """Seed-only create (local/dev/test). No advisor_ref on public create."""
 
     case_id: str = Field(..., min_length=1)
     state: str = Field(default="new_signal")
-    advisor_ref: Optional[str] = None
