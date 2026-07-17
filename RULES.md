@@ -19,17 +19,17 @@ Reference clone, mock, session handoff và root draft chỉ là ngữ cảnh, kh
 
 Demo live trước **11:00 19/7/2026**; nộp đủ slide, video ≤5 phút, GitHub, Live URL và AI log.
 
-- **Privacy:** không giám sát chat/email/camera/mic; chỉ dùng dữ liệu synthetic.
+- **Privacy:** không giám sát chat/email/camera/mic; chỉ dùng bản trích xuất EPU đã được owner phê duyệt, pseudonymize và tối thiểu hóa trường dữ liệu.
 - **Care:** không chẩn đoán, dán nhãn hoặc kỷ luật tự động; con người duyệt trước handoff.
-- **Fairness:** metric nhóm synthetic phải có ground truth, mẫu số và cỡ mẫu.
+- **Fairness:** chỉ công bố metric nhóm khi có thuộc tính audit được phê duyệt, ground truth, mẫu số và cỡ mẫu; nếu thiếu thì trả `insufficient_data`.
 - **False alarm + explainability:** demo tác động ngưỡng và factors từ model/API.
 
 ## 3. Ranh giới sản phẩm
 
-- MVP đại học chỉ dùng xu hướng điểm và chuyên cần; không mở rộng Wellbeing, LMS/RAG, adaptive tutor, OCR/TTS hay career.
+- MVP đại học chỉ dùng điểm theo học kỳ từ nguồn EPU đã duyệt; không tạo chuỗi chuyên cần/tuần để bù dữ liệu thiếu và không mở rộng Wellbeing, LMS/RAG, adaptive tutor, OCR/TTS hay career.
 - Không đưa PII thật, thông tin liên hệ cá nhân không cần thiết, secrets hoặc raw AI sessions vào repo/evidence.
 - Không commit `reference-Learning-Analytics-AI/`.
-- Group attributes synthetic chỉ dùng fairness audit, tách khỏi scoring, explanation và public case API.
+- Thuộc tính nhóm cho fairness chỉ được dùng khi đã có nguồn và phê duyệt riêng; luôn tách khỏi scoring, explanation và public case API.
 - Model có thể giữ score nội bộ; UI/API nghiệp vụ chỉ hiển thị mức ưu tiên rà soát, không raw score/xác suất/trọng số.
 - LLM chỉ giải thích output model/API; không tính/sửa score, đoán nguyên nhân, đổi trạng thái hoặc tự liên hệ.
 - Coverage thấp/cũ phải trả `insufficient_data`; không biến thiếu dữ liệu thành “ổn định”.
@@ -37,9 +37,10 @@ Demo live trước **11:00 19/7/2026**; nộp đủ slide, video ≤5 phút, Git
 
 ## 4. Quy ước làm việc
 
-- Một task có một owner và reviewer khác owner; dùng lane H/M/G/T/A/V trong [Team](docs/03-project/02-team.md).
+- Mỗi task có **một owner chịu trách nhiệm đầu ra**; không bắt buộc gán thêm người vào vai trò nghiệm thu độc lập. Board phải ghi outcome/artifact, dependency task ID, điều kiện bắt đầu, kiểm chứng và evidence/DoD để thay cho việc phụ thuộc vào tên người nghiệm thu.
 - Task nên hoàn thành trong 2–4 giờ; task lớn hơn phải tách theo outcome/contract.
-- Interface qua hai lane phải có schema + validated fixture và được provider/consumer review.
+- Interface qua hai lane phải có schema + validated fixture + kiểm thử; task consumer chỉ được bắt đầu khi task provider đã Done và evidence đã có.
+- Nếu chưa thể thực hiện vì đầu vào chưa hoàn tất, status phải ghi `BLOCKED → <task ID>`; không tự đổi contract, bịa fixture hay suy luận thay input.
 - Không ghi đè thay đổi ngoài task, không dùng git destructive command.
 - Branch: `feature/<task-id>-<short>`; commit: `feat:` / `fix:` / `docs:` / `test:` / `chore:` khi được giao commit.
 - Không tự commit, push, merge, deploy hoặc submit nếu task chưa giao quyền.

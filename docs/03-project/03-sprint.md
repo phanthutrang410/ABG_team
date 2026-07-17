@@ -1,341 +1,308 @@
 # Sprint — Silent Shield (17–19/7/2026)
 
-> **Format học từ:** `reference-Learning-Analytics-AI/docs/07-Sprint-Planning` (SprintPlanning + Sprint1–4): board có Owner/Deadline/Depends/Done when; mô tả task theo từng lane; gate gắn mốc BTC.
-> **Không lấy:** RAG, Academic Tree, CLO/PLO, dữ liệu thật, UI “dropout risk”.
-> **Nguồn chuẩn thời hạn:** [01-vaic-rules.md](../01-requirements/01-vaic-rules.md) · Phạm vi: [PRD](../02-product/04-prd.md) · Rules: [RULES.md](../../RULES.md)
+> Nguồn chuẩn: [Quy chế VAIC](../01-requirements/01-vaic-rules.md) · [PRD MVP](../02-product/04-prd.md) · [Process](../02-product/03-process.md) · [RULES.md](../../RULES.md).
+>
+> **Điều chỉnh phân công 18/7:** Hoàng là owner duy nhất hoàn thiện tài liệu/contract nguồn chuẩn. Build tập trung vào Hoàng, Khánh Duy, Giang và Thu Trang. Hạ Giang (viết là **giang**) và Văn Hải chỉ nhận task từ P2, chủ yếu QA/review độc lập và chuẩn bị asset trình bày–nộp bài.
+>
+> **Chặn phạm vi hybrid:** Duy được nghiên cứu hybrid feature theo học kỳ + forecasting điểm danh. Không được nạp, tự tạo hay dùng fixture attendance time-series cho MVP khi chưa có export được data owner phê duyệt. Các task forecast/fusion là Post-MVP, có trạng thái blocked; không nằm trên critical path CP2.
+>
+> **Snapshot board 18/7 ~02:03 (+07):** `H05`/`M04` vẫn TODO → **P0.5 chưa qua**; `H10` và toàn bộ P1 đang trễ. Xem mục 1.1 recovery — không giữ deadline P0.5/P1 cũ như thể đã đạt.
 
-**Đồng hồ (UTC+7):** giờ “hiện tại” khi lập board ≈ **22:30 T6 17/7**. P0 scaffold đã xong; gate tiếp theo là **P0.5 Architecture Lock** (không làm lại P0).
+**Quy ước tên:** Giang = Nguyễn Trường Giang (FE); giang = Trần Hạ Giang (QA/review/presentation). ID là mã workstream ổn định; cột **Owner** mới là nguồn chuẩn phân công, không suy ra owner từ tiền tố ID.
 
-**Tên trên board:** Owner/Reviewer ghi tên thành viên. Phân biệt hai Giang: **Giang** = Nguyễn Trường Giang (FE); **giang** = Trần Hạ Giang (BA/product).
-
-| Tên trên board | Thành viên đầy đủ | Task ID prefix |
-|:---------------|:------------------|:--------------:|
-| Hoàng | Hoàng | H |
-| Khánh Duy | Bùi Khánh Duy | M |
-| Giang | Nguyễn Trường Giang | G |
-| Thu Trang | Phan Thu Trang | T |
-| giang | Trần Hạ Giang | A |
-| Văn Hải | Đậu Văn Hải | V |
-
----
+| Thành viên | Lane đang chịu trách nhiệm | Không chịu trách nhiệm |
+|:--|:--|:--|
+| Hoàng | Tất cả tài liệu/contract nguồn chuẩn; backend/API; deploy; tài liệu release | Không tự viết model/fusion của Duy |
+| Khánh Duy | Data/ML, source validation, baseline semester model, nghiên cứu hybrid | Không hoàn thiện Markdown contract/PRD nguồn chuẩn |
+| Giang | Frontend integration và UI | Không tự chốt copy/contract |
+| Thu Trang | Agent adapter, grounding/refusal tests | Không tự tính/sửa mức ưu tiên |
+| giang | Từ P2: UAT, review claim/copy, slide + asset mô tả | Không sửa canonical docs hoặc code |
+| Văn Hải | Từ P2: QA release, smoke độc lập, script/video/submission | Không sửa canonical docs, deploy hoặc code |
 
 ## 1. Cổng BTC và gate nội bộ
 
-| Cổng BTC | Deadline | Deliverable | Gate nội bộ khớp |
-|:---------|:--------:|:------------|:-----------------|
-| Bắt đầu sprint | **11:00 T6 17/7** | Chọn đề, bắt đầu build | P0 start |
-| **Checkpoint 1** | **11:00 T7 18/7** | Tên dự án, track, mô tả ngắn, hướng tiếp cận | Kết thúc **P1** (docs/design + hướng đã khóa) |
-| **Checkpoint 2** | **23:00 T7 18/7** | Live URL + GitHub **public** | Kết thúc **P2** |
-| **Đóng cổng nộp** | **11:00 CN 19/7** | Slide, video ≤5 phút, GitHub, Live URL, mô tả, AI log | Kết thúc **P3** |
-| Demo Day (nếu Top 10) | **15:30 CN 19/7** | Pitch 4′ + Q&A 2′ | Sau nộp; rehearsal trong P3 |
+| Cổng BTC | Deadline | Deliverable | Gate nội bộ |
+|:--|:--:|:--|:--|
+| Checkpoint 1 | 11:00 T7 18/7 | Tên, track, mô tả ngắn, hướng tiếp cận | P1 |
+| Checkpoint 2 | 23:00 T7 18/7 | Live URL + GitHub public | P2 |
+| Đóng cổng | 11:00 CN 19/7 | Slide, video ≤5 phút, GitHub, Live URL, mô tả, AI log | P3 |
+| Demo Day (nếu Top 10) | 15:30 CN 19/7 | Pitch 4′ + Q&A 2′ | Rehearsal P3 |
 
-### Bốn gate (+ P0.5)
+| Gate | Thời gian | Focus | Exit criteria | Trạng thái |
+|:--|:--|:--|:--|:--|
+| P0 | 17/7 11:00–15:00 | Scaffold | Health, FE shell | [x] (M01 legacy chưa sạch — reopen) |
+| P0.5 | kế hoạch 17/7 22:30–18/7 00:30 | Contract lock | `H05a` + `M04` Done; schema/code chỉ theo contract | **Chưa qua** (02:03 18/7) |
+| P1 | recovery 18/7 sáng → CP1 | Vertical slice | Baseline điểm theo kỳ + CP1 | **Blocked** bởi P0.5 |
+| P2 | 18/7 11:00–23:00 | Rubric + live | UI/API/test + QA→fix→re-smoke + CP2 | Chưa mở đủ |
+| P3 | 18/7 23:00–19/7 11:00 | Release | Docs cuối, slide/video, AI log, form nộp | Chưa |
 
-| Gate | Wall clock | Focus | Exit criteria |
-|:-----|:-----------|:------|:--------------|
-| **P0** | 11:00–~15:00 T6 17/7 | Scaffold | `/health`, synthetic CSV, FE shell — **DONE** |
-| **P0.5** | **22:30 T6 → 00:30 T7** (~2h) | Architecture Lock | Contract/schema, GT/threshold, state machine, board, giang PRD sign-off |
-| **P1** | **00:30 → 11:00 T7** | Docs còn lại + bắt đầu vertical slice | Hướng tiếp cận + thuật ngữ khóa trước CP1; fixture public sẵn cho Giang/Thu Trang |
-| **P2** | **11:00 → 23:00 T7** | Rubric + bản chạy được | Privacy/care/fairness/FP trên UI/API; Live URL + GitHub public trước CP2 |
-| **P3** | **23:00 T7 → 11:00 CN** | Release | Hồ sơ nộp đủ; smoke ẩn danh; evidence FR/rubric |
+### 1.1 Recovery P0.5 → P1 (chốt lúc ~02:03 +07)
 
-```mermaid
-gantt
-    title Silent Shield — 48h gates (UTC+7)
-    dateFormat YYYY-MM-DD HH:mm
-    axisFormat %H:%M
+| Việc | Owner | Mục tiêu mới | Ghi chú |
+|:--|:--|:--|:--|
+| `H05a` minimum contract/state | Hoàng | ASAP · trước 03:30 | Mở khóa `H06b`/`H10`/`H07`; không chờ AI-log template |
+| `M04` handoff Data/ML | Khánh Duy | ASAP · trước 03:30 | Song song `H05a`; không sửa canonical Markdown |
+| `H10` contract EPU/decision | Hoàng | ngay sau `H05a`+`M04` · ~04:00 | Deadline cũ 02:00 **đã trễ** — ghi rõ, không giả vờ đạt |
+| `H05b` AI-log + release template | Hoàng | sau `H05a` · trước V08 | Không chặn schema/API |
+| CP1 (`H13`) | Hoàng | vẫn 11:00 | Scope tối thiểu từ `H05a`+`H10`; không claim hybrid |
 
-    section BTC
-    Checkpoint 1           :milestone, m1, 2026-07-18 11:00, 0m
-    Checkpoint 2           :milestone, m2, 2026-07-18 23:00, 0m
-    Final submit           :milestone, m3, 2026-07-19 11:00, 0m
+Deadline cũ P0.5 00:30 / `H10` 02:00 chỉ còn giá trị lịch sử. Board dưới dùng mốc recovery.
 
-    section Gates
-    P0 scaffold (done)     :done, p0, 2026-07-17 11:00, 2026-07-17 15:00
-    P0.5 Architecture Lock :active, p05, 2026-07-17 22:30, 2026-07-18 00:30
-    P1 Design + slice      :p1, 2026-07-18 00:30, 2026-07-18 11:00
-    P2 Rubric + live       :p2, 2026-07-18 11:00, 2026-07-18 23:00
-    P3 Release             :p3, 2026-07-18 23:00, 2026-07-19 11:00
-```
+## 2. Boundary bắt buộc cho ML, agent và hybrid
 
----
+1. MVP ship baseline từ điểm theo học kỳ, coverage và freshness. Không có attendance time-series đã duyệt thì nhánh attendance là `insufficient_data`; không impute 0, không tạo tuần, không gọi đó là hybrid.
+2. Model/API giữ raw score nội bộ. Đầu ra công khai chỉ là `review_priority_band`, factors/evidence, coverage, freshness, data state, model version và calculated-at.
+3. Agent chỉ giải thích output model/API đã được cấp quyền. Agent không tính/sửa score, không dự báo/khẳng định dropout cho một sinh viên, không suy luận nguyên nhân và không đổi trạng thái case.
+4. Fairness chỉ có metric khi đủ audit group được phê duyệt, ground truth và mẫu số; nếu thiếu thì fail closed bằng `insufficient_data`.
+5. `academic_status.is_dropout_outcome` chỉ evaluation nội bộ (M02/M03 test); **không** vào scoring features, public `ReviewCase`, hay agent context.
+6. Case state machine theo [Process §4](../02-product/03-process.md): `New Signal` → `Pending Review` → `Approved for Follow-up` → `Assigned` → `Follow-up in Progress` → `Resolved`/`Monitoring` (hoặc `Dismissed` từ `Pending Review`). “Hoãn” = action giữ `Pending Review` + thời điểm xem lại; **không** phải state riêng. Thiếu `advisor_ref` → dừng handoff, đưa mapping-repair queue — không handoff chỉ vì đã approve.
 
-## 2. Lane 48h (6 thành viên)
+## 3. Board chuẩn — task / depends / status
 
-| Thành viên | Lane P0.5→P3 | Reviewer mặc định |
-|:-----------|:-------------|:------------------|
-| Hoàng | Kiến trúc, API/case, deploy, D3/D4 | Thu Trang (kỹ thuật), giang (workflow) |
-| Khánh Duy | Data/ML contract, scoring, GT, fairness, threshold | Hoàng |
-| Giang | FE integration map → dashboard/care/fairness UI | Thu Trang (integration), giang (copy) |
-| Thu Trang | Agent contract, grounding, guardrails, adversarial | Hoàng, Khánh Duy |
-| giang | PRD freeze, acceptance, thuật ngữ privacy/care, slide | Văn Hải (trace), Hoàng (feasibility) |
-| Văn Hải | AI log, evidence/release, demo script, video, điều phối nộp | giang (claims), Hoàng (kỹ thuật) |
+Mỗi task có một owner. Nếu dependency chưa Done, status ghi `BLOCKED → ID`; không tự tạo fixture, fallback hoặc contract thay thế. Chi tiết outcome, gate, DoD nằm ở mục 4–9.
 
-> Ghi đè phân vai cũ trong [02-team.md](02-team.md) **cho cửa sổ 48h**: Giang = FE; Thu Trang = agent độc lập. Threshold/FP thuộc Khánh Duy; Hoàng chỉ expose API/config.
+**Critical path MVP (đã bổ sung nhánh thiếu):**
+`H05a` + `M04` → `H10` → (`H06a` ∥ `M05a` → `M05b` → `M06`) → `H08` → `M02` → `H02` → `H11a` → `G05` → `G02` → (`H07` ∥ `D3`) → `D4` → `V07` → `D4r` → `V05`.
 
----
+**Release loop bắt buộc:** `D4` (smoke lần 1) → `V07`/`A05` ghi defect → owner fix → `D4r` (redeploy + re-smoke) → mới `V05`. Không nộp CP2 trong cửa sổ 10 phút sau smoke đầu.
 
-## 3. Board tổng hợp
+**Không đưa lên CP2:** `M07` → `H14` → `H15` → `M08` → `H17` → `T04`. `M07` chỉ chạy sau `M02`+`H02`+`H13`. Nếu `H15` chưa Done, demo luôn semester-only và phải hiện giới hạn dữ liệu.
 
-Cột **Status:** `[x]` Done · `[~]` Đang làm · `[ ]` Todo · `[ ]*` Slot implement — **điền chi tiết sau khi P0.5/docs đóng**.
+### Hoàng
 
-| ID | Outcome / artifact | Owner | Reviewer | Gate | Deadline | Depends | Done when | Evidence path | Status |
-|:---|:-------------------|:-----:|:--------:|:----:|:--------:|:--------|:----------|:--------------|:------:|
-| H01 | Backend `/health` + DB stub | Hoàng | — | P0 | 17/7 15:00 | — | `/health` OK | backend tests | [x] |
-| M01 | Feature contract + synthetic CSV | Khánh Duy | Hoàng | P0 | 17/7 15:00 | — | 3 CSV + schema test | `data/synthetic/` | [x] |
-| G01 | FE shell + list mock | Giang | giang | P0 | 17/7 15:00 | — | Dashboard mock chạy | `frontend/src/app/dashboard` | [x] |
-| A01 | Review/Freeze PRD + thuật ngữ | giang | Hoàng | P0.5 | **18/7 00:30** | PRD draft | giang sign-off; open items ghi traceability | `04-prd.md` + note worklog | [ ] |
-| H05 | Architecture + trust/ML–LLM boundary | Hoàng | Thu Trang | P0.5 | **18/7 00:30** | A01 (song song OK) | Doc 1–2 trang + diagram | `docs/04-engineering/03-system-architecture.md` | [ ] |
-| M04 | Data/ML/fairness + GT + threshold semantics | Khánh Duy | Hoàng | P0.5 | **18/7 00:30** | — | Semantics + seed/label/FPR rules | `docs/04-engineering/05-data-ml-fairness-contract.md` | [ ] |
-| H06 | 4 Pydantic contracts + fixtures + tests | Hoàng + Khánh Duy | Thu Trang + Giang | P0.5 | **18/7 00:30** | M04 draft | Schema SoT; fixture validate | `backend/app/...` + `tests/fixtures/` | [ ] |
-| T03 | Agent I/O + refusal + adversarial cases | Thu Trang | Hoàng | P0.5 | **18/7 00:30** | H06 draft | Guardrail doc + fixture `AgentExplanation` | `docs/04-engineering/06-agent-grounding-guardrails.md` | [ ] |
-| G05 | FE route/API map + allowed display fields | Giang | giang | P0.5 | **18/7 00:30** | H06 public DTO | Map + cấm raw score trên UI | `docs/04-engineering/07-frontend-integration.md` | [ ] |
-| A03 | Case state machine + acceptance skeleton | giang | Hoàng | P0.5 | **18/7 00:30** | Process/PRD | States + ma trận FR→evidence (khung) | `docs/03-project/06-acceptance-matrix.md` | [ ] |
-| V03 | Evidence/release checklist (khung) | Văn Hải | giang | P0.5 | **18/7 00:30** | VAIC rules | Checklist CP1/CP2/final | `docs/03-project/07-release-evidence.md` | [ ] |
-| V01 | AI-log process sống | Văn Hải | giang | P0.5 | **18/7 00:30** | — | Team biết ghi manifest | `.ai-log/README.md` | [ ] |
-| A04 | Banner Post-MVP BRD/scope + root drafts | giang | Văn Hải | P1 | **18/7 02:00** | A01 | Banner + status rejected/superseded | BRD/scope + root MD | [ ] |
-| H07 | Deploy/runbook skeleton | Hoàng + Văn Hải | — | P1 | **18/7 04:00** | H05 | Env/CORS/smoke/rollback khung | `docs/04-engineering/08-deployment-runbook.md` | [ ] |
-| M05 | Đổi synthetic → cohort đại học | Khánh Duy | giang | P1 | **18/7 03:00** | M04 | Không còn `10A1`…; README data | `data/synthetic/` | [ ] |
-| H08 | Tách `ScoringFeatures` / `FairnessAuditSlice` | Khánh Duy + Hoàng | Thu Trang | P1 | **18/7 03:00** | H06 | Group attrs không vào scoring DTO | `types.py` + tests | [ ] |
-| V04 | Nộp Checkpoint 1 | Văn Hải + giang | Hoàng | P1 | **18/7 10:30** | A01,H05 | BTC nhận đủ 4 mục CP1 | Bằng chứng nộp | [ ] |
-| M02 | *IMPLEMENT* Scoring + factors + coverage | Khánh Duy | Hoàng | P1 | *điền sau P0.5* | M04,H06,H08 | *TBD* | *TBD* | [ ]* |
-| H02 | *IMPLEMENT* API list/detail (public DTO) | Hoàng | Giang | P1 | *điền sau P0.5* | H06,M02 | *TBD* | *TBD* | [ ]* |
-| H03 | *IMPLEMENT* Care case workflow API | Hoàng | giang | P1–P2 | *điền sau P0.5* | A03,H06 | *TBD* | *TBD* | [ ]* |
-| G02 | *IMPLEMENT* Dashboard → cohort → case | Giang | giang | P1–P2 | *điền sau P0.5* | G05,H02 | *TBD* | *TBD* | [ ]* |
-| T01 | *IMPLEMENT* Agent stub trên fixture | Thu Trang | Hoàng | P1 | *điền sau P0.5* | T03,H06 | *TBD* | *TBD* | [ ]* |
-| T02 | *IMPLEMENT* Grounded explain (API/ml) | Thu Trang | Khánh Duy | P2 | *điền sau P0.5* | T01,H02/M02 | *TBD* | *TBD* | [ ]* |
-| G03 | *IMPLEMENT* Care UI | Giang | giang | P2 | *điền sau P0.5* | H03,A02 | *TBD* | *TBD* | [ ]* |
-| M03 | *IMPLEMENT* Fairness metrics (FPR…) | Khánh Duy | Hoàng | P2 | *điền sau P0.5* | M04,M02 | *TBD* | *TBD* | [ ]* |
-| H04 | *IMPLEMENT* Expose threshold/config API | Hoàng | Khánh Duy | P2 | *điền sau P0.5* | M03 | *TBD* | *TBD* | [ ]* |
-| G04 | *IMPLEMENT* Fairness + privacy + threshold UI | Giang | giang | P2 | *điền sau P0.5* | H04,M03,A02 | *TBD* | *TBD* | [ ]* |
-| A02 | Ethics/privacy-care vocabulary + pitch copy | giang | Văn Hải | P2 | **18/7 18:00** | A01 | Copy khóa cho UI + slide | ethics notes / UI strings | [ ] |
-| D4 | Live URL (CP2) | Hoàng | Văn Hải | P2 | **18/7 22:00** | H07,H02 min | Incognito smoke | URL + note | [ ] |
-| D3 | GitHub public + PII policy | Hoàng | Văn Hải | P2 | **18/7 22:00** | — | Public, no secret/PII lộ | URL repo | [ ] |
-| V05 | Nộp Checkpoint 2 | Văn Hải | Hoàng | P2 | **18/7 22:30** | D3,D4 | BTC nhận 2 URL | Bằng chứng nộp | [ ] |
-| D1 | Slide | giang + Văn Hải | Hoàng | P3 | **19/7 09:00** | A02,V02 | Slide khớp Live URL | file slide | [ ] |
-| D2 | Video ≤5 phút | Văn Hải + giang | Hoàng | P3 | **19/7 09:30** | V02,D4 | ≤5:00, đúng URL | file video | [ ] |
-| D5 | AI collaboration log | cả team / Văn Hải | giang | P3 | **19/7 10:00** | V01 | Đủ, không secret/PII | `.ai-log/` | [ ] |
-| V02 | Demo script + Q&A | Văn Hải | giang | P3 | **19/7 08:00** | G02 min | Script 4′+2′ | doc script | [ ] |
-| V06 | Nộp cổng cuối | Văn Hải | Hoàng + giang | P3 | **19/7 10:30** | D1–D5 | Form đủ + bằng chứng | evidence path | [ ] |
+| ID | Task | Depends | Status |
+|:--|:--|:--|:--|
+| H01 | Backend health + DB stub | — | [x] |
+| H05a | Minimum contract/state (arch, PRD/thuật ngữ, Process state/care) | — | [ ] TODO — recovery ASAP |
+| H05b | AI-log template + release-evidence template | H05a | [ ] BLOCKED → H05a |
+| H10 | Contract EPU/Data-ML + decision từ M04 | H05a, M04 | [ ] BLOCKED → H05a, M04 · **trễ mốc 02:00** |
+| H06a | Pydantic internal/public envelopes | H10 | [ ] BLOCKED → H10 |
+| H06b | Transition API theo Process state machine | H05a | [ ] BLOCKED → H05a |
+| H11a | Integration contract tối thiểu cho G05/T03 | H06a | [ ] BLOCKED → H06a |
+| H11b | Docs agent/FE hoàn thiện sau build | H11a, G05, T03 | [ ] BLOCKED → H11a, G05, T03 |
+| H07 | Deployment/runbook docs | H05a | [ ] BLOCKED → H05a |
+| H08 | Import DTO semester fixture | M06, H06a | [ ] BLOCKED → M06, H06a |
+| H18 | Quarantine legacy ML synthetic khỏi API/MVP path | M01 | [ ] BLOCKED → M01 |
+| H14 | Decision/contract Post-MVP hybrid từ M07 | M07 | [ ] BLOCKED → M07 · ngoài CP2 |
+| H02 | API list/detail ReviewCase public | H06a, M02, H18 | [ ] BLOCKED → H06a, M02, H18 |
+| H13 | Nội dung + nộp Checkpoint 1 | H05a, H10 | [ ] BLOCKED → H05a, H10 |
+| H03 | Care workflow API + advisor_ref gate | H05a, H06b, H08 | [ ] BLOCKED → H05a, H06b, H08 |
+| H04 | Threshold/config API (public semantics) | M03 | [ ] BLOCKED → M03 |
+| H12a | Runtime privacy/care copy (UI/agent) | H05a, H10 | [ ] BLOCKED → H05a, H10 |
+| H12b | Post-MVP banner + asset copy | H12a | [ ] BLOCKED → H12a |
+| D3 | GitHub public + PII/secret scan | — | [ ] TODO |
+| D4 | Live URL + smoke lần 1 + rollback sẵn | H07, H02, G02, D3 | [ ] BLOCKED → H07, H02, G02, D3 |
+| D4r | Fix từ QA → redeploy → re-smoke | D4, V07 | [ ] BLOCKED → D4, V07 |
+| H16 | Acceptance matrix + release evidence | A05, V07, V05 | [ ] BLOCKED → A05, V07, V05 |
+| H09 | README + verify/known-limit note cuối | H02, D4r, H16 | [ ] BLOCKED → H02, D4r, H16 |
+| D5 | AI collaboration log từ V08 | V08 | [ ] BLOCKED → V08 |
+| H15 | Attendance source approval + amendment (Post-MVP) | H14 + **external approval artifact** | [ ] BLOCKED → H14 + data-owner |
+| H17 | Post-MVP hybrid public API/envelope | H14, M08 | [ ] BLOCKED → H14, M08 |
 
-**Critical path (sau P0.5):**
-`A01 + H05 + M04 + H06 → M02 → H02 → G02`
-Nhánh song song: `H06 → T01/T02` · `M02 → M03 → H04 → G04` · `A03 → H03 → G03` · `A02 → UI/agent/demo` · `D4 → V05 → V06`
+### Khánh Duy
 
----
+| ID | Task | Depends | Status |
+|:--|:--|:--|:--|
+| M01 | Quarantine/remove legacy ML synthetic (reopen) | — | [ ] REOPEN — chưa sạch consumer |
+| M04 | Handoff kỹ thuật Data/ML cho Hoàng | — | [ ] TODO — recovery ASAP |
+| H06c | FairnessReport schema + fail-closed fixture | H10 | [ ] BLOCKED → H10 |
+| M05a | Build semester source gate (code/tests) | H10 | [ ] BLOCKED → H10 |
+| M05b | Approved source available (artifact duyệt) | M05a + data-owner approval | [ ] BLOCKED → M05a + approval |
+| M06 | Fixture 4 bảng domain + manifests + quality tests | M05b | [ ] BLOCKED → M05b |
+| M02 | Baseline semester ML | M06, H06a, H08 | [ ] BLOCKED → M06, H06a, H08 |
+| M07 | Nghiên cứu hybrid (research-only, ngoài CP2) | M02, H02, H13 | [ ] BLOCKED → M02, H02, H13 |
+| M03 | Fairness gate FPR/ΔFPR/N | M02, H06c | [ ] BLOCKED → M02, H06c |
+| M08 | Attendance forecast + gated fusion (Post-MVP) | H15, M02, H14 | [ ] BLOCKED → H15, M02, H14 |
 
-## 4. P0 — Scaffold (DONE)
+### Giang
 
-| ID | Outcome | Owner | Status |
-|:---|:--------|:-----:|:------:|
-| H01 | `/health` + schemas `dwh`/`ml` | Hoàng | [x] |
-| M01 | Synthetic time series (40 hồ sơ) | Khánh Duy | [x] |
-| G01 | Next.js dashboard mock | Giang | [x] |
+| ID | Task | Depends | Status |
+|:--|:--|:--|:--|
+| G01 | FE shell + list mock | — | [x] (mock tạm; G05 phải thay) |
+| G05 | Thay mock bằng public DTO/fixture đã validate | H11a | [ ] BLOCKED → H11a |
+| G02 | Dashboard → cohort → case dùng API | G05, H02 | [ ] BLOCKED → G05, H02 |
+| G03 | Care UI review/handoff | H03, H12a | [ ] BLOCKED → H03, H12a |
+| G04 | Fairness/privacy/threshold panel | H04, H12a | [ ] BLOCKED → H04, H12a |
 
-Không mở lại scope P0. Mọi việc thiết kế/contract vào **P0.5**.
+### Thu Trang
 
----
+| ID | Task | Depends | Status |
+|:--|:--|:--|:--|
+| T03 | Agent interface + fixture + refusal/adversarial | H11a | [ ] BLOCKED → H11a |
+| T01 | Agent stub từ fixture, refusal tests xanh | T03, H06a | [ ] BLOCKED → T03, H06a |
+| T02 | Agent grounded explanation từ API/ML | T01, H02, H12a | [ ] BLOCKED → T01, H02, H12a |
+| T04 | Agent adapter hybrid (Post-MVP) | H17 | [ ] BLOCKED → H17 |
 
-## 5. P0.5 — Architecture Lock (22:30 T6 → 00:30 T7)
+### giang
 
-**Goal:** Freeze nguồn chuẩn để 6 người làm song song bằng schema + fixture; **chưa** yêu cầu vertical slice chạy end-to-end.
+| ID | Task | Depends | Status |
+|:--|:--|:--|:--|
+| A05 | UAT / claim-copy review → gap cho Hoàng | H02, G02, H03, G03, M03, H04, G04, T02, D4, H12a | [ ] BLOCKED → H02…H12a |
+| D1 | Asset slide + mô tả dự án nộp | V02, H12b, H16, D4r | [ ] BLOCKED → V02, H12b, H16, D4r |
 
-**SoT contract:** Pydantic/OpenAPI → fixture JSON trong test → contract test. JSON example không phải nguồn lâu dài.
+### Văn Hải
 
-**Score boundary:** internal `model_score` (ML) vs public `review_priority_band` (case API/UI). Không lộ raw score cho user nghiệp vụ.
-
-### 5.1 Hoàng
-
-| ID | Task | Mô tả chi tiết | Deadline | Status |
-|:---|:-----|:---------------|:--------:|:------:|
-| H05 | Architecture contract | Viết `docs/04-engineering/03-system-architecture.md` (1–2 trang): context/container, data flow demo, trust boundary, ML–LLM boundary, deployment sketch, **out-of-scope** (Wellbeing, SIS/LMS, RAG…). Mermaid ngắn. | **00:30** | [ ] |
-| H06a | Public/API envelopes | Định nghĩa Pydantic: `PredictionEnvelope` (internal), `ReviewCase` (public, **không** raw score), error/`insufficient_data`. JSON fixtures + pytest validate. Phối hợp Khánh Duy cho field scoring. | **00:30** | [ ] |
-| H06b | Case transitions (API view) | Khóa transition: new → in_review → approved/rejected/deferred → handed_off; hành động cấm (auto-discipline, auto-contact). Đồng bộ A03. | **00:30** | [ ] |
-
-**Read first:** PRD §§5–8, Process, decisions, `types.py`.
-**Do not touch:** estimator logic, FE copy cuối, agent prompts.
-**Reviewer:** Thu Trang (H05), Thu Trang + Giang (H06).
-
-### 5.2 Khánh Duy
-
-| ID | Task | Mô tả chi tiết | Deadline | Status |
-|:---|:-----|:---------------|:--------:|:------:|
-| M04 | Data/ML/fairness contract | Viết `05-data-ml-fairness-contract.md`: data dictionary 3 CSV; lineage/seed; `ScoringFeatures` vs `FairnessAuditSlice`; **synthetic_ground_truth** (cách sinh label, seed); TP/FP/TN/FN + mẫu số; threshold semantics; quy tắc nhóm mẫu nhỏ; metric FPR/ΔFPR chỉ trên synthetic. | **00:30** | [ ] |
-| H06c | `FairnessReport` schema | Pydantic + fixture + test cho report fairness (cỡ mẫu, nhãn synthetic, insufficient khi N nhỏ). | **00:30** | [ ] |
-
-**Read first:** PRD FR-03/09/10, Ethics fairness, signal catalog, synthetic README, traceability §4.
-**Do not touch:** public UI DTO (Hoàng), agent text (Thu Trang).
-**Reviewer:** Hoàng.
-
-### 5.3 Giang (Nguyễn Trường Giang)
-
-| ID | Task | Mô tả chi tiết | Deadline | Status |
-|:---|:-----|:---------------|:--------:|:------:|
-| G05 | Frontend integration map | Viết `07-frontend-integration.md`: route/component → API; loading/error/`insufficient_data`; **trường được phép hiển thị** (band, factors đã làm tròn ngôn ngữ, coverage) vs **cấm** (raw `model_score`, “điểm rủi ro”, group attrs cá nhân). Liệt kê chỗ mock hiện tại phải đổi sau freeze. | **00:30** | [ ] |
-
-**Read first:** PRD §5, Ethics copy, H06 public `ReviewCase` draft, dashboard hiện tại.
-**Do not touch:** implement UI lớn trong P0.5 (chỉ map + ghi nợ `riskScore` UI).
-**Reviewer:** giang.
-
-### 5.4 Thu Trang
-
-| ID | Task | Mô tả chi tiết | Deadline | Status |
-|:---|:-----|:---------------|:--------:|:------:|
-| T03 | Agent grounding & guardrails | Viết `06-agent-grounding-guardrails.md`: input/output `AgentExplanation`; tool read-only; refusal (bịa score, chẩn đoán, suy đoán nhóm/kinh tế, tự gửi liên hệ); fallback `insufficient_data`; **≥5 adversarial test cases** (bảng). Fixture JSON + (khung) test. | **00:30** | [ ] |
-
-**Read first:** PRD §5.4 FR-08, Ethics §8, FPT API doc, H06 envelopes.
-**Do not touch:** live LLM gọi thật trong P0.5 (stub/fixture only).
-**Reviewer:** Hoàng.
-
-### 5.5 giang (Trần Hạ Giang)
-
-| ID | Task | Mô tả chi tiết | Deadline | Status |
-|:---|:-----|:---------------|:--------:|:------:|
-| A01 | Review/Freeze PRD | **Không** tick vì “file đã có”. Review PRD: open items (coverage UI, GT, domain ĐH); bảng thuật ngữ (ưu tiên rà soát ≠ risk); **sign-off giang** ghi worklog. | **00:30** | [ ] |
-| A03 | State semantics + acceptance skeleton | Ma trận FR-01→11 → UI/API/test/evidence/owner (cột evidence có thể trống đến P2/P3). Khóa ngôn ngữ state machine với H06b. File `06-acceptance-matrix.md`. | **00:30** | [ ] |
-
-**Read first:** PRD, Process, Ethics, traceability, VAIC rules §4–5.
-**Do not touch:** code ML/API.
-**Reviewer:** Hoàng.
-
-### 5.6 Văn Hải
-
-| ID | Task | Mô tả chi tiết | Deadline | Status |
-|:---|:-----|:---------------|:--------:|:------:|
-| V03 | Release evidence khung | `07-release-evidence.md`: checklist CP1 / CP2 / final / Demo Day; chỗ dán Live URL, smoke ẩn danh, path evidence; owner từng dòng. | **00:30** | [ ] |
-| V01 | AI-log sống | Nhắc toàn team quy trình `.ai-log/`; mẫu 1 dòng manifest; cấm secret/PII/raw session. | **00:30** | [ ] |
-
-**Read first:** VAIC rules §2–4, `.ai-log/README.md`.
-**Do not touch:** nội dung slide/video cuối (P3).
-**Reviewer:** giang.
-
-### DoD P0.5
-
-- [ ] giang đã sign-off PRD/thuật ngữ (A01).
-- [ ] H05 + M04 + T03 + G05 tồn tại và không mâu thuẫn PRD.
-- [ ] Bốn contract có Pydantic + fixture + test xanh (`PredictionEnvelope`, `ReviewCase`, `FairnessReport`, `AgentExplanation`).
-- [ ] Ground truth + threshold + small-N rules đã viết trong M04.
-- [ ] Board này là nguồn task; mọi người biết Depends của mình.
+| ID | Task | Depends | Status |
+|:--|:--|:--|:--|
+| V07 | QA release + smoke độc lập (lần 1) | D3, D4 | [ ] BLOCKED → D3, D4 |
+| V05 | Nộp Checkpoint 2 | D3, D4r, V07 | [ ] BLOCKED → D3, D4r, V07 |
+| V02 | Script demo 4′ + Q&A 2′, rehearsal | D4r, G02, T02, G03, G04, H12a | [ ] BLOCKED → D4r…H12a |
+| D2 | Video ≤5 phút đúng Live URL | D1, D4r | [ ] BLOCKED → D1, D4r |
+| V08 | Rà AI log → gap cho Hoàng | H05b | [ ] BLOCKED → H05b |
+| V06 | Nộp cuối + lưu xác nhận BTC | D1, D2, D3, D4r, D5, H09, H16 | [ ] BLOCKED → D1…H16 |
 
 ---
 
-## 6. P1 — Design còn lại + Vertical Slice (00:30 → 11:00 T7)
+## 4. Hoàng — chi tiết task
 
-**Goal:** Khóa domain ĐH + docs phụ; **bắt đầu** implement theo contract đã freeze; **nộp Checkpoint 1 trước 11:00**.
+**Lane:** docs/contract nguồn chuẩn, backend/API, deploy, release evidence.
+**Read first:** PRD §§4–8, Ethics, Process §4, decisions, [EPU contract](../04-engineering/04-epu-data-integration-contract.md).
+**Không làm:** tự viết model/fusion của Duy.
 
-### 6.1 Docs / thiết kế (điền đủ)
+| ID | Gate · deadline | Outcome | DoD / evidence |
+|:--|:--|:--|:--|
+| H01 | P0 | Backend health + DB stub | `backend/tests/test_health.py` — **Done** |
+| H05a | Recovery · ASAP 03:30 | Minimum contract/state: architecture, PRD/thuật ngữ, Process state/care boundary | Docs không mâu thuẫn PRD/Ethics/Process; đủ để mở `H06b`/`H10`/`H07` |
+| H05b | P1 · sau H05a | AI-log template + release-evidence template | Template sẵn; không chặn API/schema |
+| H10 | Recovery · ~04:00 (mốc 02:00 đã trễ) | Hoàn thiện contract EPU/Data-ML và decision từ M04 | Source gate ≠ approved data; semester-only MVP; `insufficient_data`; cấm synthetic; `is_dropout_outcome` nội bộ only |
+| H06a | P1 · sau H10 | Pydantic internal/public envelopes | Public không raw score, PII, outcome, audit attr, `is_dropout_outcome` |
+| H06b | P1 · sau H05a | Transition API đúng Process: `New Signal` → `Pending Review` → `Approved for Follow-up` → `Assigned` → `Follow-up in Progress` → `Resolved`/`Monitoring`; `Dismissed` từ Pending; defer = giữ Pending + review_at | Contract tests transition/hành động cấm; **không** dùng `new/in_review/deferred/handed_off` |
+| H11a | P1 · sau H06a | Integration contract tối thiểu: allowed display fields, error/empty/stale/`insufficient_data` | Đủ cho `G05`/`T03` bắt đầu |
+| H11b | P2 · sau G05+T03 | Docs agent/FE hoàn thiện | Guardrail đầy đủ khớp code đã build |
+| H07 | P1 · sau H05a | Deployment/runbook: env, CORS, seed, health, smoke, rollback | Runbook không secret |
+| H08 | P1 · sau M06 | Import DTO normalized semester fixture | Provenance/coverage/freshness; fail closed; không import outcome vào public |
+| H18 | P1 · song song M01 | Quarantine legacy `EarlyWarning*` / attendance-week / synth group khỏi API/MVP path | Test fail nếu MVP path còn import legacy; không raw risk public |
+| H14 | Post-CP2 | Decision/contract Post-MVP hybrid từ M07 | Tách `TermEvidence`/`AttendanceForecastEvidence`; ready/`insufficient_data` |
+| H02 | P1 · sau M02 | API list/detail chỉ `ReviewCase` public | Happy/missing-state; agent context public-only |
+| H13 | P1 · 11:00 | Nộp Checkpoint 1 | Không claim hybrid đã ship |
+| H03 | P2 · sau H08 | Care workflow API | Approve / dismiss / defer(keep Pending) / assign-handoff tests; **`advisor_ref` thiếu ⇒ dừng handoff + mapping-repair queue** (không handoff chỉ vì approved) |
+| H04 | P2 · sau M03 | Threshold/config API public semantics | Không raw score |
+| H12a | P2 · ~15:00 (trước T02/G03/G04) | Runtime privacy/care copy cho UI/agent | Copy không claim quá dữ liệu; không “Điểm rủi ro” |
+| H12b | P2 · sau H12a · ~19:00 | Post-MVP banner + asset copy | Hybrid ghi Post-MVP/blocked |
+| D3 | P2 · ~20:30 | GitHub public, PII/secret scan | URL ẩn danh + scan evidence |
+| D4 | P2 · ~21:00 | Live URL + smoke lần 1 + rollback sẵn sàng | Health + list→case ẩn danh |
+| D4r | P2 · ~22:00 | Sau V07/A05 defects: owner fix → redeploy → re-smoke | Re-smoke xanh trước V05; có cửa sổ fix (≥45–60 phút) |
+| H16 | P3 · sau V05 | Acceptance matrix + release evidence | Phụ thuộc **A05 + V07 + V05**; mỗi FR/CP2 item có evidence hoặc limitation |
+| H09 | P3 · 09:00 | README + verify/known-limit | Khớp deploy và scope thật |
+| D5 | P3 · 10:00 | AI collaboration log từ V08 | Gap có owner; sạch PII/secret |
+| H15 | Post-MVP | Attendance source approval + amendment | **External:** data-owner approval artifact (owner, quyền, hash, cadence, privacy review path). Content: provenance, exception policy; không synthetic. Status không chỉ `BLOCKED → H14` |
+| H17 | Post-MVP | Hybrid public API/envelope theo H14 | Agent-safe fields only; T04 chỉ bắt đầu sau H17 |
 
-| ID | Owner | Task | Deadline | Status |
-|:---|:-----:|:-----|:--------:|:------:|
-| A04 | giang | Banner `Target/Post-MVP` trên BRD/scope; gắn `rejected/superseded/post-MVP` cho root drafts lệch MVP | 02:00 | [ ] |
-| M05 | Khánh Duy | Đổi generator/CSV/mock IDs sang cohort/lớp/ngành **đại học** (không disclaimer K-12 trừ bất khả kháng) | 03:00 | [ ] |
-| H08 | Khánh Duy + Hoàng | Refactor types: `ScoringFeatures` + `FairnessAuditSlice`; group attrs không vào estimator | 03:00 | [ ] |
-| H07 | Hoàng + Văn Hải | Runbook skeleton AWS/env/CORS/secrets/seed/health/smoke/rollback | 04:00 | [ ] |
-| V04 | Văn Hải + giang | Gói CP1 (tên Silent Shield, track, mô tả, hướng tiếp cận) → nộp BTC; lưu bằng chứng | **10:30** | [ ] |
-
-### 6.2 Implement — khung (điền chi tiết sau P0.5)
-
-> Sau khi H06/M04 đóng, owner điền **Done when / Evidence / sub-steps** vào bảng dưới (hoặc thêm story ngắn). Không implement lệch contract.
-
-| ID | Owner | Outcome (khung) | Depends | Điền sau P0.5 | Status |
-|:---|:-----:|:----------------|:--------|:--------------|:------:|
-| M02 | Khánh Duy | Train/score + contributing factors + coverage/`insufficient_data` | M04, H06, H08 | Timebox, test path, model_version | [ ]* |
-| H02 | Hoàng | API list/detail trả `ReviewCase` public | H06, M02 | Endpoints, OpenAPI, tests | [ ]* |
-| G02 | Giang | Dashboard đơn vị → cohort → case trên **fixture/API**; bỏ cột “Điểm rủi ro” | G05, H02\|fixture | Routes, copy, smoke | [ ]* |
-| T01 | Thu Trang | Agent stub: trả lời từ fixture, refusal cases xanh | T03, H06 | Mock tests, no invented score | [ ]* |
-| H03 | Hoàng | Care cases API (approve/reject/defer/handoff) | A03, H06 | *có thể kéo sang P2* | [ ]* |
-
-**Checkpoint 1 exit:** V04 done; hướng tiếp cận = PRD + architecture đã freeze.
-
----
-
-## 7. P2 — Rubric Gate + bản chạy được (11:00 → 23:00 T7)
-
-**Goal:** Bốn rubric xuất hiện thật trên UI/API/test; **Live URL + GitHub public** trước 23:00.
-
-### 7.1 Docs / copy
-
-| ID | Owner | Task | Deadline | Status |
-|:---|:-----:|:-----|:--------:|:------:|
-| A02 | giang | Vocabulary privacy/care + đoạn pitch; rà chuỗi UI với Giang | 18:00 | [ ] |
-| A03b | giang | Cập nhật acceptance matrix: gắn evidence path thật khi feature xong | 22:00 | [ ] |
-| V03b | Văn Hải | Điền URL/smoke vào release evidence | 22:00 | [ ] |
-
-### 7.2 Implement — khung
-
-| ID | Owner | Outcome (khung) | Depends | Status |
-|:---|:-----:|:----------------|:--------|:------:|
-| M03 | Khánh Duy | Fairness metrics thật từ GT (FPR, ΔFPR, N); fail closed nếu thiếu GT/N nhỏ | M04, M02 | [ ]* |
-| H04 | Hoàng | API/config expose threshold (logic ngưỡng thuộc Khánh Duy) | M03 | [ ]* |
-| G03 | Giang | Care UI (review/handoff) | H03, A02 | [ ]* |
-| G04 | Giang | Fairness + privacy panel + threshold trade-off UI | H04, M03, A02 | [ ]* |
-| T02 | Thu Trang | Explain grounded từ API/ml; adversarial tests | T01, H02/M02 | [ ]* |
-| D4 | Hoàng | Deploy Live URL; smoke ẩn danh | H07, slice tối thiểu | [ ] |
-| D3 | Hoàng | Repo public; redact PII; **quyết định history sạch** nếu cần nộp | V03 | [ ] |
-| V05 | Văn Hải | Nộp CP2 (2 URL) + bằng chứng | D3, D4 | [ ] |
-
-**Checkpoint 2 exit:** V05; URL mở được khi không đăng nhập.
+**Verify:** link/traceability, contract test, docs khớp code/public DTO.
 
 ---
 
-## 8. P3 — Release (23:00 T7 → 11:00 CN)
+## 5. Khánh Duy — chi tiết task
 
-**Goal:** Đủ hồ sơ đóng cổng; thống nhất thuật ngữ; rehearsal demo.
+**Lane:** Data/ML, source validation, baseline semester, nghiên cứu hybrid.
+**Read first:** PRD §§4,7–8; signal catalog; Ethics §§5–6; [EPU contract](../04-engineering/04-epu-data-integration-contract.md); ML tests gần nhất.
+**Không làm:** hoàn thiện Markdown contract/PRD; dùng synthetic hoặc attendance thiếu approval; đưa `is_dropout_outcome`/group attr vào scoring.
 
-| ID | Owner | Task | Deadline | Status |
-|:---|:-----:|:-----|:--------:|:------:|
-| V02 | Văn Hải | Demo script 4′ + Q&A 2′; khớp Live URL | 08:00 | [ ] |
-| D1 | giang + Văn Hải | Slide final | 09:00 | [ ] |
-| D2 | Văn Hải + giang | Video ≤5:00 | 09:30 | [ ] |
-| D5 | cả team / Văn Hải | AI log tổng hợp sạch | 10:00 | [ ] |
-| H09 | Hoàng | README chạy được + verify note | 09:00 | [ ] |
-| V06 | Văn Hải | Upload form cuối + xác nhận BTC trước **11:00** | **10:30** | [ ] |
-| — | cả team | *IMPLEMENT polish slots* (bugfix demo) — điền ad-hoc | 10:00 | [ ]* |
+| ID | Gate · deadline | Outcome | DoD / evidence |
+|:--|:--|:--|:--|
+| M01 | P0→P1 REOPEN | Quarantine/remove legacy ML synthetic: attendance tuần, synth socioeconomic/ethnicity, raw risk path trong `early_warning` | README + module không còn MVP consumer; test cấm feature attendance-week/synth group trong scoring |
+| M04 | Recovery · ASAP 03:30 | Handoff Data/ML: semester baseline, source/quality gate, threshold/FPR, giới hạn hybrid | Input, failure states, test plan; **không** đồng nghĩa dữ liệu đã được duyệt |
+| H06c | P1 · sau H10 | `FairnessReport` schema + fail-closed fixture | Metric chỉ khi group + GT + N hợp lệ |
+| M05a | P1 · sau H10 | **Build** source gate: register, hash/count, PII exclusion, fail-closed khi thiếu approval | Code/tests gate; H10 Done ≠ source approved |
+| M05b | P1 · sau M05a | **Approved source available** | Artifact duyệt của data owner (owner, quyền, snapshot hash, record count); thiếu → giữ `insufficient_data`, không bịa fixture “đã duyệt” |
+| M06 | P1 · sau M05b | Fixture: **4 bảng domain** (`student_dimension`, `term_grade`, `academic_status`, `advisor_assignment`) + `source_manifest` + `data_quality_report` | Deterministic, pseudonymous; không cross-join/PII/token; outcome chỉ trong evaluation |
+| M02 | P1 · baseline | Baseline semester ML: trend/volatility + factors + coverage | Không attendance tuần; không dùng `is_dropout_outcome` trong score |
+| M07 | Sau M02+H02+H13 · ngoài CP2 | Nghiên cứu hybrid research-only | Handoff cho H14; không code/fixture/source mới; **không** cùng deadline với M02 |
+| M03 | P2 | Fairness gate FPR/ΔFPR/N hoặc `insufficient_data` | Formula/denominator/group-separation; outcome chỉ evaluation |
+| M08 | Post-MVP | Attendance forecasting + gated fusion | Depends **H15 + M02 + H14**; determinism, no-leakage, fusion-gating; output internal priority only |
 
----
+### M07 — yêu cầu handoff hybrid
 
-## 9. Phân tải P0.5 theo thành viên (nhìn nhanh)
+Chỉ chạy sau khi MVP slice `M02`/`H02`/`H13` xong. So sánh semester feature vs forecast attendance: data readiness, window, timestamp order, horizon, label cutoff/no leakage, missingness, nghỉ có phép, gated/late fusion. Chỉ đề xuất:
 
-```text
-22:30–00:30 T7
-Hoàng      H05 architecture · H06a/b contracts+transitions
-Khánh Duy  M04 GT/threshold/fairness · H06c FairnessReport
-Giang      G05 FE map + allowed fields
-Thu Trang  T03 agent guardrails + AgentExplanation fixture
-giang      A01 PRD freeze · A03 acceptance skeleton + states
-Văn Hải    V03 release checklist · V01 AI-log
-```
+- `TermEvidence` và `AttendanceForecastEvidence` tách riêng; coverage, freshness, provenance, `model_version`, `calculated_at`, ready/`insufficient_data`.
+- Fusion chỉ khi cả hai branch qua gate; absence không zero-impute, không đổi priority.
+- Public/agent chỉ `review_priority_band`, factors/evidence, limitations.
 
----
-
-## 10. Quy ước board (học SprintPlanning)
-
-| Quy ước | Chi tiết |
-|:--------|:---------|
-| Tick Done | Chỉ khi có **Evidence path** (hoặc test path cho task nội bộ) |
-| Slot `[ ]*` | Cấm code lệch contract; owner điền Done when sau P0.5 |
-| Story giao lane | `Read first` · `Input contract` · `Scope` · `Do not touch` · `Verify` · `Done when` |
-| Branch | `feature/<id>-<short>` |
-| Standup ngắn | Done / Doing / Blocked — gắn ID task |
-| Blocked > 2h | Ping reviewer; không tự đổi contract |
+**Verify:** determinism, missing/stale, formula/denominator, PII/source gate.
 
 ---
 
-## 11. Rủi ro ngắn
+## 6. Giang — chi tiết task
 
-| Risk | Mitigation |
-|:-----|:-----------|
-| Viết quá nhiều prose trong P0.5 | Giới hạn 1–2 trang/doc; ưu tiên schema + fixture + test |
-| Ba nguồn contract lệch | Schema Pydantic là SoT; fixture phải validate |
-| CP2 không có live | H07 sớm P1; D4 parallel tối thiểu H02+G02 fixture |
-| PII trong git history | D3: redact + quyết định repo/history sạch trước public |
-| A01 tick sớm | Chỉ sau sign-off giang |
+**Lane:** Frontend integration và UI.
+**Read first:** PRD §5; Ethics; H11a (không chờ H11b).
+**Không làm:** tự chốt copy/contract; raw score; “Điểm rủi ro”; attendance tuần; synthetic mock sau G05.
+
+| ID | Gate · deadline | Outcome | DoD / evidence |
+|:--|:--|:--|:--|
+| G01 | P0 | FE shell + list mock tạm | Smoke — **Done** (mock phải bị G05 thay) |
+| G05 | P1 · sau H11a | Thay hẳn `MOCK_RISK_LIST`/raw risk/attendance-week bằng public DTO + fixture đã validate | Routes/types: loading/error/`insufficient_data`; không còn “Điểm rủi ro” / synthetic demo copy |
+| G02 | P1 · sau H02 | Dashboard → cohort → case dùng API | Lint/build/smoke |
+| G03 | P2 · sau H12a | Care UI theo Process states + defer = giữ Pending | Chỉ action được phép; lint/build/smoke |
+| G04 | P2 · sau H12a | Fairness/privacy/threshold panel | Metric hợp lệ hoặc `insufficient_data` |
+
+**Verify:** lint, production build, behavior smoke. Chỉ public DTO.
 
 ---
 
-## 12. Việc làm ngay sau P0.5
+## 7. Thu Trang — chi tiết task
 
-1. Hoàng + Khánh Duy chốt diff schema; thông báo Giang / Thu Trang fixture path.
-2. Điền cột Deadline/Done when/Evidence cho mọi dòng `[ ]*`.
-3. Bắt đầu M02 / T01 / G02-fixture **song song**.
-4. Văn Hải + giang soạn nội dung Checkpoint 1.
+**Lane:** Agent adapter, grounding/refusal tests.
+**Read first:** PRD §5.4/FR-08; Ethics §8; H11a / H12a.
+**Không làm:** tự tính/sửa mức ưu tiên; score/dropout conclusion.
+
+| ID | Gate · deadline | Outcome | DoD / evidence |
+|:--|:--|:--|:--|
+| T03 | P1 · sau H11a | Agent interface, fixture, refusal/adversarial | ≥5 case grounded/refusal; read-only; không live call bắt buộc |
+| T01 | P1 · sau T03 | Agent stub từ fixture | Không bịa score/cause; mocked tests pass |
+| T02 | P2 · sau H12a (~16:30+, không cùng 18:00 với H12a) | Grounded explanation từ API/ML | Adversarial pass; chỉ band/factors/limits |
+| T04 | Post-MVP | Agent adapter hybrid | **Chỉ sau H17** (API đã cấp quyền); không raw attendance/score |
+
+**Verify:** grounding/refusal/adversarial mocked tests.
+
+---
+
+## 8. giang — chi tiết task
+
+**Bắt đầu từ P2.** Story: [08-stories-giang.md](08-stories-giang.md).
+
+| ID | Gate · deadline | Outcome | DoD / evidence |
+|:--|:--|:--|:--|
+| A05 | P2 · ~21:30 (song song V07; defects → D4r) | UAT/claim-copy review | Checklist pass/fail/gap; không sửa docs/code |
+| D1 | P3 · 09:00 | Asset slide + mô tả | Dựa `H12b` + evidence; URL thật; không PII |
+
+**A05:** list→case→review/handoff trên Live URL; rà care/privacy/fairness/claim; gửi Hoàng + feed `D4r`.
+
+**D1:** chỉ copy/screenshot từ `H12b`/`H16` và Live URL đã `D4r`; hybrid chỉ Post-MVP nếu `H15` chưa Done.
+
+---
+
+## 9. Văn Hải — chi tiết task
+
+**Bắt đầu từ P2.** Story: [09-stories-van-hai.md](09-stories-van-hai.md). Evidence: [07-release-evidence.md](07-release-evidence.md).
+
+| ID | Gate · deadline | Outcome | DoD / evidence |
+|:--|:--|:--|:--|
+| V07 | P2 · ~21:20 | QA release + smoke độc lập lần 1 | Incognito; ghi defect cho owner/`D4r`; không tự sửa |
+| V05 | P2 · ~22:45 | Nộp Checkpoint 2 | **Chỉ sau `D4r` xanh**; BTC nhận 2 URL + xác nhận |
+| V02 | P3 · 08:00 | Script 4′ + Q&A 2′, rehearsal | Copy `H12a`; Live sau `D4r` |
+| D2 | P3 · 09:30 | Video ≤5 phút | Đúng Live URL sau `D4r` |
+| V08 | P3 · 09:45 | Rà AI log | Depends `H05b`; gap cho Hoàng/`D5` |
+| V06 | P3 · 10:30 | Nộp cuối | Sau evidence `H16` đã khóa CP2+final |
+
+---
+
+## 10. Quy ước, rủi ro và việc làm ngay
+
+| Quy ước / risk | Cách xử lý |
+|:--|:--|
+| P0.5 trễ / H10 trễ | Chạy recovery §1.1; không giữ deadline cũ trên board |
+| Docs choke-point Hoàng | Split `H05a/b`, `H11a/b`, `H12a/b`; Hoàng vẫn owner duy nhất |
+| Source gate ≠ approved data | `M05a` build gate; `M05b` chờ artifact duyệt; M06 chỉ sau M05b |
+| Attendance chưa duyệt | `H15` cần external approval artifact; MVP `insufficient_data` |
+| Agent “dropout risk” | Từ chối; chỉ band/factors/limits từ API |
+| QA phát hiện lỗi | V07/A05 → owner fix → `D4r` → mới V05 |
+| Blocked >2 giờ | Ghi ID blocker; không tự đổi schema/fixture/scope |
+| Legacy synthetic còn trên UI/ML | `M01` REOPEN + `H18` + `G05` thay mock |
+
+1. **Ngay:** Hoàng `H05a`; Duy `M04` + bắt đầu `M01` reopen — song song.
+2. Sau `H10`: mở `H06a`/`M05a`; không coi dữ liệu đã duyệt cho đến `M05b`.
+3. `H12a` xong trước `T02`/`G03`/`G04`; `H12b` sau cho asset.
+4. `M07` chỉ sau `M02`+`H02`+`H13`; không tranh slot với baseline.
+5. Trước handoff: verify phù hợp; trước final: `scripts/verify.ps1`, `git diff --check`, `git status --short`.

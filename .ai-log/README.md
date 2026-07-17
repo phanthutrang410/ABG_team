@@ -1,6 +1,6 @@
 # Nhật ký AI (D5)
 
-**Owner:** Văn Hải - V· **Mọi thành viên** tự ghi lại việc dùng AI của mình vào đây trước khi nộp.
+**Owner tài liệu/log:** Hoàng · **Audit gap:** Văn Hải (V08) · **Mọi thành viên** tự ghi lại việc dùng AI của mình vào đây trước khi nộp.
 
 **Cấm:** commit session thô, API key, `.env`, PII (dữ liệu cá nhân thật). Git log ≠ nhật ký AI → phải ghi thủ công.
 
@@ -27,7 +27,7 @@ session_id,member,tool,started_at,ended_at,task_id,purpose,result,artifacts,comm
 | `member` | Tên trên board (Hoàng, Khánh Duy, Giang, Thu Trang, giang, Văn Hải) |
 | `tool` | Claude Code / Claude.ai / ChatGPT / Cursor / Codex... |
 | `started_at` / `ended_at` | Giờ bắt đầu/kết thúc (ISO, UTC+7) |
-| `task_id` | ID task trên board sprint (VD: H05, M02, V03) |
+| `task_id` | ID task trên board sprint (VD: H05, M02, V07) |
 | `purpose` | Mô tả ngắn mục đích để làm gì |
 | `result` | done / partial / abandoned |
 | `artifacts` | Đường dẫn file/output tạo ra |
@@ -43,7 +43,7 @@ Ví dụ thêm 1 dòng vào bảng:
 
 | session_id | member | tool | share_url | verified_incognito | notes |
 |------------|--------|------|-----------|:------------------:|-------|
-| 20260717-A01-giang-claude-01 | giang | Claude.ai | https://claude.ai/share/xxx | ✅ | Review PRD |
+| 20260717-H05-hoang-claude-01 | Hoàng | Claude.ai | https://claude.ai/share/xxx | ✅ | Hoàn thiện baseline docs |
 
 - **share_url**: dùng link share/export công khai của chat (không phải dán toàn bộ nội dung).
 - **verified_incognito**: bạn đã tự mở link ở tab ẩn danh để xác nhận người khác xem được, không lỗi 403.
@@ -64,6 +64,6 @@ SUBMIT_PRIVATE_URL=<link_drive_private>
 - [ ] Mọi link trong `online-chats.md` mở được ở chế độ ẩn danh, không lộ secret
 - [ ] Không có `.env`, API key, hoặc PII trong bất kỳ file nào ở `.ai-log/`
 - [ ] `SUBMIT_PRIVATE_URL` (nếu có ảnh/export riêng) đã điền đủ
-- [ ] Văn Hải đã rà lại tổng hợp trước khi đóng cổng nộp (D5)
+- [ ] Văn Hải đã bàn giao gap audit V08; Hoàng đã hoàn thiện tổng hợp D5 trước khi đóng cổng nộp
 
 **session_id gợi ý:** `20260717-H01-hoang-codex-01`

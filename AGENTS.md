@@ -8,11 +8,11 @@
 
 ### A. Preflight
 
-1. Xác định task ID, phase, owner/reviewer, outcome và FR/rubric liên quan.
+1. Xác định task ID, phase, owner chịu trách nhiệm, outcome và FR/rubric liên quan.
 2. Đọc row/story trong [Sprint](docs/03-project/03-sprint.md) và tài liệu theo router ở mục 2.
 3. Chạy `git status --short`; đọc diff hiện có, không ghi đè thay đổi ngoài task.
 4. Đọc code, contract/fixture và test gần nhất trước khi sửa.
-5. Xác nhận dependency/input contract. Nếu chưa có provider, chỉ dùng fixture đã thống nhất; không tự tạo heuristic.
+5. Xác nhận dependency/input contract và điều kiện bắt đầu. Nếu task tiền đề chưa Done, ghi `BLOCKED → <task ID>`; không bắt đầu bằng heuristic hoặc tự tạo fixture thay thế.
 6. Chọn targeted test, verify và evidence path trước khi implementation.
 
 Task review/diagnose/report là read-only nếu người dùng không yêu cầu sửa. Assumption làm thay đổi scope/contract phải được nêu rõ và xin owner chốt.
@@ -24,8 +24,8 @@ Task chưa có brief thì agent tự điền trước khi sửa; micro-task khô
 ```text
 ID — Outcome:
 Phase / Priority / Timebox:
-Owner / Reviewer:
-Depends on + readiness:
+Owner:
+Depends on (task ID phải Done) + readiness:
 Read first:
 Input contract / fixture:
 Scope / Do not touch:
@@ -37,7 +37,7 @@ Evidence / Done when:
 
 1. Thực hiện thay đổi nhỏ nhất tạo được outcome/vertical slice.
 2. Viết hoặc cập nhật test cùng thay đổi; bug fix cần regression test phù hợp.
-3. Chỉ sửa trong scope; muốn sửa artifact lane khác phải báo owner/reviewer.
+3. Chỉ sửa trong scope; muốn sửa artifact lane khác phải báo owner của artifact đó và cập nhật dependency nếu cần.
 4. Không che lỗi bằng broad exception, bỏ assertion, skip test hoặc placeholder luôn pass.
 5. Không tự fallback scoring/priority ở frontend khi API thiếu.
 6. Contract breaking change phải cập nhật trong cùng handoff: schema → fixture → provider → consumer → test → docs.
@@ -61,7 +61,7 @@ Contract/API changes:
 Checks run + exact result/skips:
 Acceptance/evidence paths:
 Known gaps/risks:
-Next consumer/reviewer:
+Next consumer / task được mở khóa:
 ```
 
 ## 2. Read-first router
@@ -87,7 +87,7 @@ Interface provider → consumer phải khóa:
 - error, empty, stale và `insufficient_data` states;
 - case transition và hành động bị cấm;
 - coverage, freshness, `model_version`, thời điểm tính và contributing factors;
-- ground truth, threshold, denominator, sample size và nhãn synthetic cho fairness.
+- ground truth, threshold, denominator, sample size, provenance và quyền dùng nguồn/nhóm audit cho fairness.
 
 Product meaning theo PRD/Ethics/Process. Interface theo Pydantic/OpenAPI hoặc schema code đã duyệt. JSON chỉ là fixture được contract test validate; frontend mock không phải source of truth.
 

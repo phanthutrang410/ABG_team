@@ -1,9 +1,9 @@
 # Session handoff
 
-**Goal:** Ship Silent Shield MVP + 5 deliverables VAIC (xem AGENTS.md).
+> Context only. Đọc [AGENTS.md](../AGENTS.md) + [RULES.md](../RULES.md); [Sprint](../docs/03-project/03-sprint.md) và [Worklog](../docs/03-project/05-worklog.md) mới là nguồn trạng thái.
 
-**Status:** Skeleton tối giản sẵn; chưa implement core.
+**Goal:** Ship Silent Shield MVP + 5 deliverables VAIC.
 
-**Next:** A01 PRD · H01 backend · M01 synthetic · G01 FE shell.
+**Status/Next:** Đọc Sprint và Worklog tại thời điểm bắt đầu session; không lưu snapshot task tại đây.
 
 **Gotchas:** Không commit reference EduInsight; fairness/privacy phải demo được.

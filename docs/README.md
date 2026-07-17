@@ -43,9 +43,12 @@ docs/
 |:-:|:---------|:---------|
 | 01 | [Quyết định chọn đề](03-project/01-topic-selection.md) | Phân tích các đề và lý do chọn Silent Shield |
 | 02 | [Đội ngũ](03-project/02-team.md) | Khảo sát thành viên và cơ sở phân vai |
-| 03 | [Sprint](03-project/03-sprint.md) | Board 48 giờ: 4 gate + P0.5, phân task 6 lane, Depends/Evidence, gắn cổng VAIC |
+| 03 | [Sprint](03-project/03-sprint.md) | Board 48 giờ: docs/contract do Hoàng sở hữu; build H/M/G/T; QA/release/presentation giang/Hải từ P2 |
 | 04 | [Quyết định](03-project/04-decisions.md) | Các quyết định sản phẩm/kỹ thuật ngắn |
 | 05 | [Nhật ký](03-project/05-worklog.md) | Nhật ký điều phối theo thời gian |
+| 07 | [Release evidence](03-project/07-release-evidence.md) | Checklist bằng chứng CP1 / CP2 / nộp cuối / Demo Day |
+| 08 | [Stories — giang](03-project/08-stories-giang.md) | P2+ UAT/review và asset slide/mô tả, không sửa docs nguồn |
+| 09 | [Stories — Văn Hải](03-project/09-stories-van-hai.md) | P2+ QA release, rehearsal/video và submission, không sửa docs nguồn |
 
 ## 4. Engineering
 
@@ -53,6 +56,8 @@ docs/
 |:-:|:---------|:---------|
 | 01 | [FPT AI API](04-engineering/01-fpt-ai-api.md) | Gọi FPT AI bằng API tương thích OpenAI |
 | 02 | [Harness Engineering](04-engineering/02-harness-engineering.html) | HTML snapshot tham khảo về harness engineering; không phải source of truth của sản phẩm |
+| 03 | [EPU reference — catalog trường](04-engineering/03-epu-reference-data-fields.md) | Các trường đang có trong EPU reference (V59, profile, transcript v5); cơ sở chọn/loại nguồn, không phải SIS production |
+| 04 | [Hợp đồng tích hợp EPU](04-engineering/04-epu-data-integration-contract.md) | Chọn nguồn không synthetic, data gate, schema chuẩn hóa và handoff fixture cho Hoàng |
 
 `02-harness-engineering.html` là trang được lưu từ nguồn bên ngoài và có thể cần network hoặc asset gốc để render đầy đủ. Không dùng nội dung trong đó như requirement nếu chưa được đưa vào PRD/decision.
 

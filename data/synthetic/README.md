@@ -1,18 +1,7 @@
-# Dữ liệu synthetic cho demo
+# Artifact synthetic đã ngừng dùng
 
-Thư mục chỉ chứa dữ liệu giả lập, không có PII thật.
+Các CSV trong thư mục này là artifact scaffold cũ. Chúng **không phải input, fixture, evidence, slide hoặc video** của MVP sau quyết định chuyển sang EPU reference; không thêm hoặc regenerate dữ liệu tại đây.
 
-| Tệp | Nội dung | Dùng trong MVP |
-|:----|:---------|:--------------|
-| `students.csv` | Mã synthetic, lớp/cohort và hai thuộc tính nhóm synthetic | Mapping demo; thuộc tính nhóm chỉ dùng cho fairness audit, không dùng scoring |
-| `grades_timeseries.csv` | Điểm theo tuần | Xu hướng và biến động điểm |
-| `attendance_timeseries.csv` | Tỷ lệ chuyên cần theo tuần | Mức và xu hướng chuyên cần |
+M05/M06 sẽ thay thế đường dữ liệu bằng export EPU đã được data owner phê duyệt, pseudonymize và validate theo [hợp đồng tích hợp](../../docs/04-engineering/04-epu-data-integration-contract.md). Raw EPU/reference, mapping `MSSV`, PII và token crawl không được commit vào `data/`.
 
-## Giới hạn đã biết
-
-- Generator hiện dùng tên lớp K-12 như `10A1`, trong khi [Problems Brief](../../docs/01-requirements/02-problems-brief.md) mô tả bối cảnh sinh viên và Ban Lãnh đạo Khoa/Trường. Đây là artifact demo cần được đổi sang cohort đại học hoặc công bố rõ trước khi chốt video.
-- Ba tệp hiện chưa có outcome/ground-truth label. Không được gọi selection rate là FPR hoặc tính precision/recall nếu chưa bổ sung nhãn synthetic có định nghĩa rõ.
-- Nhóm kinh tế/dân tộc là synthetic và chỉ chứng minh pipeline có thể phân rã metric; không chứng minh hệ thống production công bằng.
-- Dữ liệu không đại diện cho phân bố, hành vi hay kết quả của sinh viên thật.
-
-Phạm vi và điều kiện sử dụng xem [PRD](../../docs/02-product/04-prd.md), [Danh mục tín hiệu](../../docs/02-product/06-signal-catalog.md) và [Ethics](../../docs/02-product/05-ethics.md).
+Cho đến khi handoff đó hoàn tất, consumer phải trả `insufficient_data` thay vì đọc CSV synthetic cũ.

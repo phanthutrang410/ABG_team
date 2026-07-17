@@ -21,13 +21,39 @@ function Invoke-Step {
 
 Push-Location $Root
 try {
-    if (Get-Command ruff -ErrorAction SilentlyContinue) {
-        Invoke-Step "Backend lint (ruff)" {
-            Push-Location backend
-            try { ruff check app tests } finally { Pop-Location }
+    Write-Host "`n==> Agent rules wiring" -ForegroundColor Cyan
+    if (-not (Test-Path -LiteralPath "RULES.md")) {
+        throw "RULES.md is missing"
+    }
+    if (-not (Test-Path -LiteralPath "AGENTS.md")) {
+        throw "AGENTS.md is missing"
+    }
+    if ((Get-Content -Raw -Encoding UTF8 -LiteralPath "RULES.md") -notmatch "AGENTS\.md") {
+        throw "RULES.md does not reference AGENTS.md"
+    }
+    if ((Get-Content -Raw -Encoding UTF8 -LiteralPath "AGENTS.md") -notmatch "RULES\.md") {
+        throw "AGENTS.md does not reference RULES.md"
+    }
+    $AgentEntrypoints = @(
+        "CLAUDE.md",
+        ".cursor/rules/project.mdc",
+        ".github/copilot-instructions.md"
+    )
+    foreach ($EntryPoint in $AgentEntrypoints) {
+        if (-not (Test-Path -LiteralPath $EntryPoint)) {
+            throw "Agent entrypoint missing: $EntryPoint"
         }
-    } else {
-        Write-Warning "ruff not found; skip backend lint"
+        if ((Get-Content -Raw -Encoding UTF8 -LiteralPath $EntryPoint) -notmatch "AGENTS\.md") {
+            throw "Agent entrypoint does not reference AGENTS.md: $EntryPoint"
+        }
+    }
+
+    if (-not (Get-Command ruff -ErrorAction SilentlyContinue)) {
+        throw "ruff not found; install backend dev dependencies before verify"
+    }
+    Invoke-Step "Backend lint (ruff)" {
+        Push-Location backend
+        try { ruff check app tests } finally { Pop-Location }
     }
 
     if (-not $Quick) {
@@ -50,6 +76,12 @@ try {
         if (-not $Quick) {
             Invoke-Step "Frontend tests" {
                 npm test --prefix frontend
+            }
+            if ((Get-Content -Raw -Encoding UTF8 "frontend/package.json") -match "No frontend tests yet") {
+                Write-Warning "Frontend tests are a placeholder; this is not behavioral test evidence"
+            }
+            Invoke-Step "Frontend production build" {
+                npm run build --prefix frontend
             }
         }
     } else {

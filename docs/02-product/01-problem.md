@@ -58,13 +58,13 @@ Tín hiệu thuộc về một **case trong quy trình rà soát**, không phả
 
 ### Được phép sử dụng
 
-- Điểm số và xu hướng điểm theo thời gian.
-- Chuyên cần, nghỉ có phép và trạng thái bảo lưu nếu được cấp quyền.
+- Điểm theo học kỳ và xu hướng điểm khi một hồ sơ có ít nhất hai học kỳ hợp lệ.
+- Trạng thái học vụ và mapping cố vấn học tập trong bản trích xuất EPU đã được phê duyệt, chỉ ở mức tối thiểu cho evaluation/routing.
 - Dữ liệu hành vi học tập tổng hợp như tần suất đăng nhập LMS, mức độ hoàn thành hoặc nộp bài trễ **chỉ khi đã được phê duyệt cho giai đoạn sau MVP**.
-- Các trường dữ liệu cần thiết để phân lớp, xác định GVCN và chuyển đúng đơn vị hỗ trợ.
-- Thuộc tính nhóm trên dữ liệu synthetic để đo fairness; không dùng làm nguyên nhân suy đoán cho một cá nhân.
+- Các trường dữ liệu đã pseudonymize cần thiết để phân lớp, xác định người nhận case và chuyển đúng đơn vị hỗ trợ.
+- Thuộc tính nhóm phục vụ fairness chỉ khi có nguồn được phê duyệt; không dùng làm nguyên nhân suy đoán cho một cá nhân.
 
-MVP chỉ dùng dữ liệu synthetic và chỉ có điểm/chuyên cần theo [PRD](04-prd.md). Danh mục mở rộng không phải cam kết triển khai; xem [Danh mục tín hiệu](06-signal-catalog.md). Việc triển khai với dữ liệu thật cần phê duyệt mục đích sử dụng, tối thiểu hóa dữ liệu, phân quyền, thời hạn lưu giữ và quy trình xử lý yêu cầu của chủ thể dữ liệu theo chính sách nhà trường và pháp luật áp dụng.
+MVP dùng bản trích xuất EPU đã qua data gate, pseudonymize và chỉ có các trường trong [hợp đồng tích hợp](../04-engineering/04-epu-data-integration-contract.md). Không có nguồn điểm danh tuần hoặc thuộc tính fairness được duyệt thì hệ thống không tạo feature/metric tương ứng. Danh mục mở rộng không phải cam kết triển khai; xem [Danh mục tín hiệu](06-signal-catalog.md).
 
 ### Không thu thập hoặc suy luận
 
@@ -99,27 +99,27 @@ Agent không được tự tạo hoặc thay đổi điểm của model, chẩn 
 ## 8. Giả định và ràng buộc
 
 - Dữ liệu nguồn có mã sinh viên và thông tin lớp đủ nhất quán để ghép nối và bàn giao đúng người.
-- Chu kỳ đồng bộ mặc định là hàng tuần; độ mới phải được hiển thị trên báo cáo.
+- Chu kỳ đồng bộ theo snapshot/kỳ học mà source đã phê duyệt cấp; độ mới phải được hiển thị trên báo cáo.
 - Dữ liệu thiếu, lỗi hoặc quá cũ phải làm giảm độ tin cậy và có thể chặn tạo tín hiệu mới.
 - Nghỉ có phép, bảo lưu và case đang được xử lý cần được dùng để giảm báo động giả và cảnh báo lặp.
-- Ngưỡng và chỉ số fairness phải được đánh giá trên dữ liệu synthetic trong MVP; không tuyên bố hiệu quả ngoài thực tế trước khi được kiểm chứng.
+- Ngưỡng và chỉ số fairness chỉ được đánh giá khi data gate có nhãn, nhóm audit được phê duyệt và cỡ mẫu đủ; không tuyên bố hiệu quả ngoài phạm vi snapshot đã kiểm chứng.
 - Ban Lãnh đạo là người dùng hệ thống chính nhưng không phải stakeholder hay người tham gia quy trình duy nhất.
 
 ## 9. Success metrics
 
-Các ngưỡng chấp nhận cần được chốt sau khi có baseline trên dữ liệu synthetic và xác nhận của stakeholder; không chọn mục tiêu chỉ để làm đẹp số liệu.
+Các ngưỡng chấp nhận cần được chốt sau khi có baseline trên snapshot EPU đã được duyệt và xác nhận của stakeholder; không chọn mục tiêu chỉ để làm đẹp số liệu.
 
 | Nhóm | Chỉ số | Cách sử dụng |
 |:-----|:-------|:-------------|
-| Chất lượng | Precision/recall trên dữ liệu synthetic | Đánh giá khả năng tìm đúng mẫu cần quan tâm và mức bỏ sót ở ngưỡng đang dùng |
+| Chất lượng | Precision/recall trên snapshot có nhãn đã được duyệt | Đánh giá khả năng tìm đúng mẫu cần quan tâm và mức bỏ sót ở ngưỡng đang dùng; không tính khi nhãn/cỡ mẫu thiếu |
 | Báo động giả | False-positive rate (FPR) | Kiểm soát tỷ lệ trường hợp bị đưa ra rà soát nhưng bị xác nhận không cần chuyển tiếp |
-| Khối lượng | Số tín hiệu mới mỗi tuần | Theo dõi tải đầu vào của Ban Lãnh đạo và phát hiện tăng bất thường |
+| Khối lượng | Số tín hiệu mới mỗi kỳ đồng bộ | Theo dõi tải đầu vào của Ban Lãnh đạo và phát hiện tăng bất thường |
 | Rà soát | Tỷ lệ được phê duyệt chuyển tiếp | Kiểm tra mức hữu ích của tín hiệu đối với quy trình chăm sóc |
 | Rà soát | Tỷ lệ bị loại sau rà soát | Phân tích nguyên nhân để điều chỉnh ngưỡng, dữ liệu hoặc ngoại lệ nghiệp vụ |
 | Tốc độ | Thời gian từ khi phát sinh tín hiệu đến khi con người xem xét | Đo khả năng nhận biết và phản hồi sớm |
 | Bàn giao | Tỷ lệ chuyển đúng GVCN/đơn vị phụ trách | Kiểm tra chất lượng phân lớp và routing |
-| Fairness | Chênh lệch FPR giữa các nhóm trên dữ liệu synthetic | Phát hiện nhóm chịu báo động giả nhiều hơn; hiển thị trên UI cùng phạm vi dữ liệu |
-| Tải công việc | Số case mới và case đang xử lý trên mỗi GVCN/tuần | Ngăn hệ thống tạo khối lượng hỗ trợ không khả thi |
+| Fairness | Chênh lệch FPR giữa các nhóm audit được phê duyệt | Chỉ hiển thị khi có nhóm, nhãn và cỡ mẫu đủ; nếu không trả `insufficient_data` |
+| Tải công việc | Số case mới và case đang xử lý trên mỗi GVCN/kỳ đồng bộ | Ngăn hệ thống tạo khối lượng hỗ trợ không khả thi |
 | Dữ liệu | Tỷ lệ nguồn đồng bộ đúng hạn và độ trễ dữ liệu | Tránh đưa tín hiệu từ dữ liệu lỗi hoặc quá cũ |
 
 Retention rate và mức hài lòng với dịch vụ hỗ trợ là outcome dài hạn được đề xuất trong brief, không phải acceptance của MVP. Chỉ được dùng để đánh giá tác động sau khi có pilot, baseline, thời gian theo dõi và thiết kế đo lường phù hợp; không được trình bày như kết quả đã đạt.
