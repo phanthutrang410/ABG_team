@@ -1,0 +1,15 @@
+---
+description: Silent Shield — conventions for the whole repo
+alwaysApply: true
+---
+
+# Project rules
+
+Read [AGENTS.md](../../AGENTS.md) first. Board: [docs/sprint.md](../../docs/sprint.md).
+
+- UI tiếng Việt; copy “cần hỗ trợ/quan tâm”, không kỳ thị
+- LLM không invent risk score
+- Không commit PII thật, secrets, hay `reference-Learning-Analytics-AI/`
+- Branch `feature/<task-id>-<short>`; conventional commits
+- Trước khi coi xong: `.\scripts\verify.ps1` (hoặc layer bạn đụng)
+- Ethics: [docs/ethics.md](../../docs/ethics.md)
