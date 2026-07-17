@@ -1,0 +1,10 @@
+{
+  "status": "unavailable",
+  "case": null,
+  "problem": {
+    "code": "upstream_unavailable",
+    "reason_codes": [],
+    "message_key": null
+  },
+  "allowed_intents": ["explain_case", "neutral_draft"]
+}

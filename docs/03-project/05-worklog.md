@@ -1,5 +1,29 @@
 # Nhật ký công việc
 
+## 2026-07-18 (~H06a verify + H11a Done)
+
+- `H06a` xác nhận lại: Coverage/ScoringFeatures/ReviewCase — **35** contract tests xanh (không đổi scope).
+- `H11a` Done: [10 FE/Agent integration](../04-engineering/10-fe-agent-integration-contract.md); `backend/app/contracts/integration.py` (`CaseListResponse` / `CaseDetailResponse` / `AgentContextResponse` + allowlist/forbidden); fixtures `tests/fixtures/integration/*`; **18** tests. Mở `G05`/`T03`. Không implement H02 routes / agent runtime.
+- Verify: `.\scripts\verify.ps1` — ruff pass; pytest **92 passed**; FE lint/build OK; FE test placeholder skip (warned).
+
+## 2026-07-18 (~merge handoff multitask H10–H15)
+
+- Gom board sau Wave 1: `H06a` Done (Pydantic Coverage/ScoringFeatures/ReviewCase + 35 tests); `H19` Done (Alembic 7 bảng `dwh` + 4 migrate tests); `H12a` Done (4 copy keys + bỏ “Điểm rủi ro”).
+- `H10` giữ Done (baseline). `H13` vẫn TODO — draft [11-h13…](11-h13-cp1-btc-draft.md) paste-ready; form + receipt human. `H15` vẫn `BLOCKED → data-owner` — prep [12-h15…](12-h15-attendance-approval-prep.md) only.
+- Mở khóa: `H11a`/`H12b` TODO; `H20` còn `BLOCKED → M06`; giảm blocker trên `H02`/`H08`/`M02`/`T01`/`G03`/`G04`/`T02` (H06a/H12a/H19 Done).
+- Verify: `git diff --check` OK; `.\scripts\verify.ps1` — ruff pass; pytest **74 passed**; FE lint pass; FE test placeholder skip (warned); `next build` OK. Không commit.
+
+## 2026-07-18 (~04:25 H13 CP1 draft)
+
+- `H13` nội dung CP1 paste-ready: [11-h13-cp1-btc-draft.md](11-h13-cp1-btc-draft.md); checklist [07-release-evidence.md](07-release-evidence.md) §1 — hàng nội dung `[x]`; form + receipt còn `[ ]` / BLOCKED → human BTC submit trước 11:00.
+- Sprint `H13` giữ TODO (chưa Done): chưa có form submit/receipt.
+- Hard rules giữ: không hybrid/forecast ship; không “Điểm rủi ro”; thiếu chuyên cần → `insufficient_data` (MVP); không “xu hướng dài hạn”.
+
+## 2026-07-18 (~H15 prep only — still BLOCKED)
+
+- Wave 2 prep: [12-h15-attendance-approval-prep.md](12-h15-attendance-approval-prep.md) — chase checklist (owner/rights/hash/cadence/privacy) + amendment outline (§2.2 window/`excused`/unique key). **Không** tick Done; Sprint giữ `BLOCKED → data-owner`.
+- Consumers tiếp tục fail-closed `attendance_source_unapproved`; không synthetic attendance fixture; không amend EPU/Data-ML như đã duyệt.
+
 ## 2026-07-18 (~04:15 H10 Done)
 
 - `M04` artifact đã có ([handoff](10-m04-data-ml-handoff.md)); `H10` khóa contract: [EPU](../04-engineering/04-epu-data-integration-contract.md), [Data-ML](../04-engineering/08-data-ml-scoring-fairness-contract.md), decision #17.

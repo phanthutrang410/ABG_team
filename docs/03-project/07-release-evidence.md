@@ -8,9 +8,11 @@
 
 | Mục | Owner | Task nguồn | Evidence | Status |
 |:--|:--|:--|:--|:--|
-| Tên dự án, track, mô tả, hướng tiếp cận | Hoàng | H13 |  | [ ] |
-| Đã nộp form/link BTC | Hoàng | H13 |  | [ ] |
-| Xác nhận BTC đã nhận | Hoàng | H13 |  | [ ] |
+| Tên dự án, track, mô tả, hướng tiếp cận | Hoàng | H13 | [11-h13-cp1-btc-draft.md](11-h13-cp1-btc-draft.md) · paste-ready ~04:25 18/7 | [x] |
+| Đã nộp form/link BTC | Hoàng | H13 | BLOCKED → human BTC submit (deadline 11:00; form URL ngoài repo) | [ ] |
+| Xác nhận BTC đã nhận | Hoàng | H13 | BLOCKED → human BTC submit / receipt | [ ] |
+
+> **H13 partial:** nội dung 4 trường đã khóa trong draft. `H13` chưa Done cho đến khi Hoàng nộp form và lưu xác nhận BTC.
 
 ## 2. Checkpoint 2: 18/7 23:00
 
