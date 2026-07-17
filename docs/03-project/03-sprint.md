@@ -1,6 +1,6 @@
 # Sprint — 17–19/7/2026
 
-Submit **11:00 19/7** · Demo Day **15:30 19/7** · Goal: [AGENTS.md](../AGENTS.md)
+Submit **11:00 19/7** · Demo Day **15:30 19/7** · Goal: [AGENTS.md](../../AGENTS.md)
 
 ## Phases
 
@@ -16,15 +16,15 @@ Submit **11:00 19/7** · Demo Day **15:30 19/7** · Goal: [AGENTS.md](../AGENTS.
 | ID | Task | Owner | Done |
 |:---|:-----|:------|:----:|
 | A01 | Chốt PRD | A* | [ ] |
-| H01 | Backend `/health` + DB stub | H* | [ ] |
-| M01 | Feature contract + synthetic K-12 | M* | [ ] |
-| G01 | FE shell + risk list | G* | [ ] |
+| H01 | Backend `/health` + DB stub | H* | [x] |
+| M01 | Feature contract + synthetic time series | M* | [x] |
+| G01 | FE shell + review-priority list | G* | [x] |
 | V01 | AI-log + checklist nộp bài | V* | [ ] |
 | T01 | Agent stub (không bịa score) | T* | [ ] |
 | M02 | Train/score + factors | M* | [ ] |
-| H02 | API risk list / detail | H* | [ ] |
+| H02 | API review-priority list / detail | H* | [ ] |
 | H03 | Care cases API | H* | [ ] |
-| G02 | Dashboard lớp → HS | G* | [ ] |
+| G02 | Dashboard đơn vị → cohort/lớp → case | G* | [ ] |
 | T02 | Agent explain từ API/ml | T* | [ ] |
 | G03 | Care UI | G* | [ ] |
 | M03 | Fairness metrics | M* | [ ] |

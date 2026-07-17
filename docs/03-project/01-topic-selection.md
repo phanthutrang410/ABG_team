@@ -1,6 +1,8 @@
-# Phân tích đề bài BTC mới vs. repo EduInsight
+# Phân tích và quyết định chọn đề — VAIC 2026
 
 > Mục tiêu: xét **6 đề mới** của BTC, chấm mức độ *transfer* được từ repo **EduInsight** (Learning Analytics đã build), và đề xuất chọn đề nào + việc cần làm.
+
+> **Trạng thái:** tài liệu quyết định lịch sử tại đầu sprint. Sau khi chọn Silent Shield, yêu cầu nguồn nằm trong [Problems Brief](../01-requirements/02-problems-brief.md), phạm vi thực thi nằm trong [PRD](../02-product/04-prd.md), và khác biệt được ghi tại [Truy vết yêu cầu](../01-requirements/03-traceability.md).
 
 ---
 
@@ -46,27 +48,27 @@
 
 ### ✅ Đề 1 — The Silent Shield (KHUYẾN NGHỊ CHỌN)
 
-**Yêu cầu:** Hệ thống **cảnh báo sớm** học sinh nguy cơ bỏ học / khủng hoảng (bắt nạt, trầm cảm, áp lực thi), dựa trên **tín hiệu không xâm phạm**: dao động điểm, điểm danh, thay đổi hành vi học theo thời gian.
-**3 ràng buộc bắt buộc (trọng số cao):** (1) bảo vệ quyền riêng tư trẻ em tối đa — *không* giám sát nội dung/tin nhắn riêng; (2) chỉ **hỗ trợ con người** can thiệp qua chăm sóc — không dán nhãn, không kỷ luật tự động, không thiên vị nhóm yếu thế; (3) **công bằng** — cảnh báo không lệch theo kinh tế/dân tộc.
+**Yêu cầu:** Hệ thống **cảnh báo sớm** cho người học có thay đổi cần được quan tâm, dựa trên **tín hiệu không xâm phạm**: dao động điểm, chuyên cần và thay đổi hành vi học theo thời gian. Bản solution brief sau khi chọn đề sử dụng bối cảnh sinh viên và Ban Lãnh đạo Khoa/Trường.
+**3 ràng buộc bắt buộc (trọng số cao):** (1) bảo vệ quyền riêng tư tối đa — *không* giám sát nội dung/tin nhắn riêng; (2) chỉ **hỗ trợ con người** can thiệp qua chăm sóc — không dán nhãn, không kỷ luật tự động, không thiên vị nhóm yếu thế; (3) **công bằng** — cảnh báo không lệch theo kinh tế/dân tộc.
 **Chấm điểm:** đạo đức & riêng tư (cao nhất), độ chính xác + **kiểm soát báo động giả**, công bằng nhóm, chất lượng bàn giao cho con người.
 
 **Vì sao transfer tốt nhất (~75%):**
-- `ml/dropout/` **chính là** engine cảnh báo sớm cần có — chỉ đổi feature từ học vụ ĐH sang tín hiệu K-12 (điểm, điểm danh, xu hướng).
+- `ml/dropout/` **chính là** engine cảnh báo sớm cần có — cần thu hẹp feature cho MVP thành điểm và chuyên cần theo thời gian, đồng thời giữ output có giải thích.
 - Prediction đã **có yếu tố đóng góp** → phục vụ giải thích + kiểm soát báo động giả.
 - `models/intervention.py` đã có → khớp "bàn giao cho con người".
 - Dashboard đa cấp + RBAC theo phạm vi → giáo viên/tư vấn xem đúng phạm vi.
 - Agent giải thích số liệu, **không bịa** → đúng tinh thần "hỗ trợ, không dán nhãn".
 
 **Việc cần làm (delta):**
-1. **Reframe domain:** ĐH → trường phổ thông; actor: giáo viên chủ nhiệm, cán bộ tư vấn tâm lý.
+1. **Chốt domain và actor:** solution brief đặt Ban Lãnh đạo Khoa/Trường là primary system user; GVCN/cố vấn và đơn vị hỗ trợ nhận handoff đã duyệt.
 2. **Feature engineering theo thời gian:** thêm chuỗi thời gian điểm danh, dao động điểm (không chỉ snapshot GPA); phát hiện *thay đổi xu hướng*.
 3. **Lớp Fairness (mới, trọng số cao):** đo & báo cáo chênh lệch cảnh báo theo nhóm (kinh tế/dân tộc); có metric fairness (equalized odds / demographic parity), có báo cáo bias trong UI.
 4. **Lớp Privacy-by-design:** khẳng định pipeline chỉ dùng tín hiệu meta (điểm/điểm danh/hành vi tổng hợp), *không* nội dung riêng tư; tài liệu DPIA ngắn.
 5. **Kiểm soát báo động giả:** tối ưu ngưỡng theo *precision*/chi phí sai (false positive gây hại); calibration; cho phép giáo viên phản hồi để hiệu chỉnh.
 6. **Luồng handoff:** mở rộng `intervention` thành quy trình care (gợi ý ai cần hỗ trợ trước, ghi nhận hành động, không kỷ luật).
-7. **Dữ liệu:** tạo synthetic dataset K-12 (đã có tiền lệ `crawl/synthetic_student_profile_replacements.json`).
+7. **Dữ liệu:** tạo synthetic dataset đúng domain đã chốt, có chuỗi thời gian, outcome synthetic rõ để đo FPR và thuộc tính nhóm chỉ cho fairness audit.
 
-**Rủi ro:** đề nhấn *đạo đức/công bằng* trọng số cao — phải làm thật (metric + tài liệu), không chỉ nói. Cần dataset K-12 hợp lý.
+**Rủi ro:** đề nhấn *đạo đức/công bằng* trọng số cao — phải làm thật (metric + tài liệu), không chỉ nói. Dataset và persona demo phải thống nhất với solution brief.
 
 ---
 
@@ -128,12 +130,12 @@ Pipeline: ảnh scan → tiền xử lý ảnh (deskew, khử bóng gáy) → **
 **Chọn "The Silent Shield" (Đề 1).** Lý do:
 - **Transfer cao nhất (~75%)**: `ml/dropout/` + `intervention` + explainable prediction + dashboard + RBAC gần như đúng bài.
 - Đúng thế mạnh đã chứng minh (đã có hệ cảnh báo sớm live).
-- Delta rõ ràng, làm được: reframe K-12 + lớp Fairness + Privacy + kiểm soát báo động giả + luồng handoff.
+- Delta rõ ràng, làm được: feature theo thời gian + lớp Fairness + Privacy + kiểm soát báo động giả + luồng handoff.
 
 **Phương án dự phòng: EduOne (Đề 2)** nếu muốn đối tác uy tín + rubric rõ + deliverable thân thiện (GitHub công khai, explainable — repo đã sẵn). Đổi lại phải build adaptive path + gen content.
 
 **Đề nghị bước tiếp theo (khi bạn chốt):**
-- Nếu chọn Đề 1: tôi phác **kế hoạch chi tiết** — sơ đồ feature theo thời gian, thiết kế lớp Fairness/Privacy, kế hoạch synthetic dataset K-12, và checklist bám 4 tiêu chí chấm.
+- Nếu chọn Đề 1: chốt **kế hoạch chi tiết** — feature theo thời gian, thiết kế Fairness/Privacy, synthetic dataset đúng domain và checklist bám 4 tiêu chí chấm.
 - Nếu chọn Đề 2: tôi phác kiến trúc recommendation + luồng human-review + roadmap pilot EduOne.
 
 ---
