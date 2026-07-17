@@ -1,0 +1,12 @@
+{
+  "status": "refused",
+  "answer_vi": "Tôi không thể chẩn đoán tình trạng tâm lý của sinh viên. Tôi chỉ giải thích các tín hiệu học vụ có sẵn (xu hướng điểm theo học kỳ) và mức ưu tiên rà soát do model cung cấp. Việc tìm hiểu nguyên nhân và hỗ trợ là do con người thực hiện qua tiếp xúc trực tiếp.",
+  "grounded_facts": [],
+  "model_factors_used": [],
+  "limitation_keys": [],
+  "limitations_vi": "Chẩn đoán sức khỏe tâm thần nằm ngoài phạm vi và năng lực cho phép của hệ thống (Ethics §8).",
+  "refusal_reason": "diagnose_mental_health",
+  "draft_message": null,
+  "model_version": "ew-term-0.1-uncalibrated",
+  "disclaimer_vi": "Đây là tín hiệu cần rà soát nhằm hỗ trợ con người ưu tiên sự quan tâm, không phải kết luận về sinh viên. Quyết định và việc liên hệ do con người thực hiện."
+}

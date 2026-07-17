@@ -1,5 +1,13 @@
 # Nhật ký công việc
 
+## 2026-07-18 (T03 Done — agent contract, lane Thu Trang)
+
+- `T03` **Done**: output contract `backend/app/agent/schemas.py` (`AgentExplanationRequest` bọc `AgentContextResponse` H11a — không widen; `AgentExplanation` với invariants: refused⇒reason, draft chỉ khi ok + luôn `requires_human_approval`, ok⇒`model_version`, unavailable⇒không facts/draft).
+- 6 fixtures `backend/tests/fixtures/agent/` (ok / insufficient_data / refusal / draft / unavailable + adversarial); **12 ca adversarial** phủ đủ 7 refusal codes + 3 outcome không-refusal (chống over-refusal); input contexts **tham chiếu** fixtures H11a `tests/fixtures/integration/agent_context_*.json`, không nhân bản shape.
+- Privacy: mọi fixture quét đệ quy `assert_no_forbidden_keys` (H11a §2.1); chỉ `student_ref` pseudonym; không score/%/PII trong copy.
+- Verify: pytest `tests/agent` **26 passed**; contract suite (agent + integration + review_case + scoring + fairness) **102 passed**; ruff pass; `git diff --check` sạch. **Skip có ghi:** `test_health`/`test_case_transitions`/`test_dwh_migrate` không chạy được trên máy build (env thiếu fastapi/sqlalchemy — không liên quan T03); chưa live-LLM eval (thuộc T02).
+- Doc draft cho H11b: [08-agent-grounding-guardrails.md](../04-engineering/08-agent-grounding-guardrails.md). Mở khóa: `T01` (TODO).
+
 ## 2026-07-18 (~05:56 chase M05b/H15)
 
 - Chase refresh only: [12-h15…](12-h15-attendance-approval-prep.md) §0 — status bảng M05a/M05b/H15 + next asks copy/paste cho Duy và data-owner; checklist §1 vẫn **OPEN** cả 5 hàng.

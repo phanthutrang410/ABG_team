@@ -158,8 +158,8 @@ Deploy:   (H07 ∥ D3) → D4a (shell) → D4b (product smoke) → V07 + A05 →
 
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
-| T03 | Agent interface + fixture + refusal/adversarial | H11a | [ ] TODO — unblocked sau H11a-r; guard/refusal; **không** cần H02; chưa Done |
-| T01 | Agent stub từ fixture, refusal tests xanh | T03, H06a | [ ] BLOCKED → T03, H06a-r |
+| T03 | Agent interface + fixture + refusal/adversarial | H11a | [x] **Done** — output contract `backend/app/agent/schemas.py` consume `AgentContextResponse` (H11a); 6 fixtures + 12 ca adversarial (phủ 7 refusal + ok/insufficient/unavailable); 26 tests xanh `backend/tests/agent/`; forbidden-field scan `assert_no_forbidden_keys`; không vỡ contract tests của H06a/H11a/H06c |
+| T01 | Agent stub từ fixture, refusal tests xanh | T03, H06a | [ ] TODO — unblocked (T03 Done, H06a-r Done) |
 | T02 | Agent grounded explanation từ API/ML | T01, H02, H12a | [ ] BLOCKED → T01, H02 · H12a Done |
 | T04 | Agent adapter hybrid (Post-MVP) | H17 | [ ] **FREEZE** tới sau submission |
 
@@ -282,8 +282,8 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
-| T03 | P1 · sau H11a-r | Agent interface, fixture, refusal/adversarial | **TODO** — unblocked sau H11a-r (chưa Done); ≥5 case grounded/refusal; **không cần H02/live API** |
-| T01 | P1 · sau T03 | Agent stub từ fixture | Không bịa score/cause; mocked tests pass |
+| T03 | P1 · **Done** | Agent interface, fixture, refusal/adversarial | **Done:** `AgentExplanation` contract consume H11a envelope; 12 ca adversarial (7 refusal + ok/insufficient/unavailable, chống over-refusal); evidence `backend/tests/agent/` (26 tests) + `backend/tests/fixtures/agent/` + [doc 08](../04-engineering/08-agent-grounding-guardrails.md); mocked-only, không live call |
+| T01 | P1 · sau T03 — **TODO, unblocked** | Agent stub từ fixture | Không bịa score/cause; mocked tests pass (chạy 12 ca adversarial với mock model) |
 | T02 | P2 · sau H12a | Grounded explanation từ API/ML | Adversarial pass; chỉ band/factors/limits |
 | T04 | **FREEZE** | Agent adapter hybrid | Chỉ sau submission + H17 |
 
