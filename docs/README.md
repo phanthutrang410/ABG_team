@@ -43,7 +43,7 @@ docs/
 |:-:|:---------|:---------|
 | 01 | [Quyết định chọn đề](03-project/01-topic-selection.md) | Phân tích các đề và lý do chọn Silent Shield |
 | 02 | [Đội ngũ](03-project/02-team.md) | Khảo sát thành viên và cơ sở phân vai |
-| 03 | [Sprint](03-project/03-sprint.md) | Board và critical path 48 giờ |
+| 03 | [Sprint](03-project/03-sprint.md) | Board 48 giờ: 4 gate + P0.5, phân task 6 lane, Depends/Evidence, gắn cổng VAIC |
 | 04 | [Quyết định](03-project/04-decisions.md) | Các quyết định sản phẩm/kỹ thuật ngắn |
 | 05 | [Nhật ký](03-project/05-worklog.md) | Nhật ký điều phối theo thời gian |
 
@@ -74,4 +74,4 @@ docs/
 - Dữ liệu sinh viên thật, secrets và tài liệu ngoài phạm vi Silent Shield không được đưa vào repo.
 - Khi di chuyển tài liệu, phải cập nhật liên kết trong toàn repo và chạy `scripts/verify.ps1 -Quick`.
 
-Điểm vào cho agent và thành viên: [AGENTS.md](../AGENTS.md).
+Điểm vào: mọi thành viên đọc [RULES.md](../RULES.md); AI agent phải đọc thêm [AGENTS.md](../AGENTS.md) trước mỗi task.
