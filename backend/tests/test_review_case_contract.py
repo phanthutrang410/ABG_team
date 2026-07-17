@@ -111,6 +111,80 @@ def test_insufficient_coverage_requires_insufficient_data_state() -> None:
         "status": "insufficient",
         "reason_codes": ["grade_coverage_insufficient", "attendance_source_unapproved"],
     }
+    data["review_priority_band"] = None
+    data["contributing_factors"] = []
     data["data_state"] = "partial"
     with pytest.raises(ValidationError, match="insufficient_data"):
+        ReviewCase.model_validate(data)
+
+
+def test_insufficient_rejects_review_priority_band() -> None:
+    """Data-ML §3: no band when no ready branch."""
+    data = load_fixture()
+    data["coverage"] = {
+        "n_valid_terms": 0,
+        "n_courses": 0,
+        "n_attendance_events": 0,
+        "last_term_code": None,
+        "last_attendance_at": None,
+        "status": "insufficient",
+        "reason_codes": ["grade_coverage_insufficient", "attendance_source_unapproved"],
+    }
+    data["data_state"] = "insufficient_data"
+    data["review_priority_band"] = "can_ra_soat"
+    data["contributing_factors"] = []
+    with pytest.raises(ValidationError, match="review_priority_band"):
+        ReviewCase.model_validate(data)
+
+
+def test_insufficient_allows_null_band_and_empty_factors() -> None:
+    data = load_fixture()
+    data["coverage"] = {
+        "n_valid_terms": 0,
+        "n_courses": 0,
+        "n_attendance_events": 0,
+        "last_term_code": None,
+        "last_attendance_at": None,
+        "status": "insufficient",
+        "reason_codes": ["grade_coverage_insufficient", "attendance_source_unapproved"],
+    }
+    data["data_state"] = "insufficient_data"
+    data["review_priority_band"] = None
+    data["contributing_factors"] = []
+    case = ReviewCase.model_validate(data)
+    assert case.review_priority_band is None
+    assert case.contributing_factors == []
+
+
+def test_ok_rejects_empty_contributing_factors() -> None:
+    """Data-ML §3: empty factors forbidden when ok."""
+    data = load_fixture()
+    data["coverage"] = {
+        "n_valid_terms": 2,
+        "n_courses": 8,
+        "n_attendance_events": 4,
+        "last_term_code": "20251",
+        "last_attendance_at": "2026-07-10T00:00:00Z",
+        "status": "ok",
+        "reason_codes": [],
+    }
+    data["data_state"] = "ok"
+    data["contributing_factors"] = []
+    data["limitations"] = []
+    with pytest.raises(ValidationError, match="contributing_factors"):
+        ReviewCase.model_validate(data)
+
+
+def test_rejects_synthetic_dataset_version_on_public_case() -> None:
+    """Data-ML §1: synthetic-* forbidden on public ReviewCase."""
+    data = load_fixture()
+    data["dataset_version"] = "synthetic-v0.2-seed42-n120-w12-uni"
+    with pytest.raises(ValidationError, match="synthetic-"):
+        ReviewCase.model_validate(data)
+
+
+def test_partial_still_requires_band() -> None:
+    data = load_fixture()
+    data["review_priority_band"] = None
+    with pytest.raises(ValidationError, match="review_priority_band"):
         ReviewCase.model_validate(data)

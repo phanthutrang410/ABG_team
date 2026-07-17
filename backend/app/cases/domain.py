@@ -68,7 +68,9 @@ class TransitionErrorCode(str, Enum):
     MISSING_ADVISOR_REF = "missing_advisor_ref"
     MISSING_MONITORING_UNTIL = "missing_monitoring_until"
     MISSING_ACTOR = "missing_actor"
+    UNTRUSTED_ACTOR = "untrusted_actor"
     TERMINAL_STATE = "terminal_state"
+    CREATE_DISABLED = "create_disabled"
 
 
 class TransitionError(Exception):

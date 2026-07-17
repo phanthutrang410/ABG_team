@@ -45,6 +45,16 @@ class Coverage(BaseModel):
     def _consistent(self) -> "Coverage":
         if self.status == "insufficient" and not self.reason_codes:
             raise ValueError("coverage status=insufficient phải có ít nhất một reason_code")
+        # Data-ML §3: counts=0 (no ready branch) must not claim status=ok.
+        if (
+            self.status == "ok"
+            and self.n_valid_terms == 0
+            and self.n_attendance_events == 0
+        ):
+            raise ValueError(
+                "coverage status=ok không được khi n_valid_terms=0 và "
+                "n_attendance_events=0 (không nhánh ready)"
+            )
         if (
             ATTENDANCE_SOURCE_UNAPPROVED in self.reason_codes
             and self.n_attendance_events != 0

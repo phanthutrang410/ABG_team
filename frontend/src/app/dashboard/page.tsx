@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { ScopeBanner } from "@/components/ScopeBanner";
 import { copyForReasonCodes } from "@/lib/copy";
 import {
   MOCK_REVIEW_LIST,
@@ -12,9 +13,11 @@ export default function DashboardPage() {
         <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>Silent Shield · VAIC 2026</p>
         <h1 style={{ margin: "0.25rem 0 0", fontSize: 28 }}>Danh sách cần rà soát</h1>
         <p style={{ margin: "0.5rem 0 0", color: "#475569" }}>
-          Gợi ý ưu tiên rà soát — không phải kết luận kỷ luật. Dữ liệu demo synthetic.
+          Gợi ý mức độ ưu tiên rà soát — không phải kết luận kỷ luật. Dữ liệu demo synthetic.
         </p>
       </header>
+
+      <ScopeBanner />
 
       <section
         style={{

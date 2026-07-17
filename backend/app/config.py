@@ -1,6 +1,9 @@
 """Application settings."""
 
+from __future__ import annotations
+
 from functools import lru_cache
+from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,6 +20,13 @@ class Settings(BaseSettings):
     langchain_tracing_v2: bool = False
     langchain_api_key: str = ""
     langchain_project: str = "silent-shield"
+
+    # Care /cases harden (H06b deploy-blocker)
+    app_env: str = "local"
+    # None = derive from app_env (local/dev/test only); explicit bool overrides.
+    cases_seed_create: Optional[bool] = None
+    cases_trusted_actor: str = "leader:demo"
+    cases_trusted_actor_kind: str = "human"
 
     model_config = SettingsConfigDict(
         env_file=("../.env", ".env"),

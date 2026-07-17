@@ -4,17 +4,50 @@
 >
 > **Owner:** Hoàng · **Depends:** H10 Done + **external** data-owner approval artifact · **SoT until then:** [Data-ML §2.2](../04-engineering/08-data-ml-scoring-fairness-contract.md), [EPU contract](../04-engineering/04-epu-data-integration-contract.md), decision #17.
 
+## 0. Chase status (refresh ~05:56 +07 18/7/2026)
+
+| Lane | Sprint status | Blocker | Next ask (owner) |
+|:--|:--|:--|:--|
+| **M05a** (Duy) | `[ ] TODO` — mở sau H10 (H10 Done) | Chưa có gate code/tests | **Khánh Duy:** ship `M05a` source gate (register + hash/count + PII exclusion + fail-closed thiếu approval). Evidence: code + tests. **Không** bịa fixture “đã duyệt”. |
+| **M05b** (Duy + data-owner) | `[ ] BLOCKED → M05a + approval` | M05a chưa Done **và** chưa có semester approval artifact | **Sau M05a:** Duy chỉ mở `M05b` khi data-owner giao package semester (owner / rights / hash / record count) **ngoài repo**. Thiếu → giữ `insufficient_data`. |
+| **H15** (Hoàng + data-owner) | `[ ] BLOCKED → data-owner` | Chưa có attendance approval artifact | **Data-owner:** giao đủ 5 trường §1 dưới (ngoài git). Hoàng **không** amend EPU/Data-ML và **không** tick Done cho tới khi artifact + amend cùng handoff. |
+
+**Open items (chưa nhận):** cả 5 hàng checklist §1 = trống; không có pointer ngoài-repo trong release evidence; consumers vẫn `attendance_source_unapproved`.
+
+**Cấm chase này:** fake approval, synthetic `attendance_event`, tick `M05b`/`H15` Done, amend contract “sẵn”.
+
+### Next asks — copy/paste
+
+**→ Khánh Duy (M05a → rồi mới M05b)**
+
+1. Hoàn thành **M05a** ngay: build source gate theo EPU + Data-ML §7 (register, hash/count, PII exclusion, fail-closed khi thiếu approval) + tests.
+2. **Không** bắt đầu M06 / không seed fixture “approved” trước M05b.
+3. Khi M05a Done: ping data-owner lấy **semester** approval artifact (owner, quyền, `snapshot_sha256`, record count) → chỉ khi có mới tick **M05b** và mở M06.
+4. Attendance export là lane **H15** riêng — M06 chỉ thêm `attendance_event` sau H15 Done.
+
+**→ Data-owner (H15 attendance package)**
+
+Giao **một** package ngoài repo, đủ:
+
+1. Owner (tên/role + đơn vị)
+2. Rights (scope MVP Silent Shield; cấm tái phân phối)
+3. Hash (`snapshot_sha256` hoặc tương đương)
+4. Cadence (chu kỳ làm mới / cửa sổ hợp lệ)
+5. Privacy review (không PII thừa; pseudonym path; retention)
+
+Optional: schema field names only, `presence_status` enum, `excused` policy, grain (`observed_at` vs period). **Không** gửi map MSSV↔ref vào git.
+
 ## 1. Chase checklist (artifact outside repo)
 
 Ask data owner for a single approval package. Store it **outside the git tree** (controlled path / shared drive / env-configured location). Repo may only hold a non-PII pointer in M05b / release evidence later — never the raw export or identity map.
 
-| # | Field | Ask / capture | Notes |
-|:--|:--|:--|:--|
-| 1 | **Owner** | Tên/role người phê duyệt + đơn vị | Ai chịu trách nhiệm nguồn |
-| 2 | **Rights** | Quyền dùng cho Silent Shield MVP (scope, cấm tái phân phối) | Khớp RULES privacy/minimization |
-| 3 | **Hash** | `snapshot_sha256` (hoặc tương đương) của export điểm danh | Khớp `source_manifest` khi M05b/H20 |
-| 4 | **Cadence** | Chu kỳ làm mới / cửa sổ hợp lệ của snapshot | Feed refine §2.2 window/period |
-| 5 | **Privacy review** | Xác nhận không PII thừa; pseudonym path; retention | Không commit map MSSV↔ref |
+| # | Field | Ask / capture | Status (~05:56 18/7) | Notes |
+|:--|:--|:--|:--|:--|
+| 1 | **Owner** | Tên/role người phê duyệt + đơn vị | **OPEN** — chưa nhận | Ai chịu trách nhiệm nguồn |
+| 2 | **Rights** | Quyền dùng cho Silent Shield MVP (scope, cấm tái phân phối) | **OPEN** — chưa nhận | Khớp RULES privacy/minimization |
+| 3 | **Hash** | `snapshot_sha256` (hoặc tương đương) của export điểm danh | **OPEN** — chưa nhận | Khớp `source_manifest` khi M05b/H20 |
+| 4 | **Cadence** | Chu kỳ làm mới / cửa sổ hợp lệ của snapshot | **OPEN** — chưa nhận | Feed refine §2.2 window/period |
+| 5 | **Privacy review** | Xác nhận không PII thừa; pseudonym path; retention | **OPEN** — chưa nhận | Không commit map MSSV↔ref |
 
 Optional but useful when chasing: schema sample (field names only), `presence_status` enum, whether `excused` / period vs `observed_at` is authoritative, expected row grain (buổi / ngày / tuần).
 

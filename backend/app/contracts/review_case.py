@@ -1,4 +1,4 @@
-"""Public ReviewCase safe projection (H06a).
+"""Public ReviewCase safe projection (H06a / H06a-r).
 
 Semantics: Data-ML §§1–4 + architecture §3 ReviewCase.
 Public MUST NOT include model_score, PII, is_dropout_outcome, audit group attrs, advisor_ref.
@@ -7,7 +7,7 @@ Public MUST NOT include model_score, PII, is_dropout_outcome, audit group attrs,
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -30,6 +30,9 @@ ReviewPriorityBand = Literal["uu_tien_som", "can_ra_soat"]
 
 DataState = Literal["ok", "partial", "insufficient_data"]
 
+#: Data-ML §1 — synthetic-* forbidden on MVP public case path.
+_SYNTHETIC_DATASET_PREFIX = "synthetic-"
+
 
 class ContributingFactor(BaseModel):
     """Machine-readable factor + evidence refs — no weights, no Vietnamese copy (H12a)."""
@@ -48,7 +51,8 @@ class ReviewCase(BaseModel):
     case_id: str = Field(min_length=1)
     student_ref: str = Field(min_length=1, description="Pseudonym only")
     case_state: CaseState
-    review_priority_band: ReviewPriorityBand
+    #: Null when no branch ready (coverage.status=insufficient) — Data-ML §3.
+    review_priority_band: Optional[ReviewPriorityBand] = None
     contributing_factors: List[ContributingFactor] = Field(default_factory=list)
     coverage: Coverage
     data_state: DataState
@@ -69,4 +73,33 @@ class ReviewCase(BaseModel):
             )
         if self.coverage.status == "partial" and self.data_state == "ok":
             raise ValueError("coverage.status=partial không được data_state=ok")
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_data_ml_section3(self) -> "ReviewCase":
+        """Data-ML §3 (+ §1 synthetic ban) public-case semantic guards (H06a-r)."""
+        if self.dataset_version.startswith(_SYNTHETIC_DATASET_PREFIX):
+            raise ValueError(
+                "dataset_version prefix synthetic- cấm trên public ReviewCase (Data-ML §1)"
+            )
+
+        if self.coverage.status == "insufficient":
+            if self.review_priority_band is not None:
+                raise ValueError(
+                    "coverage.status=insufficient (không nhánh ready) "
+                    "không được có review_priority_band"
+                )
+        elif self.review_priority_band is None:
+            raise ValueError(
+                "coverage có nhánh ready đòi hỏi review_priority_band"
+            )
+
+        if self.coverage.status == "ok" and not self.contributing_factors:
+            raise ValueError(
+                "coverage.status=ok đòi hỏi contributing_factors không rỗng"
+            )
+        if self.data_state == "ok" and not self.contributing_factors:
+            raise ValueError(
+                "data_state=ok đòi hỏi contributing_factors không rỗng"
+            )
         return self

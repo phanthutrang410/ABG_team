@@ -1,5 +1,10 @@
 # Nhật ký công việc
 
+## 2026-07-18 (~05:56 chase M05b/H15)
+
+- Chase refresh only: [12-h15…](12-h15-attendance-approval-prep.md) §0 — status bảng M05a/M05b/H15 + next asks copy/paste cho Duy và data-owner; checklist §1 vẫn **OPEN** cả 5 hàng.
+- Sprint giữ nguyên: `M05a` TODO; `M05b` `BLOCKED → M05a + approval`; `H15` `BLOCKED → data-owner`. **Không** tick Done; **không** fake approval; **không** amend EPU/Data-ML.
+
 ## 2026-07-18 (~H06a verify + H11a Done)
 
 - `H06a` xác nhận lại: Coverage/ScoringFeatures/ReviewCase — **35** contract tests xanh (không đổi scope).
