@@ -12,7 +12,7 @@ BTC (VAIC) yêu cầu chứng minh sản phẩm không làm hoàn toàn bằng A
 
 ## 2. Làm gì:
 
-### Bước 1 — Ghi 1 dòng vào `manifest.csv` sau mỗi phiên làm việc quan trọng
+### Bước 1: Ghi 1 dòng vào `manifest.csv` sau mỗi phiên làm việc quan trọng
 Mỗi khi bạn dùng AI để hoàn thành một task có ý nghĩa (viết doc, sinh code, debug...), thêm 1 dòng:
 
 ```csv
@@ -34,11 +34,11 @@ session_id,member,tool,started_at,ended_at,task_id,purpose,result,artifacts,comm
 | `commit_sha` | SHA commit liên quan (nếu có) |
 | `evidence_type` | file / link / screenshot |
 | `evidence_ref` | Link tới bằng chứng (nếu là link) |
-| `screenshot` | Đường dẫn ảnh chụp (nếu có, để trong Drive private — xem bước 3) |
+| `screenshot` | Đường dẫn ảnh chụp (nếu có, để trong Drive private: xem bước 3) |
 | `redactions` | Ghi chú nếu đã che/xoá thông tin nhạy cảm |
 | `review_status` | pending / reviewed |
 
-### Bước 2 — Nếu chat trên web (Claude.ai, ChatGPT web...) → ghi vào `online-chats.md`
+### Bước 2: Nếu chat trên web (Claude.ai, ChatGPT web...) → ghi vào `online-chats.md`
 Thêm 1 dòng vào bảng:
 
 | session_id | member | tool | share_url | verified_incognito | notes |
@@ -48,7 +48,7 @@ Thêm 1 dòng vào bảng:
 - **share_url**: dùng link share/export công khai của chat (không phải dán toàn bộ nội dung).
 - **verified_incognito**: bạn đã tự mở link ở tab ẩn danh để xác nhận người khác xem được, không lỗi 403.
 
-### Bước 3 — Nếu có ảnh chụp màn hình / export cần lưu
+### Bước 3: Nếu có ảnh chụp màn hình / export cần lưu
 - **Không** commit ảnh/screenshot chứa thông tin nhạy cảm vào Git.
 - Upload lên Drive **private**, rồi điền link vào dòng tương ứng trong `manifest.csv` (cột `screenshot`) hoặc note riêng theo format:
 
