@@ -38,7 +38,7 @@ Chỉ nộp sau **`D4r` xanh** (đã có cửa sổ fix/redeploy/re-smoke sau V0
 | Owner | Văn Hải |
 | Depends | D4r, G02, T02, G03, G04, H12a |
 
-Script chỉ demo dữ liệu theo kỳ, priority review, human review (Process states), grounded agent, coverage/fairness gate. Hybrid chỉ được nhắc là hướng Post-MVP nếu H15 chưa Done.
+Script demo điểm theo kỳ + điểm danh theo thời gian (hoặc `insufficient_data` nếu `H15` chưa xong), priority review, human review (Process states), grounded agent, coverage/fairness gate. Forecast/fusion chỉ được nhắc là research/Post-MVP — không gọi chuyên cần theo thời gian là Post-MVP.
 
 ## D2 — Video
 

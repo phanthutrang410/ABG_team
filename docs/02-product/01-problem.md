@@ -48,7 +48,7 @@ Tín hiệu thuộc về một **case trong quy trình rà soát**, không phả
 
 ## 4. Mục tiêu và kết quả kỳ vọng
 
-1. **Nhận biết sớm hơn:** tổng hợp biến động điểm số, chuyên cần và hành vi học tập để đưa các trường hợp cần chú ý vào quy trình rà soát trước khi vấn đề trở nên nghiêm trọng.
+1. **Nhận biết sớm hơn:** tổng hợp biến động điểm số và chuyên cần/hành vi học tập theo thời gian để đưa các trường hợp cần chú ý vào quy trình rà soát trước khi vấn đề trở nên nghiêm trọng. **MVP** dùng điểm theo học kỳ + điểm danh theo thời gian — xem [PRD §4](04-prd.md).
 2. **Mở rộng vùng phủ chăm sóc:** giúp GVCN/cố vấn học tập tiếp cận cả những sinh viên ít biểu hiện ra bên ngoài nhưng có thay đổi đáng chú ý trong quá trình học.
 3. **Giảm tải có kiểm soát:** chỉ đưa ra tín hiệu mới hoặc có thay đổi, hạn chế lặp lại case đã xử lý và đo khối lượng công việc phát sinh.
 4. **Hỗ trợ quyết định có giải thích:** cung cấp bằng chứng để Ban Lãnh đạo phê duyệt, loại bỏ hoặc hoãn việc chuyển tiếp; không thay thế nhận định của con người.
@@ -59,12 +59,13 @@ Tín hiệu thuộc về một **case trong quy trình rà soát**, không phả
 ### Được phép sử dụng
 
 - Điểm theo học kỳ và xu hướng điểm khi một hồ sơ có ít nhất hai học kỳ hợp lệ.
+- Điểm danh / chuyên cần theo thời gian từ nguồn được phê duyệt (`H15`); thiếu nguồn → `insufficient_data`, không bịa chuỗi.
 - Trạng thái học vụ và mapping cố vấn học tập trong bản trích xuất EPU đã được phê duyệt, chỉ ở mức tối thiểu cho evaluation/routing.
 - Dữ liệu hành vi học tập tổng hợp như tần suất đăng nhập LMS, mức độ hoàn thành hoặc nộp bài trễ **chỉ khi đã được phê duyệt cho giai đoạn sau MVP**.
 - Các trường dữ liệu đã pseudonymize cần thiết để phân lớp, xác định người nhận case và chuyển đúng đơn vị hỗ trợ.
 - Thuộc tính nhóm phục vụ fairness chỉ khi có nguồn được phê duyệt; không dùng làm nguyên nhân suy đoán cho một cá nhân.
 
-MVP dùng bản trích xuất EPU đã qua data gate, pseudonymize và chỉ có các trường trong [hợp đồng tích hợp](../04-engineering/04-epu-data-integration-contract.md). Không có nguồn điểm danh tuần hoặc thuộc tính fairness được duyệt thì hệ thống không tạo feature/metric tương ứng. Danh mục mở rộng không phải cam kết triển khai; xem [Danh mục tín hiệu](06-signal-catalog.md).
+MVP dùng bản trích xuất đã qua data gate, pseudonymize và chỉ có các trường trong [hợp đồng tích hợp](../04-engineering/04-epu-data-integration-contract.md). Điểm danh theo thời gian thuộc MVP; nếu catalog hiện chưa có chuỗi đã duyệt thì phải lấy nguồn qua `H15`, không đẩy ra Post-MVP và không tạo feature giả. Danh mục mở rộng không phải cam kết triển khai; xem [Danh mục tín hiệu](06-signal-catalog.md).
 
 ### Không thu thập hoặc suy luận
 

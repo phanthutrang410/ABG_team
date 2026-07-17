@@ -74,20 +74,70 @@ Ba nguyên tắc xuyên suốt:
 
 ## 4. Trạng thái case
 
-Không sử dụng `Low Risk`, `Medium Risk` hoặc `High Risk` làm trạng thái của sinh viên. Case sử dụng trạng thái quy trình sau:
+Không sử dụng `Low Risk`, `Medium Risk` hoặc `High Risk` làm trạng thái của sinh viên. Case sử dụng **đúng** các trạng thái quy trình dưới đây. Đây là contract cho transition API (`H06b`/`H03`): mọi schema/code phải khớp tên hiển thị và mã API trong bảng này.
 
-| Trạng thái | Ý nghĩa | Chuyển tiếp điển hình |
-|:-----------|:--------|:----------------------|
-| `New Signal` | Tín hiệu mới sau khi qua kiểm tra dữ liệu và lọc lặp | `Pending Review` |
-| `Pending Review` | Đang chờ người có thẩm quyền xem bằng chứng | `Approved for Follow-up`, `Dismissed` hoặc giữ chờ |
-| `Approved for Follow-up` | Đã duyệt việc chuyển tín hiệu cho người hỗ trợ | `Assigned` |
-| `Dismissed` | Không chuyển tiếp sau rà soát; phải lưu lý do | Kết thúc, chỉ mở case mới nếu có thay đổi đáng kể |
-| `Assigned` | Đã bàn giao đúng GVCN/đơn vị hỗ trợ | `Follow-up in Progress` |
-| `Follow-up in Progress` | Người phụ trách đã tiếp nhận và đang hỗ trợ | `Resolved` hoặc `Monitoring` |
-| `Resolved` | Vòng hỗ trợ hiện tại đã hoàn tất | Kết thúc |
-| `Monitoring` | Chưa cần hành động thêm, tiếp tục theo dõi có thời hạn | `Resolved` hoặc case mới khi xuất hiện thay đổi đáng kể |
+### 4.1 Danh mục trạng thái và mã API
 
-“Hoãn” là hành động giữ case ở `Pending Review` kèm thời điểm xem lại, không phải nhãn mới cho sinh viên.
+| Trạng thái (hiển thị) | Mã API bắt buộc | Ý nghĩa |
+|:----------------------|:----------------|:--------|
+| `New Signal` | `new_signal` | Tín hiệu mới sau kiểm tra dữ liệu và lọc lặp |
+| `Pending Review` | `pending_review` | Đang chờ người có thẩm quyền xem bằng chứng |
+| `Approved for Follow-up` | `approved_for_follow_up` | Đã duyệt việc chuyển tín hiệu cho người hỗ trợ |
+| `Dismissed` | `dismissed` | Không chuyển tiếp sau rà soát; phải lưu lý do |
+| `Assigned` | `assigned` | Đã bàn giao đúng GVCN/đơn vị hỗ trợ (`advisor_ref`) |
+| `Follow-up in Progress` | `follow_up_in_progress` | Người phụ trách đã tiếp nhận và đang hỗ trợ |
+| `Resolved` | `resolved` | Vòng hỗ trợ hiện tại đã hoàn tất |
+| `Monitoring` | `monitoring` | Chưa cần hành động thêm; theo dõi có thời hạn |
+
+**Cấm** dùng alias cũ làm state hoặc field API: `new`, `in_review`, `deferred`, `handed_off`, `Low Risk`, `Medium Risk`, `High Risk`.
+
+### 4.2 Ma trận chuyển tiếp được phép
+
+| Từ | Được tới | Ai / điều kiện |
+|:---|:---------|:---------------|
+| `New Signal` | `Pending Review` | Hệ thống sau tạo tín hiệu hợp lệ |
+| `Pending Review` | `Approved for Follow-up` | Ban Lãnh đạo / người được ủy quyền · hành động `approve` |
+| `Pending Review` | `Dismissed` | Cùng role · `dismiss` + lý do chuẩn hóa bắt buộc |
+| `Pending Review` | `Pending Review` | Cùng role · `defer` + bắt buộc `review_at` (giữ state, không tạo state mới) |
+| `Approved for Follow-up` | `Assigned` | Hệ thống/người điều phối · `assign` **chỉ khi** có `advisor_ref` hợp lệ |
+| `Assigned` | `Follow-up in Progress` | Người nhận · `accept` |
+| `Follow-up in Progress` | `Resolved` | Người nhận / điều phối · `resolve` |
+| `Follow-up in Progress` | `Monitoring` | Người nhận / điều phối · `monitor` + thời hạn theo dõi |
+| `Monitoring` | `Resolved` | Điều phối · kết thúc theo dõi |
+
+`Dismissed` và `Resolved` là terminal của vòng hiện tại. Chỉ mở **case mới** khi có thay đổi dữ liệu đáng kể; không “reopen” bằng alias state cũ.
+
+### 4.3 Hành động và trường phụ
+
+| Hành động | State sau | Trường bắt buộc | Ghi chú |
+|:----------|:----------|:----------------|:--------|
+| `approve` | `Approved for Follow-up` | actor, timestamp | Không đồng nghĩa đã handoff |
+| `dismiss` | `Dismissed` | reason code | |
+| `defer` | vẫn `Pending Review` | `review_at` | **Không** phải state `Deferred` |
+| `assign` | `Assigned` | `advisor_ref` | Thiếu → xem §4.4 |
+| `accept` | `Follow-up in Progress` | actor | |
+| `resolve` / `monitor` | `Resolved` / `Monitoring` | timestamp (+ hạn nếu monitor) | |
+
+Agent/LLM không được gọi bất kỳ hành động chuyển trạng thái nào.
+
+### 4.4 Gate `advisor_ref` và mapping-repair
+
+- Phê duyệt (`approve`) chỉ duyệt **chuyển tín hiệu**, không tự bàn giao.
+- `assign` / handoff **bắt buộc** có `advisor_ref` (và scope mapping hợp lệ) từ `advisor_assignment`.
+- Thiếu `advisor_ref`: **dừng handoff**, đưa case vào hàng chờ **mapping-repair**; giữ `Approved for Follow-up` (hoặc trạng thái chờ sửa mapping tương đương trong API nội bộ) — **không** chuyển `Assigned` chỉ vì đã approve.
+- Không gửi đại trà, không gán người nhận giả.
+
+### 4.5 Chuyển tiếp / hành động bị cấm (reject)
+
+| Cấm | Lý do |
+|:----|:------|
+| `New Signal` → `Assigned` / `Approved for Follow-up` bỏ qua review | Thiếu human review |
+| `Pending Review` → `Assigned` | Phải `approve` trước |
+| `assign` khi thiếu `advisor_ref` | Care boundary; đưa mapping-repair |
+| Tạo state `Deferred` / `Handed Off` | Defer là action; handoff = `Assigned` |
+| Dùng mã `new` / `in_review` / `deferred` / `handed_off` | Alias bị loại khỏi contract |
+| Agent/LLM đổi state hoặc tự gửi thông báo | Ethics §8 / PRD FR-08 |
+| Gắn `Low/Medium/High Risk` làm state sinh viên | Thuật ngữ sản phẩm: mức ưu tiên thuộc case |
 
 ## 5. Thông báo theo kỳ đồng bộ
 
@@ -119,7 +169,7 @@ Chỉ gửi thông báo ngắn:
 | Nguồn dữ liệu lỗi hoặc quá cũ | Hiển thị rõ freshness; không âm thầm coi dữ liệu cũ là hiện tại; chặn tín hiệu mới nếu không đủ tin cậy |
 | Nghỉ có phép, bảo lưu hoặc thay đổi lớp chưa đồng bộ | Hiển thị ngoại lệ nếu biết; cho phép người review loại case với lý do chuẩn hóa; phản hồi lỗi về nguồn dữ liệu |
 | Case vừa được xử lý xuất hiện lại | Không tạo lại nếu không có thay đổi đáng kể; hiển thị lịch sử trạng thái và thời hạn monitoring |
-| Không xác định được GVCN/người nhận | Dừng bàn giao, đưa vào hàng chờ sửa mapping; không gửi đại trà |
+| Không xác định được GVCN/người nhận (`advisor_ref` thiếu hoặc mapping lỗi) | Dừng bàn giao (`assign` bị reject); đưa vào hàng chờ **mapping-repair**; không gửi đại trà; không coi `approve` là đã handoff — xem §4.4 |
 | Agent thiếu dữ liệu căn cứ | Trả lời rằng chưa đủ dữ liệu và chỉ ra trường còn thiếu; không suy đoán |
 | Chênh lệch FPR giữa các nhóm tăng | Gắn cờ fairness, rà ngưỡng/dữ liệu trước khi mở rộng; không dùng thuộc tính nhóm để suy đoán nguyên nhân cá nhân |
 | Tải case vượt khả năng GVCN | Điều chỉnh ngưỡng hoặc lịch review có giám sát; không tự hạ ưu tiên của một cá nhân dựa trên thuộc tính nhạy cảm |

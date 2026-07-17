@@ -16,7 +16,7 @@ Bản Markdown được giữ làm nguồn tham chiếu, chỉ chuẩn hóa tiê
 | D.1 | Agent là lớp triage; không chẩn đoán/kết luận/kỷ luật | [Bài toán](../02-product/01-problem.md), [Ethics](../02-product/05-ethics.md) | Đã phản ánh |
 | D.2 | Ban Lãnh đạo là primary system user; GVCN thực thi case được giao | [Stakeholders](../02-product/02-stakeholders.md), [PRD](../02-product/04-prd.md) | Đã chuẩn hóa |
 | D.3–D.3.1 | Metadata có sẵn, purpose limitation, minimization, phân tầng quyền | [Ethics](../02-product/05-ethics.md), [contract EPU](../04-engineering/04-epu-data-integration-contract.md) | MVP chỉ dùng export EPU pseudonymized sau data gate; feed/pilot cần phê duyệt riêng |
-| D.4 | Danh mục tín hiệu học vụ | [Danh mục tín hiệu](../02-product/06-signal-catalog.md) | Chỉ điểm theo kỳ trong MVP; chuyên cần chờ nguồn được phê duyệt |
+| D.4 | Danh mục tín hiệu học vụ | [Danh mục tín hiệu](../02-product/06-signal-catalog.md) | MVP: điểm theo kỳ + điểm danh theo thời gian (`CORE-03`); thiếu nguồn → `insufficient_data` qua `H15`, không Post-MVP |
 | D.5.1 | D0–D3 và hành động gợi ý | [PRD](../02-product/04-prd.md), [Quy trình](../02-product/03-process.md) | Chuyển thành mức ưu tiên của **case**, không phải nhãn sinh viên |
 | D.5.2 | Coverage/depth; ưu tiên within-student; im lặng khi thiếu dữ liệu | [Danh mục tín hiệu](../02-product/06-signal-catalog.md), [Ethics](../02-product/05-ethics.md) | Bắt buộc hiển thị/kiểm soát |
 | E.1–E.2 | Mở rộng vùng chăm sóc; giảm bỏ học và tăng gắn bó | [Bài toán](../02-product/01-problem.md) | Outcome dài hạn, không tuyên bố đạt trong MVP |
@@ -56,7 +56,7 @@ Brief nhắc tới `Final_W` nhưng không định nghĩa đầy đủ nhãn, gr
 |:--------|:-----------|:--------------------|:-----------------------|
 | Bối cảnh đại học vs scaffold synthetic | Brief dùng sinh viên, GPA/tín chỉ và Ban Lãnh đạo Khoa/Trường; generator cũ dùng lớp `10A1`–`12C1` | Đã quyết định loại synthetic và dùng contract EPU | M05 xác minh nguồn; M06 chuẩn hóa V59/`epu_data`; Hoàng chỉ nhận fixture pseudonymous đã validate |
 | Primary user | Brief chọn Ban Lãnh đạo; PRD cũ đặt GVCN ở trung tâm dashboard | PRD/stakeholder/process đã lấy Ban Lãnh đạo làm primary user | UI/routing cần khớp luồng review trước handoff |
-| Phạm vi tín hiệu | Brief liệt kê 13 dòng học vụ và 6 tín hiệu bổ sung; data hiện chỉ có điểm/chuyên cần | Tách catalog dài hạn khỏi MVP | Không tạo UI giả cho nguồn chưa có |
+| Phạm vi tín hiệu | Brief liệt kê 13 dòng học vụ và 6 tín hiệu bổ sung; MVP chốt điểm + điểm danh theo thời gian | Catalog dài hạn tách khỏi CORE MVP | Không tạo UI giả; thiếu nguồn điểm danh → `insufficient_data` + theo dõi `H15` |
 | Coverage/depth | Brief yêu cầu nhưng [feature contract](../../backend/app/ml/early_warning/types.py) hiện chưa thể hiện đầy đủ | Đưa vào PRD/ethics/catalog | Bổ sung contract/API/UI hoặc ghi rõ limitation trong demo |
 | Output D0–D3 | [Dashboard mock](../../frontend/src/app/dashboard/page.tsx) còn hiển thị “Điểm rủi ro” và raw score | Chuyển thành ưu tiên của case và trạng thái workflow | Đổi copy/UI/API public, ẩn raw score và đổi tên `risk list` trước demo |
 | Fairness ground truth/nhóm audit | Catalog EPU có `Trạng thái` ở V59 nhưng không có nhóm kinh tế/dân tộc được phê duyệt | PRD yêu cầu metric chỉ khi có ground truth, nhóm và mẫu số rõ | Không tạo nhóm/label synthetic; FR-09 trả `insufficient_data` đến khi data owner cấp nguồn hợp lệ |

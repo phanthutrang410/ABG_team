@@ -1,15 +1,43 @@
 # Nhật ký công việc
 
+## 2026-07-18 (scope: điểm danh theo thời gian = MVP)
+
+- Sửa decision #9/#13, RULES, PRD, problem, signal catalog (`CORE-03`), traceability, sprint, stories, architecture, EPU contract/catalog/persistence: **điểm danh theo thời gian thuộc MVP**, không Post-MVP.
+- `H15` chuyển về P1/MVP (source approval). Forecast/gated fusion (`M07`/`M08`/`H14`/`H17`/`T04`) vẫn research/Post-MVP ngoài CP2.
+- Thiếu nguồn điểm danh → `insufficient_data`; cấm tạo chuỗi giả.
+
+## 2026-07-18 (persistence DB readiness)
+
+- Theo yêu cầu chuẩn bị database cho các task sau, thêm `H19` (schema/migration DB rỗng) và `H20` (import fixture approved) trước `H08`. DB cũ chỉ được inventory metadata/pattern; không copy schema/row/raw export.
+- Chưa có M04, M05b hay artifact data-owner approval trong workspace: không nạp V59, `epu_data` hay synthetic. `H20` phải rollback nếu thiếu approval/hash/count/schema/PII gate.
+
+## 2026-07-18 (~03:20 re-verify H06b / H07 / H05b)
+
+- Re-audit DoD: transition API + templates + runbook đã đủ; chỉ sửa nit `.ai-log/README.md` example path `03-system-architecture` → `05-system-architecture`.
+- Checks: `ruff check app tests` pass; `pytest -q tests/test_case_transitions.py` → 15 passed; `.\scripts\verify.ps1 -Quick` (xem kết quả cùng handoff).
+- Verdict giữ Done cho cả ba; chưa commit (theo yêu cầu).
+
+## 2026-07-18 (~02:40 board merge — H06b / H07 / H05b)
+
+- `H06b` Done: Process §4 transitions + forbidden actions + `advisor_ref` gate dưới `/cases`; `backend/app/cases/*`, `main.py`, `tests/test_case_transitions.py` (15 xanh; Quick+full verify). Gap: in-memory store; chưa full public ReviewCase (`H06a`). `H03` còn `BLOCKED → H08`.
+- `H07` Done: [deploy runbook](../04-engineering/06-deploy-runbook.md) draft từ arch, không secret; linked docs index + arch; finalize Live/smoke/rollback tại `D4`. `D4` còn `BLOCKED → H02, G02, D3`.
+- `H05b` Done: `.ai-log/templates/*` + release-evidence template; pointer README/`07-release-evidence` only. Mở `V08`.
+
+## 2026-07-18 (~H05a Done)
+
+- `H05a` Done: [kiến trúc tối thiểu](../04-engineering/05-system-architecture.md); Process §4 khóa ma trận transition + mã API + `defer`/`advisor_ref` gate; PRD FR-06/07 + product statement; banner Target vs MVP trên BRD/scope; decision #15; index docs.
+- Mở khóa `H06b`, `H07`, `H05b`. `H10`/`H13`/`H12a` vẫn chờ `M04` (và H10). P0.5 còn một chân `M04`.
+
 ## 2026-07-18 (~02:10 board recovery)
 
 - P0.5 **chưa qua** (H05/M04 vẫn TODO lúc ~02:03): cập nhật [Sprint](03-sprint.md) recovery plan; tách choke-point docs `H05a/b`, `H11a/b`, `H12a/b`; thêm `D4r` (QA→fix→re-smoke); `H16` phụ thuộc thêm `V05`.
-- Đồng bộ Process state machine cho `H06b`/`H03`; `H03` phụ thuộc `H08` + test thiếu `advisor_ref`; tách `M05a/b`; M06 = 4 domain + manifests; reopen `M01` + `H18` + `G05` thay mock; `M07` sau `M02/H02/H13`; `M08`←`M02+H14+H15`, `T04`←`H17`.
+- Đồng bộ Process state machine cho `H06b`/`H03`; `H03` phụ thuộc `H08` + test thiếu `advisor_ref`; tách `M05a/b`; M06 = domain + manifests; reopen `M01` + `H18` + `G05` thay mock; `M07` sau `M02/H02/H13`; `M08`←`M02+H14+H15`, `T04`←`H17`.
 - Cập nhật stories giang/Văn Hải, [release evidence](07-release-evidence.md), [EPU contract](../04-engineering/04-epu-data-integration-contract.md).
 
 ## 2026-07-18 (điều chỉnh ownership + hybrid research)
 
 - Theo phân công mới, [Sprint](03-sprint.md) giao mọi tài liệu/contract/evidence Markdown cho **Hoàng**; code/build chỉ thuộc Hoàng, Khánh Duy, Giang và Thu Trang. **giang** và **Văn Hải** bắt đầu task từ P2: UAT/QA/review, slide–mô tả asset, rehearsal/video và submission.
-- Thêm M07 để Duy nghiên cứu hybrid feature theo học kỳ + attendance forecasting. Đây là research-only: không tự tạo weekly attendance, fixture hay endpoint. H15/M08/T04 là Post-MVP và bị block đến khi data owner phê duyệt export pseudonymized, provenance và contract.
+- Thêm M07 để Duy nghiên cứu forecasting điểm danh + gated fusion. Research-only cho forecast/fusion: không tự tạo weekly attendance giả. **Sửa sau:** `H15` (source approval điểm danh) thuộc MVP; chỉ `M08`/`H17`/`T04` (và `H14` research contract) là Post-MVP/forecast ngoài CP2.
 - Agent chỉ giải thích priority/evidence/limits do model/API trả về; không tạo hoặc khẳng định dropout risk cho sinh viên.
 
 ## 2026-07-18 (tái cấu trúc task)

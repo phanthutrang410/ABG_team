@@ -23,7 +23,7 @@
 - Ứng viên primary là `v59-empty-program-students.json`: 460 hồ sơ, có `Trạng thái`, bảng điểm hai học kỳ và `Cố vấn học tập`. Chỉ được dùng sau khi M05 xác minh provenance/quyền sử dụng và xuất bản bản trích xuất đã pseudonymize.
 - `epu_data.json` là ứng viên kiểm tra transform theo chuỗi học kỳ dài hơn; không ghép với V59 vì `MSSV` không giao nhau trong snapshot đã kiểm tra, và không đủ cỡ mẫu để đánh giá model/fairness.
 - `v59-synthetic-students.json`, profile replacements và transcript v5 bị **loại khỏi pipeline** vì được catalog xác định là synthetic. Không sinh thêm điểm danh, lịch tuần, nhãn hay thuộc tính nhóm để bù khoảng trống.
-- Điểm theo môn–học kỳ là tín hiệu khả dụng. Điểm danh theo tuần không có nguồn được duyệt; mọi feature phụ thuộc nó phải trả `insufficient_data`, không được giả lập.
+- Điểm theo môn–học kỳ là tín hiệu khả dụng. Điểm danh theo thời gian **thuộc MVP** nhưng catalog reference hiện chưa có chuỗi đã duyệt — phải lấy qua `H15`; mọi feature phụ thuộc nó trả `insufficient_data` cho đến khi có nguồn, không được giả lập và không đẩy ra Post-MVP.
 
 ---
 
@@ -275,7 +275,7 @@ Hữu ích để chuẩn hóa lớp ↔ ngành ↔ khoa khi gom danh sách lãnh
 | Danh sách theo khoa/lớp | `Khoa`, `Lớp`, `Ngành` | Pseudonymize mã SV, bỏ PII thừa |
 | Giao GV phụ trách | `Cố vấn học tập` (V59) | Chuẩn hóa thành `advisor_ref`; không seed/mock email hoặc liên hệ |
 | Soạn mail | `student_ref`, lớp và `advisor_ref` sau khi case được duyệt | Chỉ tạo bản nháp; dữ liệu liên hệ nằm ngoài artifact nộp bài |
-| Điểm danh theo tuần | Không có | Không tạo feature/case; trả `insufficient_data` |
+| Điểm danh theo thời gian | Catalog reference hiện chưa có chuỗi | **MVP** qua `H15`: lấy export đã duyệt; thiếu → `insufficient_data`; **không** tạo chuỗi giả và không đẩy Post-MVP |
 | Fairness nhóm kinh tế/dân tộc | Không có | Không proxy hoặc bịa nhóm; audit trả `insufficient_data` đến khi có nguồn được phê duyệt |
 
 ---

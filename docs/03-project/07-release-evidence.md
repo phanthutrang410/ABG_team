@@ -49,3 +49,7 @@
 - CP2: không nộp `V05` trước `D4r` xanh. `H16` phải khóa evidence CP2 sau `V07` + `V05` (và gap `A05` nếu có).
 - Asset slide/mô tả không được thay đổi scope/copy canonical do Hoàng khóa (`H12a` runtime; `H12b` banner/asset).
 - Nếu một mục bị block, ghi dependency cụ thể và báo owner, không dùng screenshot/mock thay thế.
+
+## 6. Fill template (H05b)
+
+Khi điền cột Evidence, dùng form trong [templates/release-evidence-item.template.md](templates/release-evidence-item.template.md). Checklist ở trên vẫn là nguồn trạng thái; template chỉ chuẩn hóa cách ghi bằng chứng.

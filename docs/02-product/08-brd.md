@@ -1,10 +1,12 @@
 # BRD — Silent Shield (Business Requirements)
 
+> **Phạm vi tài liệu:** BRD mô tả **sản phẩm đích / Target** (có thể gồm Wellbeing, D0–D3, SLA dài hạn). **MVP 48 giờ** ship theo [PRD](04-prd.md) + [Process §4](03-process.md): điểm theo học kỳ, điểm danh theo thời gian, `review_priority_band`, trạng thái case Process — **không** triển khai trục Wellbeing, không dùng D0–D3/W0–W3 làm state UI/API, không claim forecasting/hybrid đã ship.
+
 ## 1. Mục đích tài liệu
 
 BRD mô tả yêu cầu ở **cấp nghiệp vụ** cho sản phẩm đích (bối cảnh đại học). [PRD](04-prd.md) là bản chuyển các yêu cầu này thành phạm vi demo được trong MVP 48 giờ — khi hai tài liệu khác nhau, áp dụng thứ tự ưu tiên trong [docs/README](../README.md).
 
-Lưu ý thuật ngữ: tài liệu này dùng thang D0–D3/W0–W3 và từ "cảnh báo" ở cấp nghiệp vụ; mọi hiển thị trên giao diện phải tuân theo bảng thuật ngữ nhất quán trong [Bài toán](01-problem.md) ("tín hiệu cần rà soát", "mức độ ưu tiên rà soát").
+Lưu ý thuật ngữ: tài liệu này dùng thang D0–D3/W0–W3 và từ "cảnh báo" ở cấp nghiệp vụ **Target**. Mọi hiển thị trên giao diện MVP phải tuân theo bảng thuật ngữ trong [Bài toán](01-problem.md) ("tín hiệu cần rà soát", "mức độ ưu tiên rà soát") và trạng thái trong [Process §4](03-process.md).
 
 ## 2. Mục tiêu nghiệp vụ
 

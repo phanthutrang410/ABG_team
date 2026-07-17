@@ -42,8 +42,8 @@ Hoàng nhận được evidence/gap có thể hành động cho `D4r` và `H16`.
 ### Cách làm
 
 1. Chỉ lấy thông điệp, giới hạn và screenshot từ `H12b`/`H16` và Live URL đã qua `D4r`.
-2. Trình bày semester-only MVP, human review, privacy/care, fairness fail-closed và agent grounded.
-3. Nếu hybrid chưa qua H15, ghi rõ đây là hướng Post-MVP bị chặn bởi source approval; không đưa nó thành tính năng đã ship.
+2. Trình bày MVP gồm điểm theo kỳ + điểm danh theo thời gian, human review, privacy/care, fairness fail-closed và agent grounded.
+3. Nếu `H15` chưa Done, ghi giới hạn dữ liệu (`insufficient_data`) trên nhánh chuyên cần — **không** gọi đó là Post-MVP. Forecast/fusion (nếu nhắc) mới là research bị chặn.
 4. Bàn giao asset cho Văn Hải quay D2 và nộp V06.
 
 ### Không làm

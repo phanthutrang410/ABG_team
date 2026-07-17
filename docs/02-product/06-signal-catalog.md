@@ -12,12 +12,13 @@ Mỗi tín hiệu phải đi qua bốn cổng trước khi sử dụng: có mụ
 |:---|:---------|:--------------------|:-----------------|:-----------|
 | CORE-01 | Xu hướng điểm theo kỳ | Độ dốc điểm tổng kết giữa các kỳ | `term_grade` từ V59 đã pseudonymize | MVP khi có ≥2 kỳ |
 | CORE-02 | Biến động điểm theo kỳ | Mức dao động điểm theo học phần/kỳ | `term_grade` từ V59 đã pseudonymize | MVP khi coverage đủ |
-| META-01 | Độ phủ dữ liệu | Số kỳ/học phần hợp lệ, tỷ lệ thiếu, freshness và provenance | `data_quality_report` | MVP, không dùng như tín hiệu độc lập |
+| CORE-03 | Chuyên cần theo thời gian | Xu hướng vắng/hiện diện theo buổi/ngày/tuần đã duyệt | Export điểm danh sau `H15` | **MVP** — thiếu nguồn → `insufficient_data`, không đẩy Post-MVP |
+| META-01 | Độ phủ dữ liệu | Số kỳ/học phần/mốc chuyên cần hợp lệ, tỷ lệ thiếu, freshness và provenance | `data_quality_report` | MVP, không dùng như tín hiệu độc lập |
 | META-02 | Routing được phép | Có `advisor_ref` và scope mapping hợp lệ | `advisor_assignment` | Điều kiện handoff, không dùng scoring |
 | AUDIT-01 | Nhóm kinh tế | Chỉ phân nhóm metric fairness | Không có trong catalog EPU | `insufficient_data`, cấm proxy/scoring |
 | AUDIT-02 | Nhóm dân tộc | Chỉ phân nhóm metric fairness | Không có trong catalog EPU | `insufficient_data`, cấm proxy/scoring |
 
-MVP ưu tiên thay đổi so với lịch sử của chính sinh viên. Không có nguồn điểm danh tuần được duyệt nên không có CORE chuyên cần trong MVP. Ngưỡng tuyệt đối, nếu có, chỉ là điều kiện hỗ trợ và chỉ được demo với false positive/false negative khi snapshot có nhãn/cỡ mẫu phù hợp.
+MVP ưu tiên thay đổi so với lịch sử của chính sinh viên. Điểm danh theo thời gian là CORE MVP (`CORE-03`); catalog reference hiện có thể chưa có chuỗi — `H15` phải lấy nguồn đã duyệt; cấm tạo chuỗi giả. Ngưỡng tuyệt đối, nếu có, chỉ là điều kiện hỗ trợ và chỉ được demo với false positive/false negative khi snapshot có nhãn/cỡ mẫu phù hợp.
 
 ## 3. Ứng viên tín hiệu học vụ hậu MVP
 
@@ -30,8 +31,8 @@ Brief gọi đây là “12 tiêu chí” nhưng bảng nguồn có thêm một 
 | CAND-03 | Credit momentum | SIS | So với tiến độ chương trình/cohort ẩn danh; rà bias theo ngành/hệ | Hậu MVP |
 | CAND-04 | Hoạt động LMS | Metadata LMS | Chỉ tần suất/khoảng hoạt động; không đọc nội dung; ưu tiên within-student | Hậu MVP, cần privacy review |
 | CAND-05 | Nộp bài và thời điểm nộp | LMS gradebook | Chỉ trạng thái/timing, không đánh giá nội dung bài | Hậu MVP |
-| CAND-06 | Chuyên cần và vắng thi | Điểm danh/khảo thí | Xử lý nghỉ có phép, lỗi điểm danh và đặc thù môn trước khi tạo case | Một phần đã có trong MVP |
-| CAND-07 | Thời gian vào lớp | Điểm danh theo giờ | Chỉ xu hướng đi muộn; cần xác minh chất lượng bằng chứng và ngoại lệ | Chưa duyệt |
+| CAND-06 | Chuyên cần và vắng thi | Điểm danh/khảo thí | Xử lý nghỉ có phép, lỗi điểm danh và đặc thù môn trước khi tạo case | **CORE-03 trong MVP**; phần vắng thi/khảo thí mở rộng hậu MVP |
+| CAND-07 | Thời gian vào lớp | Điểm danh theo giờ | Chỉ xu hướng đi muộn; cần xác minh chất lượng bằng chứng và ngoại lệ | Hậu MVP / chưa duyệt |
 | CAND-08 | Tiến độ so với cohort | SIS | Dùng thống kê cohort đủ lớn; hiển thị giới hạn khi chương trình khác nhau | Hậu MVP |
 | CAND-09 | Hành vi đăng ký học phần | Log đăng ký | Không diễn giải việc giảm tải là disengagement nếu chưa rà bối cảnh | Hậu MVP |
 | CAND-10 | Trạng thái cảnh báo/bảo lưu | Hồ sơ học vụ | Dùng như ngoại lệ/quy tắc nghiệp vụ có thời hạn, không thành nhãn cố định | Hậu MVP |
