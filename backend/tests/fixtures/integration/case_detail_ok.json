@@ -1,0 +1,32 @@
+{
+  "case": {
+    "case_id": "case_pseudo_001",
+    "student_ref": "stu_pseudo_001",
+    "case_state": "pending_review",
+    "review_priority_band": "can_ra_soat",
+    "contributing_factors": [
+      {
+        "code": "grade_trend_negative",
+        "evidence_refs": ["term_avg:20242", "term_avg:20251"]
+      }
+    ],
+    "coverage": {
+      "n_valid_terms": 2,
+      "n_courses": 8,
+      "n_attendance_events": 0,
+      "last_term_code": "20251",
+      "last_attendance_at": null,
+      "status": "partial",
+      "reason_codes": ["attendance_source_unapproved"]
+    },
+    "data_state": "partial",
+    "limitations": ["attendance_source_unapproved", "copy.partial_term_only"],
+    "dataset_version": "epu-v59-empty:deadbeef:schema-1",
+    "model_version": "ew-term-0.1-uncalibrated",
+    "threshold_config_version": "thr-epu-0.1-uncalibrated",
+    "calculated_at": "2026-07-18T04:00:00Z"
+  },
+  "state": "ok",
+  "freshness": "fresh",
+  "problem": null
+}

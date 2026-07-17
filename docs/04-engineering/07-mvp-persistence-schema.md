@@ -1,6 +1,6 @@
 # MVP persistence schema — H19/H20
 
-> **Trạng thái:** Implementation target sau `H10` (**Done**). `H19` được mở; `H20` chỉ bắt đầu sau `H19` + `M06` (do đó đã có M05b/data-owner approval). Tài liệu này không cho phép nạp reference clone, raw export hay dữ liệu synthetic.
+> **Trạng thái:** `H19` **Done** — empty versioned `dwh` schema + Alembic revision `20260718_h19_dwh` (migrate empty DB repeatable). `H20` chỉ bắt đầu sau `H19` + `M06` (do đó đã có M05b/data-owner approval). Tài liệu này không cho phép nạp reference clone, raw export hay dữ liệu synthetic.
 >
 > **Owner:** Hoàng · **Evidence khi Done:** migration revision, mapping metadata không PII, test DB rỗng/repeatable và import-gate test.
 
@@ -34,6 +34,8 @@ Mọi bảng domain phải scoped bằng `source_id`; không cross-join V59 và 
 | Attendance tuần synthetic / protected group synthetic | Không tạo cột/path từ legacy; điểm danh thật chỉ qua `H15` |
 
 Nếu inventory legacy không có DDL truy cập được, H19 ghi `legacy_schema_unavailable`; không tự suy diễn bảng hoặc nạp reference để bù.
+
+**H19 inventory result:** `legacy_schema_unavailable` — reference clone is gitignored (`reference-Learning-Analytics-AI/`) and no accessible legacy DDL/SQL dump was available in-repo for inventory. MVP tables follow this design doc + [EPU contract](04-epu-data-integration-contract.md) only; no legacy rows or schema were copied.
 
 ## 4. Import gate của H20
 

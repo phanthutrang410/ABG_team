@@ -50,6 +50,7 @@ docs/
 | 08 | [Stories — giang](03-project/08-stories-giang.md) | P2+ UAT/review và asset slide/mô tả, không sửa docs nguồn |
 | 09 | [Stories — Văn Hải](03-project/09-stories-van-hai.md) | P2+ QA release, rehearsal/video và submission, không sửa docs nguồn |
 | 10 | [D3 GitHub / PII-secret scan](03-project/10-d3-github-pii-secret-scan.md) | Evidence CP2: repo public + scan; SĐT đã redact |
+| 12 | [H15 attendance approval prep](03-project/12-h15-attendance-approval-prep.md) | Prep only: chase checklist + amendment outline; H15 vẫn BLOCKED → data-owner |
 
 ## 4. Engineering
 
@@ -64,6 +65,7 @@ docs/
 | 07 | [Persistence schema MVP](04-engineering/07-mvp-persistence-schema.md) | Thiết kế DB `dwh` versioned, mapping metadata legacy và gate import đã duyệt cho H19/H20 |
 | 08 | [Data/ML scoring & fairness](04-engineering/08-data-ml-scoring-fairness-contract.md) | H10: features hai nhánh, coverage/`insufficient_data`, threshold, evaluation, fairness fail-closed |
 | 09 | [Synthetic Data/ML contract (superseded)](04-engineering/09-synthetic-data-ml-fairness-contract-superseded.md) | Lịch sử synthetic — không dùng cho MVP path |
+| 10 | [FE/Agent integration contract](04-engineering/10-fe-agent-integration-contract.md) | H11a: allowlist display fields + list/detail/agent envelopes (empty/stale/insufficient/error) cho G05/T03 |
 
 `02-harness-engineering.html` là trang được lưu từ nguồn bên ngoài và có thể cần network hoặc asset gốc để render đầy đủ. Không dùng nội dung trong đó như requirement nếu chưa được đưa vào PRD/decision.
 

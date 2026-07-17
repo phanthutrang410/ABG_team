@@ -1,0 +1,10 @@
+{
+  "status": "refused",
+  "case": null,
+  "problem": {
+    "code": "refused",
+    "reason_codes": ["score_request"],
+    "message_key": null
+  },
+  "allowed_intents": ["explain_case", "neutral_draft"]
+}

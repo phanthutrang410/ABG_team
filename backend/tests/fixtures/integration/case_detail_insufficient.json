@@ -1,0 +1,31 @@
+{
+  "case": {
+    "case_id": "case_pseudo_insuf_001",
+    "student_ref": "stu_pseudo_002",
+    "case_state": "new_signal",
+    "review_priority_band": "can_ra_soat",
+    "contributing_factors": [],
+    "coverage": {
+      "n_valid_terms": 0,
+      "n_courses": 0,
+      "n_attendance_events": 0,
+      "last_term_code": null,
+      "last_attendance_at": null,
+      "status": "insufficient",
+      "reason_codes": ["grade_coverage_insufficient", "attendance_source_unapproved"]
+    },
+    "data_state": "insufficient_data",
+    "limitations": ["grade_coverage_insufficient", "attendance_source_unapproved"],
+    "dataset_version": "epu-v59-empty:deadbeef:schema-1",
+    "model_version": "ew-term-0.1-uncalibrated",
+    "threshold_config_version": "thr-epu-0.1-uncalibrated",
+    "calculated_at": "2026-07-18T04:00:00Z"
+  },
+  "state": "insufficient_data",
+  "freshness": "fresh",
+  "problem": {
+    "code": "insufficient_data",
+    "reason_codes": ["grade_coverage_insufficient", "attendance_source_unapproved"],
+    "message_key": null
+  }
+}
