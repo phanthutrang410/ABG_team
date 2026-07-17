@@ -127,7 +127,7 @@
 | `Rút học phí` | 2 | 0 | 0 |
 | `Bảo lưu` | 1 | 0 | 0 |
 
-Gợi ý nhãn dương cho dropout modeling (cần chốt product): gộp `Thôi học` + `Buộc thôi học` (+ tùy chọn `Rút học phí`); `Bảo lưu` tách riêng (không mặc định = dropout).
+Gợi ý lịch sử (đã **chốt H10 / decision #17**): positive evaluation = `Thôi học` + `Buộc thôi học` chỉ; `Rút học phí` và `Bảo lưu` → `unknown` (không gộp positive; không mặc định dropout). Chi tiết: [EPU §3](04-epu-data-integration-contract.md).
 
 ### 3.3. Phần tử `grades[]`
 

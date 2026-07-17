@@ -1,7 +1,8 @@
 """FairnessReport contract (H06c).
 
-Semantics: docs/04-engineering/05-data-ml-fairness-contract.md (M04) §7-§8.
-Chỉ tính trên dữ liệu synthetic; thuộc tính nhóm không tham gia scoring (FR-09).
+Semantics: docs/04-engineering/08-data-ml-scoring-fairness-contract.md (H10) §6.
+MVP path fail-closed khi thiếu audit attribute; fixture synthetic cũ sẽ rework.
+Lịch sử: docs/04-engineering/09-synthetic-data-ml-fairness-contract-superseded.md.
 """
 
 from __future__ import annotations

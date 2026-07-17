@@ -1,5 +1,18 @@
 # Nhật ký công việc
 
+## 2026-07-18 (~04:15 H10 Done)
+
+- `M04` artifact đã có ([handoff](10-m04-data-ml-handoff.md)); `H10` khóa contract: [EPU](../04-engineering/04-epu-data-integration-contract.md), [Data-ML](../04-engineering/08-data-ml-scoring-fairness-contract.md), decision #17.
+- Taxonomy: `Rút học phí`/`Bảo lưu` → `unknown`; pseudonym ngoài repo; attendance default cửa sổ/mốc + `attendance_source_unapproved` tới H15; copy keys cho H12a.
+- Supersede synthetic contract → `09-synthetic-…`; P0.5 **Done**; mở `H06a`/`H19`/`M05a`/`H12a`/`H13`/`H06c`. H10 Done ≠ nguồn đã duyệt (`M05b`).
+
+## 2026-07-18 (~04:00 D3 Done)
+
+- `D3` Done: repo đã `visibility=public` (`https://github.com/phanthutrang410/ABG_team`); anonymous API/HTML 200.
+- Scan tracked tree (`scripts/d3_pii_secret_scan.py` + gitleaks): không secret trong tree; 24 SĐT trong `02-team.md` / `Khao_sat_ABG_tong_hop.md` → redact cột Liên hệ `—`.
+- Evidence: [10-d3-github-pii-secret-scan.md](10-d3-github-pii-secret-scan.md); private JSON dưới `.ai-log-private/` (gitignored). `.gitleaks.toml` allowlist false positive + ignored paths.
+- Residual: SĐT vẫn có trong git history cũ (không rewrite). `D4`/`V07` còn chờ `H02`/`G02`/`D4`.
+
 ## 2026-07-18 (scope: điểm danh theo thời gian = MVP)
 
 - Sửa decision #9/#13, RULES, PRD, problem, signal catalog (`CORE-03`), traceability, sprint, stories, architecture, EPU contract/catalog/persistence: **điểm danh theo thời gian thuộc MVP**, không Post-MVP.

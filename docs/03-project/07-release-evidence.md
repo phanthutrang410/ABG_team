@@ -19,7 +19,7 @@
 | Live URL hoạt động (smoke lần 1) | Hoàng | D4 |  | [ ] |
 | Smoke test ẩn danh độc lập lần 1 | Văn Hải | V07 |  | [ ] |
 | Fix → redeploy → re-smoke | Hoàng | D4r |  | [ ] |
-| GitHub public, PII/secret scan | Hoàng | D3 |  | [ ] |
+| GitHub public, PII/secret scan | Hoàng | D3 | [10-d3-github-pii-secret-scan.md](10-d3-github-pii-secret-scan.md) · https://github.com/phanthutrang410/ABG_team | [x] |
 | BTC nhận 2 URL | Văn Hải | V05 |  | [ ] |
 | Hoàng hoàn thiện evidence CP2 | Hoàng | H16 (sau V07, V05) |  | [ ] |
 

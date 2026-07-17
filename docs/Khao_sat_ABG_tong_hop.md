@@ -6,14 +6,14 @@ Nguồn: `Khảo sát ABG(1-6).xlsx` — **6 phản hồi** (15/07 – 17/07/202
 
 ## 🧭 Tổng quan nhanh
 
-| # | Họ tên | SĐT | Kinh nghiệm đã qua | Vai trò mong muốn | Thế mạnh nổi bật |
-|---|--------|-----|--------------------|--------------------|--------------------|
-| 1 | **Bùi Khánh Duy** | 0862607525 | Nghiên cứu | ML, Frontend, Backend | ML/DL, Xử lý dữ liệu AI, Nghiên cứu, Product Thinking, Soft-skills (5đ) |
-| 2 | **Hoàng** | 0369187580 | Nghiên cứu, Internship, Sản phẩm thực tế | AI/LLM Dev, Backend, PM | Gần như toàn diện — AI/LLM, ML/DL, Backend, DevOps (4-5đ) |
-| 3 | **Nguyễn Trường Giang** | 0392856881 | Hackathon, Internship, Sản phẩm thực tế | Data Engineering, Frontend, PM | Làm việc nhóm (5đ), Product Thinking, Data Analysis |
-| 4 | **Trần Hạ Giang** | 0931673183 | Hackathon, Startup, Cuộc thi học thuật | Business Analysis, Presentation/Pitch | Phân tích yêu cầu, Product Thinking, Data Analysis, Thuyết trình (5đ) |
-| 5 | **Đậu Văn Hải** | 0858676457 | Internship | PM, BA, Presentation/Pitch | Toàn bộ mảng phân tích & soft-skill đều 4đ, không có nền tảng kỹ thuật |
-| 6 | **Phan Thu Trang** | 0349996812 | Hackathon, Nghiên cứu, Internship, Cuộc thi học thuật | Data Engineering, ML, AI/LLM Dev | Đồng đều (3đ), nổi bật Làm việc nhóm (4đ), có AI Agent/LangChain |
+| # | Họ tên | Liên hệ | Kinh nghiệm đã qua | Vai trò mong muốn | Thế mạnh nổi bật |
+|---|--------|---------|--------------------|--------------------|--------------------|
+| 1 | **Bùi Khánh Duy** | — | Nghiên cứu | ML, Frontend, Backend | ML/DL, Xử lý dữ liệu AI, Nghiên cứu, Product Thinking, Soft-skills (5đ) |
+| 2 | **Hoàng** | — | Nghiên cứu, Internship, Sản phẩm thực tế | AI/LLM Dev, Backend, PM | Gần như toàn diện — AI/LLM, ML/DL, Backend, DevOps (4-5đ) |
+| 3 | **Nguyễn Trường Giang** | — | Hackathon, Internship, Sản phẩm thực tế | Data Engineering, Frontend, PM | Làm việc nhóm (5đ), Product Thinking, Data Analysis |
+| 4 | **Trần Hạ Giang** | — | Hackathon, Startup, Cuộc thi học thuật | Business Analysis, Presentation/Pitch | Phân tích yêu cầu, Product Thinking, Data Analysis, Thuyết trình (5đ) |
+| 5 | **Đậu Văn Hải** | — | Internship | PM, BA, Presentation/Pitch | Toàn bộ mảng phân tích & soft-skill đều 4đ, không có nền tảng kỹ thuật |
+| 6 | **Phan Thu Trang** | — | Hackathon, Nghiên cứu, Internship, Cuộc thi học thuật | Data Engineering, ML, AI/LLM Dev | Đồng đều (3đ), nổi bật Làm việc nhóm (4đ), có AI Agent/LangChain |
 
 ---
 
@@ -43,7 +43,7 @@ Nguồn: `Khảo sát ABG(1-6).xlsx` — **6 phản hồi** (15/07 – 17/07/202
 
 ## 👤 Chi tiết từng thành viên
 
-### 1. Bùi Khánh Duy — *SĐT: 0862607525*
+### 1. Bùi Khánh Duy
 - **Kinh nghiệm:** Nghiên cứu
 - **Điểm mạnh (5đ):** ML/DL, Xử lý dữ liệu cho AI, Phân tích yêu cầu, Product Thinking, Data Analysis, Nghiên cứu/Benchmark, Làm việc nhóm, Thuyết trình, Viết tài liệu
 - **Điểm cần cải thiện (1đ):** Xây dựng ứng dụng AI/LLM, Backend, Frontend, Deploy/vận hành, BA
@@ -52,7 +52,7 @@ Nguồn: `Khảo sát ABG(1-6).xlsx` — **6 phản hồi** (15/07 – 17/07/202
 - **Vai trò mong muốn:** Machine Learning, Frontend Development, Backend Development
 - **Nhận xét:** Hồ sơ phân cực rõ — rất mạnh về tư duy/nghiên cứu/phân tích và kỹ năng mềm (hầu hết đạt điểm tối đa), nhưng tự đánh giá thấp ở phần triển khai kỹ thuật thực chiến dù có liệt kê khá nhiều công cụ AI. **Phù hợp nhất với vai trò nghiên cứu/phân tích mô hình ML** hơn là dựng sản phẩm end-to-end.
 
-### 2. Hoàng — *SĐT: 0369187580*
+### 2. Hoàng
 - **Kinh nghiệm:** Nghiên cứu, Internship, Phát triển sản phẩm thực tế
 - **Điểm mạnh (5đ):** AI/LLM App, ML/DL, Backend (cả 2 mục), Xử lý dữ liệu AI, Deploy/vận hành, Viết tài liệu
 - **Điểm khá (3-4đ):** Frontend (3), BA (3), Thuyết trình (3) — vẫn ở mức ổn, không có điểm yếu rõ rệt
@@ -61,7 +61,7 @@ Nguồn: `Khảo sát ABG(1-6).xlsx` — **6 phản hồi** (15/07 – 17/07/202
 - **Vai trò mong muốn:** AI/LLM Development, Backend Development, PM
 - **Nhận xét:** **Hồ sơ toàn diện nhất trong nhóm** — vừa mạnh kỹ thuật (AI/LLM, ML, Backend, DevOps) vừa có kinh nghiệm sản phẩm thực tế, đồng thời là người mang lại nhiều nguồn lực nhất (GPU, cloud, API key, dataset). Ứng viên trọng tâm cho vai trò **AI/LLM Engineer kiêm đầu tàu kỹ thuật**.
 
-### 3. Nguyễn Trường Giang — *SĐT: 0392856881*
+### 3. Nguyễn Trường Giang
 - **Kinh nghiệm:** Hackathon, Internship, Phát triển sản phẩm thực tế
 - **Điểm mạnh:** Làm việc nhóm (5), Product Thinking (4), Data Analysis (4), Thuyết trình (4), Viết tài liệu (4)
 - **Còn lại:** Đồng đều ở mức 3 (AI/LLM, ML, Backend, Frontend, Deploy, Phân tích yêu cầu, BA, Nghiên cứu)
@@ -70,7 +70,7 @@ Nguồn: `Khảo sát ABG(1-6).xlsx` — **6 phản hồi** (15/07 – 17/07/202
 - **Vai trò mong muốn:** Data Engineering/Data Processing, Frontend Development, PM
 - **Nhận xét:** Generalist mức khá, không có điểm yếu nổi bật; nổi bật ở kỹ năng làm việc nhóm và tư duy sản phẩm. Có thể đảm nhiệm linh hoạt **Data/Frontend** hoặc hỗ trợ **PM** khi cần.
 
-### 4. Trần Hạ Giang — *SĐT: 0931673183*
+### 4. Trần Hạ Giang
 - **Kinh nghiệm:** Hackathon, Startup, Cuộc thi học thuật
 - **Điểm mạnh (5đ):** Phân tích & xác định yêu cầu, Product Thinking, Data Analysis, Thuyết trình
 - **Điểm yếu (1-2đ):** Toàn bộ mảng kỹ thuật — AI/LLM (2), ML/DL (2), Backend (1-2), Frontend (2), Deploy (1)
@@ -79,7 +79,7 @@ Nguồn: `Khảo sát ABG(1-6).xlsx` — **6 phản hồi** (15/07 – 17/07/202
 - **Vai trò mong muốn:** Business Analysis (BA), Presentation/Demo/Pitch
 - **Nhận xét:** Hồ sơ rất rõ nét, đúng như vai trò mong muốn — mạnh về **phân tích yêu cầu, tư duy sản phẩm và trình bày/pitch**, kỹ thuật không phải thế mạnh. Phù hợp làm **BA / người chốt bài toán & thuyết trình demo**.
 
-### 5. Đậu Văn Hải — *SĐT: 0858676457*
+### 5. Đậu Văn Hải
 - **Kinh nghiệm:** Internship
 - **Điểm mạnh (4đ đồng đều):** Phân tích yêu cầu, BA, Product Thinking, Data Analysis, Nghiên cứu, Làm việc nhóm, Thuyết trình, Viết tài liệu
 - **Điểm yếu (1đ, toàn bộ):** AI/LLM, ML/DL, Backend (cả 2 mục), Frontend, Deploy
@@ -88,7 +88,7 @@ Nguồn: `Khảo sát ABG(1-6).xlsx` — **6 phản hồi** (15/07 – 17/07/202
 - **Vai trò mong muốn:** PM, BA, Presentation/Demo/Pitch
 - **Nhận xét:** Không có nền tảng kỹ thuật nhưng có một **profile phân tích/soft-skill rất đồng đều và tự nhận thức rõ ràng** — mọi mảng "phân tích + mềm" đều 4đ. Tuy nhiên **không đảm nhận PM** vì thiếu base kỹ thuật để điều phối công việc dev (PM đã giao cho Hoàng) — **vai trò phân công: BA & Presentation/Demo/Pitch**, tập trung chốt bài toán & trình bày thay vì code.
 
-### 6. Phan Thu Trang — *SĐT: 0349996812*
+### 6. Phan Thu Trang
 - **Kinh nghiệm:** Hackathon, Nghiên cứu, Internship, Cuộc thi học thuật (kinh nghiệm đa dạng nhất nhóm)
 - **Điểm mạnh:** Làm việc nhóm (4), Nghiên cứu/Benchmark (4)
 - **Còn lại:** Đồng đều mức 3 trên tất cả các mảng kỹ thuật lẫn phân tích

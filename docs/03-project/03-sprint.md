@@ -6,7 +6,7 @@
 >
 > **Chặn phạm vi hybrid (forecasting):** Duy được nghiên cứu forecasting điểm danh + gated fusion (`M07`/`M08`). Điểm danh theo thời gian **thuộc MVP** (sau export data owner phê duyệt ở `H15`). Không được tự tạo hay dùng fixture attendance giả khi chưa có nguồn duyệt; thiếu nguồn → `insufficient_data`. Forecast/fusion vẫn ngoài CP2; không đồng nghĩa đẩy chuyên cần ra Post-MVP.
 >
-> **Snapshot board 18/7:** `H05a` Done; `M04` vẫn TODO → **P0.5 một phần**; `H10` chờ M04. Xem mục 1.1 recovery.
+> **Snapshot board 18/7:** `H05a` + `M04` + `H10` Done → **P0.5 qua**; mở `H06a`/`H19`/`M05a`/`H12a`/`H13` (H15 còn chờ data-owner). Xem mục 1.1 recovery.
 
 **Quy ước tên:** Giang = Nguyễn Trường Giang (FE); giang = Trần Hạ Giang (QA/review/presentation). ID là mã workstream ổn định; cột **Owner** mới là nguồn chuẩn phân công, không suy ra owner từ tiền tố ID.
 
@@ -31,8 +31,8 @@
 | Gate | Thời gian | Focus | Exit criteria | Trạng thái |
 |:--|:--|:--|:--|:--|
 | P0 | 17/7 11:00–15:00 | Scaffold | Health, FE shell | [x] (M01 legacy chưa sạch — reopen) |
-| P0.5 | kế hoạch 17/7 22:30–18/7 00:30 | Contract lock | `H05a` + `M04` Done; schema/code chỉ theo contract | **Một phần** — `H05a` Done; còn `M04` |
-| P1 | recovery 18/7 sáng → CP1 | Vertical slice | Baseline điểm theo kỳ + điểm danh theo thời gian + CP1 | **Blocked** bởi P0.5 |
+| P0.5 | kế hoạch 17/7 22:30–18/7 00:30 | Contract lock | `H05a` + `M04` Done; schema/code chỉ theo contract | **[x] Done** — `H05a` + `M04` + `H10` (mốc cũ đã trễ) |
+| P1 | recovery 18/7 sáng → CP1 | Vertical slice | Baseline điểm theo kỳ + điểm danh theo thời gian + CP1 | Mở — còn `M05a`… |
 | P2 | 18/7 11:00–23:00 | Rubric + live | UI/API/test + QA→fix→re-smoke + CP2 | Chưa mở đủ |
 | P3 | 18/7 23:00–19/7 11:00 | Release | Docs cuối, slide/video, AI log, form nộp | Chưa |
 
@@ -40,11 +40,11 @@
 
 | Việc | Owner | Mục tiêu mới | Ghi chú |
 |:--|:--|:--|:--|
-| `H05a` minimum contract/state | Hoàng | ASAP · trước 03:30 | **Done** — mở `H06b`/`H07`; `H10` còn chờ `M04` |
-| `M04` handoff Data/ML | Khánh Duy | ASAP · trước 03:30 | Song song `H05a`; không sửa canonical Markdown |
-| `H10` contract EPU/decision | Hoàng | ngay sau `H05a`+`M04` · ~04:00 | Deadline cũ 02:00 **đã trễ** — ghi rõ, không giả vờ đạt |
+| `H05a` minimum contract/state | Hoàng | ASAP · trước 03:30 | **Done** — mở `H06b`/`H07` |
+| `M04` handoff Data/ML | Khánh Duy | ASAP · trước 03:30 | **Done** — [handoff](10-m04-data-ml-handoff.md) |
+| `H10` contract EPU/decision | Hoàng | ngay sau `H05a`+`M04` · ~04:00 | **Done** (mốc 02:00 đã trễ) — EPU + Data-ML + decision #17 |
 | `H05b` AI-log + release template | Hoàng | sau `H05a` · trước V08 | **Done** — mở `V08` |
-| CP1 (`H13`) | Hoàng | vẫn 11:00 | Scope tối thiểu từ `H05a`+`H10`; không claim hybrid |
+| CP1 (`H13`) | Hoàng | vẫn 11:00 | Scope tối thiểu từ `H05a`+`H10`; không claim hybrid — **unblocked** |
 
 Deadline cũ P0.5 00:30 / `H10` 02:00 chỉ còn giá trị lịch sử. Board dưới dùng mốc recovery.
 
@@ -75,30 +75,30 @@ Mỗi task có một owner. Nếu dependency chưa Done, status ghi `BLOCKED →
 | H01 | Backend health + DB stub | — | [x] |
 | H05a | Minimum contract/state (arch, PRD/thuật ngữ, Process state/care) | — | [x] Done — arch + Process §4 + thuật ngữ MVP |
 | H05b | AI-log template + release-evidence template | H05a | [x] Done — templates + pointers; không rewrite policy |
-| H10 | Contract EPU/Data-ML + decision từ M04 | H05a, M04 | [ ] BLOCKED → M04 · **trễ mốc 02:00** |
-| H06a | Pydantic internal/public envelopes | H10 | [ ] BLOCKED → H10 |
+| H10 | Contract EPU/Data-ML + decision từ M04 | H05a, M04 | [x] Done — EPU + [08 Data-ML](../04-engineering/08-data-ml-scoring-fairness-contract.md) + decision #17 · mốc 02:00 đã trễ |
+| H06a | Pydantic internal/public envelopes | H10 | [ ] TODO — mở sau H10 |
 | H06b | Transition API theo Process state machine | H05a | [x] Done — Process §4 + forbidden + advisor_ref; 15 tests |
 | H11a | Integration contract tối thiểu cho G05/T03 | H06a | [ ] BLOCKED → H06a |
 | H11b | Docs agent/FE hoàn thiện sau build | H11a, G05, T03 | [ ] BLOCKED → H11a, G05, T03 |
 | H07 | Deployment/runbook docs | H05a | [x] Done — runbook draft; finalize Live/smoke/rollback tại D4 |
-| H19 | MVP persistence schema versioned + legacy mapping | H10 | [ ] BLOCKED → H10 |
+| H19 | MVP persistence schema versioned + legacy mapping | H10 | [ ] TODO — mở sau H10 |
 | H20 | Transactional approved-fixture import vào `dwh` | H19, M06 | [ ] BLOCKED → H19, M06 |
 | H08 | `dwh` → normalized internal DTO read adapter | H20, H06a | [ ] BLOCKED → H20, H06a |
 | H18 | Quarantine legacy ML synthetic khỏi API/MVP path | M01 | [ ] BLOCKED → M01 |
 | H14 | Decision/contract research forecast/fusion từ M07 | M07 | [ ] BLOCKED → M07 · ngoài CP2 |
 | H02 | API list/detail ReviewCase public | H06a, M02, H18 | [ ] BLOCKED → H06a, M02, H18 |
-| H13 | Nội dung + nộp Checkpoint 1 | H05a, H10 | [ ] BLOCKED → H10 |
+| H13 | Nội dung + nộp Checkpoint 1 | H05a, H10 | [ ] TODO — mở sau H10 |
 | H03 | Care workflow API + advisor_ref gate | H05a, H06b, H08 | [ ] BLOCKED → H08 · H06b Done (transition core sẵn) |
 | H04 | Threshold/config API (public semantics) | M03 | [ ] BLOCKED → M03 |
-| H12a | Runtime privacy/care copy (UI/agent) | H05a, H10 | [ ] BLOCKED → H10 |
+| H12a | Runtime privacy/care copy (UI/agent) | H05a, H10 | [ ] TODO — mở sau H10 · copy keys trong Data-ML §6 |
 | H12b | Post-MVP banner + asset copy | H12a | [ ] BLOCKED → H12a |
-| D3 | GitHub public + PII/secret scan | — | [ ] TODO |
-| D4 | Live URL + smoke lần 1 + rollback sẵn | H07, H02, G02, D3 | [ ] BLOCKED → H02, G02, D3 · H07 Done |
+| D3 | GitHub public + PII/secret scan | — | [x] Done — public URL + scan evidence; SĐT redacted |
+| D4 | Live URL + smoke lần 1 + rollback sẵn | H07, H02, G02, D3 | [ ] BLOCKED → H02, G02 · H07+D3 Done |
 | D4r | Fix từ QA → redeploy → re-smoke | D4, V07 | [ ] BLOCKED → D4, V07 |
 | H16 | Acceptance matrix + release evidence | A05, V07, V05 | [ ] BLOCKED → A05, V07, V05 |
 | H09 | README + verify/known-limit note cuối | H02, D4r, H16 | [ ] BLOCKED → H02, D4r, H16 |
 | D5 | AI collaboration log từ V08 | V08 | [ ] BLOCKED → V08 |
-| H15 | Attendance source approval + amendment (**MVP**) | H10 + **external approval artifact** | [ ] BLOCKED → H10 + data-owner |
+| H15 | Attendance source approval + amendment (**MVP**) | H10 + **external approval artifact** | [ ] BLOCKED → data-owner · H10 Done; default cửa sổ trong Data-ML §2.2 |
 | H17 | Post-MVP hybrid public API/envelope (forecast/fusion) | H14, M08 | [ ] BLOCKED → H14, M08 |
 
 ### Khánh Duy
@@ -106,9 +106,9 @@ Mỗi task có một owner. Nếu dependency chưa Done, status ghi `BLOCKED →
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
 | M01 | Quarantine/remove legacy ML synthetic (reopen) | — | [ ] REOPEN — chưa sạch consumer |
-| M04 | Handoff kỹ thuật Data/ML cho Hoàng | — | [ ] TODO — recovery ASAP |
-| H06c | FairnessReport schema + fail-closed fixture | H10 | [ ] BLOCKED → H10 |
-| M05a | Build semester source gate (code/tests) | H10 | [ ] BLOCKED → H10 |
+| M04 | Handoff kỹ thuật Data/ML cho Hoàng | — | [x] Done — [handoff](10-m04-data-ml-handoff.md); khóa bởi H10 |
+| H06c | FairnessReport schema + fail-closed fixture | H10 | [ ] TODO — mở sau H10 |
+| M05a | Build semester source gate (code/tests) | H10 | [ ] TODO — mở sau H10 |
 | M05b | Approved source available (artifact duyệt) | M05a + data-owner approval | [ ] BLOCKED → M05a + approval |
 | M06 | Fixture 4 bảng domain + manifests + quality tests | M05b | [ ] BLOCKED → M05b |
 | M02 | Baseline semester ML | M06, H06a, H08 | [ ] BLOCKED → M06, H06a, H08 |
@@ -146,7 +146,7 @@ Mỗi task có một owner. Nếu dependency chưa Done, status ghi `BLOCKED →
 
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
-| V07 | QA release + smoke độc lập (lần 1) | D3, D4 | [ ] BLOCKED → D3, D4 |
+| V07 | QA release + smoke độc lập (lần 1) | D3, D4 | [ ] BLOCKED → D4 · D3 Done |
 | V05 | Nộp Checkpoint 2 | D3, D4r, V07 | [ ] BLOCKED → D3, D4r, V07 |
 | V02 | Script demo 4′ + Q&A 2′, rehearsal | D4r, G02, T02, G03, G04, H12a | [ ] BLOCKED → D4r…H12a |
 | D2 | Video ≤5 phút đúng Live URL | D1, D4r | [ ] BLOCKED → D1, D4r |
@@ -158,7 +158,7 @@ Mỗi task có một owner. Nếu dependency chưa Done, status ghi `BLOCKED →
 ## 4. Hoàng — chi tiết task
 
 **Lane:** docs/contract nguồn chuẩn, backend/API, deploy, release evidence.
-**Read first:** PRD §§4–8, Ethics, Process §4, decisions, [EPU contract](../04-engineering/04-epu-data-integration-contract.md).
+**Read first:** PRD §§4–8, Ethics, Process §4, decisions, [EPU contract](../04-engineering/04-epu-data-integration-contract.md), [Data-ML](../04-engineering/08-data-ml-scoring-fairness-contract.md).
 **Không làm:** tự viết model/fusion của Duy.
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
@@ -166,7 +166,7 @@ Mỗi task có một owner. Nếu dependency chưa Done, status ghi `BLOCKED →
 | H01 | P0 | Backend health + DB stub | `backend/tests/test_health.py` — **Done** |
 | H05a | Recovery · ASAP 03:30 | Minimum contract/state: architecture, PRD/thuật ngữ, Process state/care boundary | Docs không mâu thuẫn PRD/Ethics/Process; đủ để mở `H06b`/`H10`/`H07` — **Done:** [arch](../04-engineering/05-system-architecture.md), Process §4, banner BRD/scope, decision #15 |
 | H05b | P1 · sau H05a | AI-log template + release-evidence template | Template sẵn; không chặn API/schema — **Done:** `.ai-log/templates/*`, [release-evidence template](templates/release-evidence-item.template.md); pointer [AI-log README](../../.ai-log/README.md) + [07-release-evidence](07-release-evidence.md) |
-| H10 | Recovery · ~04:00 (mốc 02:00 đã trễ) | Hoàn thiện contract EPU/Data-ML và decision từ M04 | Source gate ≠ approved data; MVP = điểm theo kỳ + điểm danh theo thời gian; `insufficient_data` khi thiếu; cấm synthetic; `is_dropout_outcome` nội bộ only |
+| H10 | Recovery · ~04:00 (mốc 02:00 đã trễ) | Hoàn thiện contract EPU/Data-ML và decision từ M04 | **Done:** [EPU](../04-engineering/04-epu-data-integration-contract.md), [Data-ML](../04-engineering/08-data-ml-scoring-fairness-contract.md), decision #17; source gate ≠ approved; MVP điểm + điểm danh; `insufficient_data`; cấm synthetic; outcome nội bộ only |
 | H06a | P1 · sau H10 | Pydantic internal/public envelopes | Public không raw score, PII, outcome, audit attr, `is_dropout_outcome` |
 | H06b | P1 · sau H05a | Transition API đúng Process: `New Signal` → `Pending Review` → `Approved for Follow-up` → `Assigned` → `Follow-up in Progress` → `Resolved`/`Monitoring`; `Dismissed` từ Pending; defer = giữ Pending + review_at | Contract tests transition/hành động cấm; **không** dùng `new/in_review/deferred/handed_off` — **Done:** `backend/app/cases/*` + `tests/test_case_transitions.py` (15 xanh; Quick+full verify); in-memory store; chưa full public ReviewCase (`H06a`) |
 | H11a | P1 · sau H06a | Integration contract tối thiểu: allowed display fields, error/empty/stale/`insufficient_data` | Đủ cho `G05`/`T03` bắt đầu |
@@ -183,8 +183,8 @@ Mỗi task có một owner. Nếu dependency chưa Done, status ghi `BLOCKED →
 | H04 | P2 · sau M03 | Threshold/config API public semantics | Không raw score |
 | H12a | P2 · ~15:00 (trước T02/G03/G04) | Runtime privacy/care copy cho UI/agent | Copy không claim quá dữ liệu; không “Điểm rủi ro” |
 | H12b | P2 · sau H12a · ~19:00 | Banner + asset copy | Forecast/fusion ghi research/blocked; **điểm danh theo thời gian = MVP** |
-| D3 | P2 · ~20:30 | GitHub public, PII/secret scan | URL ẩn danh + scan evidence |
-| D4 | P2 · ~21:00 | Live URL + smoke lần 1 + rollback sẵn sàng | Health + list→case ẩn danh — `H07` Done; còn chờ `H02`, `G02`, `D3` |
+| D3 | P2 · ~20:30 | GitHub public, PII/secret scan | URL ẩn danh + scan evidence — **Done:** [scan notes](10-d3-github-pii-secret-scan.md); https://github.com/phanthutrang410/ABG_team public; SĐT gỡ khỏi tree |
+| D4 | P2 · ~21:00 | Live URL + smoke lần 1 + rollback sẵn sàng | Health + list→case ẩn danh — `H07`+`D3` Done; còn chờ `H02`, `G02` |
 | D4r | P2 · ~22:00 | Sau V07/A05 defects: owner fix → redeploy → re-smoke | Re-smoke xanh trước V05; có cửa sổ fix (≥45–60 phút) |
 | H16 | P3 · sau V05 | Acceptance matrix + release evidence | Phụ thuộc **A05 + V07 + V05**; mỗi FR/CP2 item có evidence hoặc limitation |
 | H09 | P3 · 09:00 | README + verify/known-limit | Khớp deploy và scope thật |
@@ -199,13 +199,13 @@ Mỗi task có một owner. Nếu dependency chưa Done, status ghi `BLOCKED →
 ## 5. Khánh Duy — chi tiết task
 
 **Lane:** Data/ML, source validation, baseline semester, nghiên cứu hybrid.
-**Read first:** PRD §§4,7–8; signal catalog; Ethics §§5–6; [EPU contract](../04-engineering/04-epu-data-integration-contract.md); ML tests gần nhất.
+**Read first:** PRD §§4,7–8; signal catalog; Ethics §§5–6; [EPU contract](../04-engineering/04-epu-data-integration-contract.md); [Data-ML](../04-engineering/08-data-ml-scoring-fairness-contract.md); ML tests gần nhất.
 **Không làm:** hoàn thiện Markdown contract/PRD; dùng synthetic hoặc attendance thiếu approval; đưa `is_dropout_outcome`/group attr vào scoring.
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
 | M01 | P0→P1 REOPEN | Quarantine/remove legacy ML synthetic: attendance tuần, synth socioeconomic/ethnicity, raw risk path trong `early_warning` | README + module không còn MVP consumer; test cấm feature attendance-week/synth group trong scoring |
-| M04 | Recovery · ASAP 03:30 | Handoff Data/ML: semester + attendance-over-time baseline, source/quality gate, threshold/FPR, giới hạn forecast/fusion | Input, failure states, test plan; **không** đồng nghĩa dữ liệu đã được duyệt |
+| M04 | Recovery · ASAP 03:30 | Handoff Data/ML: semester + attendance-over-time baseline, source/quality gate, threshold/FPR, giới hạn forecast/fusion | **Done:** [10-m04…](10-m04-data-ml-handoff.md); **không** đồng nghĩa dữ liệu đã được duyệt |
 | H06c | P1 · sau H10 | `FairnessReport` schema + fail-closed fixture | Metric chỉ khi group + GT + N hợp lệ |
 | M05a | P1 · sau H10 | **Build** source gate: register, hash/count, PII exclusion, fail-closed khi thiếu approval | Code/tests gate; H10 Done ≠ source approved |
 | M05b | P1 · sau M05a | **Approved source available** | Artifact duyệt của data owner (owner, quyền, snapshot hash, record count); thiếu → giữ `insufficient_data`, không bịa fixture “đã duyệt” |
@@ -306,8 +306,8 @@ Chỉ chạy sau khi MVP slice `M02`/`H02`/`H13` xong. So sánh semester feature
 | Blocked >2 giờ | Ghi ID blocker; không tự đổi schema/fixture/scope |
 | Legacy synthetic còn trên UI/ML | `M01` REOPEN + `H18` + `G05` thay mock |
 
-1. **Ngay:** Duy `M04` + `M01` reopen; Hoàng: `H06b`/`H07`/`H05b` Done — mở `H10` khi `M04` Done; `H03` còn chờ `H08`; `V08` đã unblocked.
-2. Sau `H10`: mở `H06a`/`M05a`/`H19`; không coi dữ liệu đã duyệt cho đến `M05b`, và chỉ nạp qua `H20` sau `M06`.
-3. `H12a` xong trước `T02`/`G03`/`G04`; `H12b` sau cho asset.
+1. **Ngay:** `H10`/`M04` Done — mở `H06a` / `H19` / `M05a` / `H12a` / `H13` / `H06c`; Duy `M01` reopen; `H15` chờ data-owner; `H03` còn chờ `H08`.
+2. Không coi dữ liệu đã duyệt cho đến `M05b`; chỉ nạp qua `H20` sau `M06`.
+3. `H12a` xong trước `T02`/`G03`/`G04` (copy keys đã khóa trong Data-ML §6); `H12b` sau cho asset.
 4. `M07` chỉ sau `M02`+`H02`+`H13`; không tranh slot với baseline.
 5. Trước handoff: verify phù hợp; trước final: `scripts/verify.ps1`, `git diff --check`, `git status --short`.

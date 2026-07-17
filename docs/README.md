@@ -49,6 +49,7 @@ docs/
 | 07 | [Release evidence](03-project/07-release-evidence.md) | Checklist bằng chứng CP1 / CP2 / nộp cuối / Demo Day |
 | 08 | [Stories — giang](03-project/08-stories-giang.md) | P2+ UAT/review và asset slide/mô tả, không sửa docs nguồn |
 | 09 | [Stories — Văn Hải](03-project/09-stories-van-hai.md) | P2+ QA release, rehearsal/video và submission, không sửa docs nguồn |
+| 10 | [D3 GitHub / PII-secret scan](03-project/10-d3-github-pii-secret-scan.md) | Evidence CP2: repo public + scan; SĐT đã redact |
 
 ## 4. Engineering
 
@@ -57,10 +58,12 @@ docs/
 | 01 | [FPT AI API](04-engineering/01-fpt-ai-api.md) | Gọi FPT AI bằng API tương thích OpenAI |
 | 02 | [Harness Engineering](04-engineering/02-harness-engineering.html) | HTML snapshot tham khảo về harness engineering; không phải source of truth của sản phẩm |
 | 03 | [EPU reference — catalog trường](04-engineering/03-epu-reference-data-fields.md) | Các trường đang có trong EPU reference (V59, profile, transcript v5); cơ sở chọn/loại nguồn, không phải SIS production |
-| 04 | [Hợp đồng tích hợp EPU](04-engineering/04-epu-data-integration-contract.md) | Chọn nguồn không synthetic, data gate, schema chuẩn hóa và handoff fixture cho Hoàng |
+| 04 | [Hợp đồng tích hợp EPU](04-engineering/04-epu-data-integration-contract.md) | H10: nguồn không synthetic, taxonomy, pseudonym custody, data gate, schema chuẩn hóa |
 | 05 | [Kiến trúc hệ thống tối thiểu](04-engineering/05-system-architecture.md) | Container, luồng dữ liệu, care/state boundary MVP; SoT mỏng cho H06b/H10/H07 |
 | 06 | [Deploy / ops runbook](04-engineering/06-deploy-runbook.md) | Env, CORS, seed, health, smoke, rollback — **draft from arch; finalize at D4**; no secrets |
 | 07 | [Persistence schema MVP](04-engineering/07-mvp-persistence-schema.md) | Thiết kế DB `dwh` versioned, mapping metadata legacy và gate import đã duyệt cho H19/H20 |
+| 08 | [Data/ML scoring & fairness](04-engineering/08-data-ml-scoring-fairness-contract.md) | H10: features hai nhánh, coverage/`insufficient_data`, threshold, evaluation, fairness fail-closed |
+| 09 | [Synthetic Data/ML contract (superseded)](04-engineering/09-synthetic-data-ml-fairness-contract-superseded.md) | Lịch sử synthetic — không dùng cho MVP path |
 
 `02-harness-engineering.html` là trang được lưu từ nguồn bên ngoài và có thể cần network hoặc asset gốc để render đầy đủ. Không dùng nội dung trong đó như requirement nếu chưa được đưa vào PRD/decision.
 

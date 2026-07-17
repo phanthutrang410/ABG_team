@@ -1,6 +1,6 @@
 # MVP persistence schema — H19/H20
 
-> **Trạng thái:** Draft implementation target. `H19` chỉ bắt đầu sau `H10`; `H20` chỉ bắt đầu sau `H19` + `M06` (do đó đã có M05b/data-owner approval). Tài liệu này không cho phép nạp reference clone, raw export hay dữ liệu synthetic.
+> **Trạng thái:** Implementation target sau `H10` (**Done**). `H19` được mở; `H20` chỉ bắt đầu sau `H19` + `M06` (do đó đã có M05b/data-owner approval). Tài liệu này không cho phép nạp reference clone, raw export hay dữ liệu synthetic.
 >
 > **Owner:** Hoàng · **Evidence khi Done:** migration revision, mapping metadata không PII, test DB rỗng/repeatable và import-gate test.
 
