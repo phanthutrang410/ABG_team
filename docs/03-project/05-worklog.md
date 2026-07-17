@@ -1,5 +1,11 @@
 # Nhật ký công việc
 
+## 2026-07-18 (T01 Done — agent stub, lane Thu Trang)
+
+- `T01` **Done**: stub deterministic `backend/app/agent/stub.py` — không LLM, lắp theo 3 tầng: (1) guardrail classifier `guardrails.py` (7 refusal codes, rule-based, first-match-wins — T02 tái dùng làm pre-LLM gate); (2) fail-closed mapping `context.status` (unavailable/empty/refused/insufficient → không bịa); (3) grounded assembly chỉ từ case fields (factor codes nguyên văn, coverage counts, H12a copy keys cho limitations).
+- Tests: `tests/agent/test_agent_stub.py` — **12/12 ca adversarial pass** + determinism + grounding-only-case-codes + quét `assert_no_forbidden_keys` trên output thật (không chỉ fixture). Tổng agent suite **42 xanh**; contract suite chung **118 passed**; ruff pass.
+- Mở khóa: `T02` chỉ còn chờ `H02` (T01 + H12a Done).
+
 ## 2026-07-18 (T03 Done — agent contract, lane Thu Trang)
 
 - `T03` **Done**: output contract `backend/app/agent/schemas.py` (`AgentExplanationRequest` bọc `AgentContextResponse` H11a — không widen; `AgentExplanation` với invariants: refused⇒reason, draft chỉ khi ok + luôn `requires_human_approval`, ok⇒`model_version`, unavailable⇒không facts/draft).
