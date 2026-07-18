@@ -6,19 +6,17 @@ import {
   resolveAdvisorAccess,
   resolveAnalysisGate,
 } from "../src/lib/advisor-routing.ts";
-import type { DemoAccount } from "../src/lib/types.ts";
+import type { SessionAccount } from "../src/lib/types.ts";
 
-const GVCN: DemoAccount = {
+const GVCN: SessionAccount = {
   id: "gvcn",
   name: "CVHT Lan",
-  password: "demo123",
   roles: ["gvcn"],
 };
 
-const LEADER: DemoAccount = {
+const LEADER: SessionAccount = {
   id: "quanly",
   name: "TS. Nam",
-  password: "demo123",
   roles: ["ban_quan_ly"],
 };
 

@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     # H39a — auth seed password (CLI only; never log/commit plaintext)
     auth_seed_password: SecretStr = SecretStr("")
 
+    # Decision #27 — MVP linked semester↔attendance namespace (H08 join).
+    # Empty / pending → Mode B (no join). Active handle enables join on same student_ref.
+    linked_namespace_approval: str = "approval:mvp-linked-v59-att:v1:acfb7d80dc3a"
+
     model_config = SettingsConfigDict(
         env_file=("../.env", ".env"),
         env_file_encoding="utf-8",

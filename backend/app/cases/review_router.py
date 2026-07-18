@@ -105,6 +105,7 @@ def list_review_cases(
         store,
         thresholds=DEFAULT_THRESHOLDS,
         calculated_at=calculated_at,
+        session=db,
     )
     items = _filter_visible(principal, items)
     audit(
@@ -204,6 +205,7 @@ def get_review_case(
             store,
             thresholds=DEFAULT_THRESHOLDS,
             calculated_at=calculated_at,
+            session=db,
         )
         snap = store.get(case_id)
         if case is None or not principal_can_view_care_case(
@@ -258,6 +260,7 @@ def get_review_case(
         thresholds=DEFAULT_THRESHOLDS,
         calculated_at=calculated_at,
         include_below_threshold=False,
+        session=db,
     )
     snap = store.get(case_id)
     if (

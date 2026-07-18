@@ -14,7 +14,8 @@ from app.dwh.migrate import HEAD_REVISION, current_revision, downgrade_base, upg
 from app.dwh.models import DWH_TABLE_NAMES
 
 EXPECTED_TABLES = set(DWH_TABLE_NAMES)
-FORBIDDEN_TABLE_SUBSTRINGS = ("case", "prediction", "review_case", "model_score")
+# Care case-state tables stay out of dwh; ml_term_snapshot is the allowed ML materialization.
+FORBIDDEN_TABLE_SUBSTRINGS = ("review_case", "case_event", "model_score")
 
 
 def _postgres_available(url: str) -> bool:
@@ -97,7 +98,43 @@ def test_upgrade_head_creates_empty_tables(migrate_database_url: str) -> None:
             "auth_account_role",
             "auth_session",
             "access_audit_event",
+            "review_case",
+            "case_event",
         } <= app_tables
+        # Care tables live in app — must not appear under dwh.
+        assert "review_case" not in tables
+        assert "case_event" not in tables
+        care_cols = {
+            c["name"] for c in inspect(engine).get_columns("review_case", schema="app")
+        }
+        assert {
+            "case_id",
+            "state",
+            "student_ref",
+            "source_id",
+            "advisor_ref",
+            "review_at",
+            "reason_code",
+            "monitoring_until",
+            "mapping_repair_queued",
+            "created_at",
+            "updated_at",
+        } <= care_cols
+        event_cols = {
+            c["name"] for c in inspect(engine).get_columns("case_event", schema="app")
+        }
+        assert {
+            "id",
+            "case_id",
+            "kind",
+            "actor",
+            "actor_kind",
+            "action",
+            "from_state",
+            "to_state",
+            "detail_json",
+            "occurred_at",
+        } <= event_cols
         assert current_revision(migrate_database_url) == HEAD_REVISION
     finally:
         engine.dispose()
@@ -181,5 +218,31 @@ def test_source_manifest_unique_and_pk_constraints(migrate_database_url: str) ->
             "observed_at",
             "course_ref",
         }
+
+        ml_pk = inspector.get_pk_constraint("ml_term_snapshot", schema="dwh")
+        assert set(ml_pk["constrained_columns"]) == {"source_id", "student_ref"}
+        ml_cols = {c["name"] for c in inspector.get_columns("ml_term_snapshot", schema="dwh")}
+        assert {
+            "latest_term_gpa",
+            "review_priority_band",
+            "model_score",
+            "agent_explain_json",
+            "coverage_json",
+        } <= ml_cols
+
+        week_pk = inspector.get_pk_constraint("attendance_week", schema="dwh")
+        assert set(week_pk["constrained_columns"]) == {
+            "source_id",
+            "student_ref",
+            "week_start_date",
+        }
+        week_cols = {c["name"] for c in inspector.get_columns("attendance_week", schema="dwh")}
+        assert {
+            "week_end_date",
+            "n_in_denominator",
+            "n_present",
+            "n_excused_excluded",
+            "attendance_rate",
+        } <= week_cols
     finally:
         engine.dispose()

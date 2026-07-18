@@ -1,50 +1,12 @@
 {
   "source_id": "mvp-attendance-over-time",
-  "report_version": "m06-attendance-1",
-  "generated_at": "2026-07-18T00:00:00Z",
-  "row_count": 15,
+  "report_version": "h15b-linked-1",
+  "generated_at": "2026-07-18T12:00:00Z",
+  "row_count": 7360,
   "reject_count": 0,
-  "reject_reasons": {},
-  "missingness": {
-    "presence_status_null": 0,
-    "excused_null": 11
-  },
-  "term_coverage": [],
-  "attendance_coverage": [
-    {
-      "student_ref": "s-1001",
-      "n_attendance_events": 5,
-      "n_counted_events": 5,
-      "n_excused": 0,
-      "attendance_rate_window": 0.8,
-      "last_attendance_at": "2026-07-10T00:00:00",
-      "trend_eligible": true,
-      "reason_codes": []
-    },
-    {
-      "student_ref": "s-1002",
-      "n_attendance_events": 5,
-      "n_counted_events": 5,
-      "n_excused": 0,
-      "attendance_rate_window": 0.4,
-      "last_attendance_at": "2026-07-10T00:00:00",
-      "trend_eligible": true,
-      "reason_codes": []
-    },
-    {
-      "student_ref": "s-1003",
-      "n_attendance_events": 5,
-      "n_counted_events": 5,
-      "n_excused": 0,
-      "attendance_rate_window": 0.8,
-      "last_attendance_at": "2026-07-10T00:00:00",
-      "trend_eligible": true,
-      "reason_codes": []
-    }
-  ],
+  "n_students": 460,
+  "min_events_per_student": 16,
   "freshness": {
-    "last_attendance_at": "2026-07-10T00:00:00",
-    "n_students": 3
-  },
-  "reason_codes": []
+    "extracted_at": "2026-07-18T12:00:00Z"
+  }
 }

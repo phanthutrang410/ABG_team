@@ -73,4 +73,5 @@ def list_advisor_handoff_drafts(
         by_ref,
         thresholds=DEFAULT_THRESHOLDS,
         calculated_at=datetime.now(timezone.utc),
+        session=db,
     )

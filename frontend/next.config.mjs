@@ -48,6 +48,10 @@ const nextConfig = {
     if (!backendUrl) return [];
     return [
       {
+        source: "/auth/:path*",
+        destination: `${backendUrl}/auth/:path*`,
+      },
+      {
         source: "/review-cases",
         destination: `${backendUrl}/review-cases`,
       },
@@ -78,6 +82,14 @@ const nextConfig = {
       {
         source: "/advisor-handoff-drafts/:path*",
         destination: `${backendUrl}/advisor-handoff-drafts/:path*`,
+      },
+      {
+        source: "/weekly-reports/:path*",
+        destination: `${backendUrl}/weekly-reports/:path*`,
+      },
+      {
+        source: "/weekly-briefings/:path*",
+        destination: `${backendUrl}/weekly-briefings/:path*`,
       },
     ];
   },

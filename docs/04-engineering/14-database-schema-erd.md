@@ -1,6 +1,6 @@
 # Database schema & ERD — Silent Shield MVP
 
-> **Trạng thái:** SoT vật lý cho PostgreSQL schemas `dwh` + `app` tại migrations `20260718_h19_dwh` → `20260718_h30_snapshot` → `20260719_h39a_auth_rbac`.
+> **Trạng thái:** SoT vật lý cho PostgreSQL schemas `dwh` + `app` tại migrations `20260718_h19_dwh` → `20260718_h30_snapshot` → `20260719_h39a_auth_rbac` → `20260719_ml_attendance_week`.
 >
 > **Nguồn code:** `backend/app/dwh/models.py`, `backend/app/auth/models.py` · **Migrations:** `backend/alembic/versions/` · **Thiết kế/import gate:** [07-mvp-persistence-schema](07-mvp-persistence-schema.md).
 >
@@ -10,9 +10,10 @@
 
 | Có trong Postgres | Chưa có bảng Postgres (in-memory / process-local) |
 |:--|:--|
-| **`dwh`** Domain snapshot (điểm, điểm danh, advisor, quality) | Care `ReviewCase` / `CaseStore` (`app.cases.store`) |
-| **`dwh`** Snapshot registry H30 (`dataset_*`, `active_dataset_snapshot`) | Weekly durable cases/events H33a (`app.weekly.cases_durable`) |
-| **`dwh`** Workflow ledger H30 (`workflow_run`, `workflow_step_run`) | Weekly report / briefing / receipts (`app.weekly.state`) |
+| **`dwh`** Domain snapshot (điểm, điểm danh event + week rollup, advisor, quality) | Care `ReviewCase` / `CaseStore` (`app.cases.store`) |
+| **`dwh`** `ml_term_snapshot` (features + band; CLI `materialize-ml`) | Weekly durable cases/events H33a (`app.weekly.cases_durable`) |
+| **`dwh`** Snapshot registry H30 (`dataset_*`, `active_dataset_snapshot`) | Weekly report / briefing / receipts (`app.weekly.state`) |
+| **`dwh`** Workflow ledger H30 (`workflow_run`, `workflow_step_run`) | — |
 | **`app`** Auth RBAC H39 (`auth_account`, `auth_account_role`, `auth_session`, `access_audit_event`) | — |
 
 **H39 không đổi dữ liệu học vụ `dwh`.** Engine: **PostgreSQL** qua `DATABASE_URL`. Alembic version table nằm trong schema `dwh`. Public API/UI/agent **không** query trực tiếp `dwh`; đọc qua H08 adapter và projection an toàn. Identity SoT = cookie `ss_session` → `app.auth_session`.
@@ -69,8 +70,10 @@ erDiagram
   source_manifest ||--o{ data_quality_report : "source_id"
   student_dimension ||--o{ term_grade : "source_id+student_ref"
   student_dimension ||--o{ attendance_event : "source_id+student_ref"
+  student_dimension ||--o{ attendance_week : "source_id+student_ref"
   student_dimension ||--o{ academic_status : "source_id+student_ref"
   student_dimension ||--o{ advisor_assignment : "source_id+student_ref"
+  student_dimension ||--o{ ml_term_snapshot : "source_id+student_ref"
 
   dataset_source ||--o{ dataset_snapshot : "dataset_key"
   dataset_source ||--|| active_dataset_snapshot : "dataset_key"
@@ -115,6 +118,17 @@ erDiagram
     bool excused
   }
 
+  attendance_week {
+    string source_id PK_FK
+    string student_ref PK_FK
+    date week_start_date PK
+    date week_end_date
+    int n_events
+    int n_in_denominator
+    int n_present
+    numeric attendance_rate
+  }
+
   academic_status {
     string source_id PK_FK
     string student_ref PK_FK
@@ -128,6 +142,16 @@ erDiagram
     string student_ref PK_FK
     string advisor_ref
     string scope_source
+  }
+
+  ml_term_snapshot {
+    string source_id PK_FK
+    string student_ref PK_FK
+    string model_version
+    string review_priority_band
+    numeric latest_term_gpa
+    string coverage_status
+    text agent_explain_json
   }
 
   data_quality_report {
@@ -185,15 +209,19 @@ flowchart TB
     SD[student_dimension]
     TG[term_grade]
     AE[attendance_event]
+    AW[attendance_week]
     AS[academic_status]
     AA[advisor_assignment]
+    ML[ml_term_snapshot]
     DQR[data_quality_report]
     SM --> SD
     SM --> DQR
     SD --> TG
     SD --> AE
+    SD --> AW
     SD --> AS
     SD --> AA
+    SD --> ML
   end
 
   subgraph Registry["Snapshot registry + workflow — H30"]
@@ -267,6 +295,22 @@ Sự kiện chuyên cần theo thời gian (MVP: `mvp-attendance-over-time`).
 | `presence_status` | `varchar(32)` | Y | |
 | `excused` | `boolean` | Y | |
 
+### 3.4b `dwh.attendance_week`
+
+Rollup chuyên cần **student × ISO week** (Monday = `week_start_date`). Derive từ `attendance_event`; ghi qua CLI `rollup-attendance-week` (`app.dwh.attendance_week_rollup`).
+
+| Cột | Kiểu | Null | Ghi chú |
+|:--|:--|:--:|:--|
+| `source_id` + `student_ref` | | PK, FK → `student_dimension` CASCADE | |
+| `week_start_date` | `date` | PK | Monday của tuần ISO |
+| `week_end_date` | `date` | N | ≥ `week_start_date` |
+| `n_events` | `integer` | N | Tổng event trong tuần |
+| `n_in_denominator` | `integer` | N | Non-excused có `presence_status` |
+| `n_present` / `n_absent` | `integer` | N | Trong mẫu số |
+| `n_excused_excluded` | `integer` | N | `excused=true` — không vào mẫu số |
+| `attendance_rate` | `numeric(6,4)` | Y | null khi `n_in_denominator=0` |
+| `first_observed_at` / `last_observed_at` | `timestamptz` | Y | |
+
 ### 3.5 `dwh.academic_status`
 
 Evaluation nội bộ của snapshot — **không** project vào scoring / public API / agent.
@@ -287,6 +331,26 @@ Routing sau approve; chỉ `advisor_ref` pseudonymous.
 | `source_id` + `student_ref` | | PK, FK → `student_dimension` CASCADE | |
 | `advisor_ref` | `varchar(128)` | Y | Thiếu → mapping-repair, không handoff |
 | `scope_source` | `varchar(128)` | Y | |
+
+### 3.6b `dwh.ml_term_snapshot`
+
+Materialize M02 `ScoringFeatures` + nhãn ưu tiên rà soát theo snapshot semester (`source_id`). Một hàng / SV; upsert khi re-score. Ghi qua CLI `materialize-ml` (`app.dwh.ml_materializer`).
+
+| Cột | Kiểu | Null | Ghi chú |
+|:--|:--|:--:|:--|
+| `source_id` + `student_ref` | | PK, FK → `student_dimension` CASCADE | |
+| `dataset_version` / `model_version` / `threshold_config_version` | `varchar` | N | Data-ML §1 |
+| `calculated_at` | `timestamptz` | N | |
+| `last_term_code` | `varchar(32)` | Y | Neo kỳ học của snapshot |
+| `latest_term_gpa` … `attendance_trend_slope` | `numeric` | Y | Features Data-ML §2 |
+| `coverage_status` | `varchar(32)` | N | `ok` \| `partial` \| `insufficient` |
+| `coverage_json` | `text` | N | Full Coverage envelope |
+| `review_priority_band` | `varchar(32)` | Y | `uu_tien_som` \| `can_ra_soat` \| null dưới τ |
+| `contributing_factors_json` | `text` | N | Default `[]` |
+| `model_score` | `numeric(6,4)` | Y | **Nội bộ only** — cấm project API/agent |
+| `explain_schema_version` | `varchar(64)` | Y | Version shape `agent_explain_json` |
+| `agent_explain_json` | `text` | Y | Payload an toàn linh hoạt cho bot |
+| `evidence_fingerprint` | `varchar(128)` | Y | Delta / reconcile |
 
 ### 3.7 `dwh.data_quality_report`
 
@@ -394,7 +458,7 @@ alembic upgrade head
 Pop-Location
 ```
 
-Import dữ liệu (không phải public API): xem [07 §4](07-mvp-persistence-schema.md) — `python -m app.dwh.cli import-semester` / `import-attendance` / `readiness` / `weekly run`.
+Import / materialize (không phải public API): xem [07 §4](07-mvp-persistence-schema.md) — `python -m app.dwh.cli import-semester` / `import-attendance` / `readiness` / `materialize-ml` / `rollup-attendance-week` / `weekly run`.
 
 ## 5. Ràng buộc privacy / care
 
@@ -409,10 +473,13 @@ Import dữ liệu (không phải public API): xem [07 §4](07-mvp-persistence-s
 |:--|:--|
 | Domain rows chưa keyed by `snapshot_id` | Lịch sử tuần nhiều version trên cùng logical source còn hạn chế |
 | `workflow_run.dataset_key` / `snapshot_id` chưa FK | Ledger lỏng hơn registry; enforce ở application |
-| `review_case` / `case_event` chưa có Alembic | H33a in-memory; restart process mất weekly durable state |
-| Care case store in-memory | Demo/local; chưa production durable case DB |
+| `ml_term_snapshot` / `attendance_week` writer | **Done** — CLI `materialize-ml` / `rollup-attendance-week`; H02 prefer snapshot via `ml_snapshot_reader` |
+| `list_attendance_weeks` reader | **Done** (D460-12) — helper; no dedicated public week API yet |
+| Care `app.review_case` / `app.case_event` | **Done** (D460-08) — Alembic `20260719_care_case_store`; `PostgresCaseStore` |
+| Weekly `CaseRepository` (H33a) | Vẫn in-memory process-local (D460-09 deferred) — weekly episode mất khi restart |
+| Live linked attendance | **Done** — Live `:d460` + bootstrap · [23-d460…](../03-project/23-d460-live-redeploy-evidence.md) · Vercel FE `/auth` redeploy còn lại |
 
-Target tables tương lai (chưa migration): xem [doc 13](13-weekly-snapshot-global-agent-architecture.md) (`review_case`, `case_event`, …).
+Target còn lại: weekly episode DB; `signal_observation` table nếu cần immutable ledger — [doc 13](13-weekly-snapshot-global-agent-architecture.md).
 
 ## 7. Verify liên quan
 

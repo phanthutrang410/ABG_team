@@ -48,6 +48,24 @@ Owner thực tế và dependency luôn theo [Sprint](docs/03-project/03-sprint.m
 ## Dev
 
 ```powershell
-cd backend; pip install -e ".[dev]"; pytest -q
+docker compose up -d db
+cd backend; pip install -e ".[dev]"
+# One-shot: 460 semester + 7360 linked attendance + ml_term_snapshot + attendance_week
+python ..\scripts\bootstrap_d460.py
+pytest -q
+cd ..
 .\scripts\verify.ps1
 ```
+
+Requires `.env` from `.env.example` with `DATABASE_URL` and `LINKED_NAMESPACE_APPROVAL=approval:mvp-linked-v59-att:v1:acfb7d80dc3a`.
+
+## Known limits (H09 / D460)
+
+- **List ≠ 460:** `GET /review-cases` chỉ trả SV vượt ngưỡng ưu tiên rà soát (thường ~tens), không phải toàn bộ 460 đã import.
+- **Local + Live API D460 Done:** semester 460 + attendance 7360 (hash `acfb7d80…`) + `materialize-ml` 460 + week rollup — [runbook §5.1](docs/04-engineering/06-deploy-runbook.md) · Live evidence [23-d460…](docs/03-project/23-d460-live-redeploy-evidence.md).
+- **Auth (H39):** anon `/review-cases` → 401; demo seed `quanly`/`gvcn`/`demo` (password operator-only). List sau login ≈ tens (ngưỡng), không phải 460.
+- **Vercel FE:** cần redeploy production để proxy `/auth/*` + login G07; API Live đã linked.
+- Care case store: durable `app.review_case` trên Live `:d460`.
+- Fairness nhóm: `insufficient_data` khi chưa có audit attribute được duyệt.
+- Hybrid forecast (M07/M08): **FREEZE** — không ship.
+- Agent Live: fail-closed `unavailable` nếu thiếu OpenAI key.

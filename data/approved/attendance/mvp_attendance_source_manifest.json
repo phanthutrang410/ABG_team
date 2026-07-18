@@ -1,8 +1,11 @@
 {
   "source_id": "mvp-attendance-over-time",
-  "snapshot_sha256": "78d7153fe114537410a5179d36840a23af166cd2f86826bf09138ac02e5ad112",
+  "snapshot_sha256": "acfb7d80dc3a22d63f88b07ef706108743c122a121cd2d6261b993f98be964ac",
   "provenance_approved": true,
   "schema_version": "epu-1",
-  "record_count": 15,
-  "extracted_at": "2026-07-18T00:00:00Z"
+  "record_count": 7360,
+  "extracted_at": "2026-07-18T12:00:00Z",
+  "n_students": 460,
+  "grain": "session",
+  "linked_semester_source_id": "v59-empty-program-students"
 }

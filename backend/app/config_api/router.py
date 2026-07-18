@@ -75,7 +75,7 @@ def get_threshold_impact(
     n_uu = 0
     n_no = 0
     for record in records:
-        score, band = score_band_only(record, thresholds=thresholds)
+        score, band = score_band_only(record, thresholds=thresholds, session=db)
         if score is None:
             n_no += 1
             continue

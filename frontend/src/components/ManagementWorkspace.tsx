@@ -6,6 +6,7 @@ import { AppShell, useSetTopbarInfo } from "@/components/AppShell";
 import { BandBadge, CaseStateBadge } from "@/components/badges";
 import { ReportModal } from "@/components/ReportModal";
 import { ThresholdPanel } from "@/components/ThresholdPanel";
+import { WeeklyBriefingPanel } from "@/components/WeeklyBriefingPanel";
 import { fetchReviewCases } from "@/lib/api";
 import { FACTOR_LABEL } from "@/lib/factors";
 import { splitAccountName, useSession } from "@/lib/session";
@@ -119,7 +120,10 @@ function DashboardBody() {
       )}
 
       {tab === "overview" && (
-        <OverviewHeader loading={loading} response={response} setTab={setTab} onReload={load} onOpenCase={openCase} />
+        <>
+          <OverviewHeader loading={loading} response={response} setTab={setTab} onReload={load} onOpenCase={openCase} />
+          <WeeklyBriefingPanel />
+        </>
       )}
       {tab === "analytics" && (
         <AnalyticsTab loading={loading} response={response} setTab={setTab} onReload={load} />

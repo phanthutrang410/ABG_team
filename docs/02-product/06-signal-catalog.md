@@ -13,6 +13,8 @@ Mỗi tín hiệu phải đi qua bốn cổng trước khi sử dụng: có mụ
 | CORE-01 | Xu hướng điểm theo kỳ | Độ dốc điểm tổng kết giữa các kỳ | `term_grade` từ V59 đã pseudonymize | MVP khi có ≥2 kỳ |
 | CORE-02 | Biến động điểm theo kỳ | Mức dao động điểm theo học phần/kỳ | `term_grade` từ V59 đã pseudonymize | MVP khi coverage đủ |
 | CORE-03 | Chuyên cần theo thời gian | Xu hướng vắng/hiện diện theo buổi/ngày/tuần đã duyệt | Export điểm danh sau `H15` | **MVP** — thiếu nguồn → `insufficient_data`, không đẩy Post-MVP |
+| CORE-04 | GPA kỳ gần nhất | `latest_term_gpa` — trung bình có trọng số tín chỉ kỳ mới nhất (thang 0–10) | Derive từ `term_grade` (decision #26) | MVP derive — **không** claim SIS `GPA tích lũy` |
+| CORE-05 | Tín chỉ môn không đạt | `failed_credits` — Σ credits môn `Không đạt` (proxy) | Derive từ `term_grade` (decision #26) | MVP proxy — **không** claim SIS `Tổng tín chỉ nợ` |
 | META-01 | Độ phủ dữ liệu | Số kỳ/học phần/mốc chuyên cần hợp lệ, tỷ lệ thiếu, freshness và provenance | `data_quality_report` | MVP, không dùng như tín hiệu độc lập |
 | META-02 | Routing được phép | Có `advisor_ref` và scope mapping hợp lệ | `advisor_assignment` | Điều kiện handoff, không dùng scoring |
 | AUDIT-01 | Nhóm kinh tế | Chỉ phân nhóm metric fairness | Không có trong catalog EPU | `insufficient_data`, cấm proxy/scoring |
@@ -26,8 +28,8 @@ Brief gọi đây là “12 tiêu chí” nhưng bảng nguồn có thêm một 
 
 | ID | Tín hiệu trong brief | Nguồn dự kiến | Cách dùng an toàn nếu được duyệt | Trạng thái |
 |:---|:---------------------|:---------------|:-------------------------------|:-----------|
-| CAND-01 | GPA và xu hướng GPA | SIS | Ưu tiên delta theo kỳ; ngưỡng tuyệt đối không đứng một mình | Hậu MVP |
-| CAND-02 | Tín chỉ tích lũy và môn không đạt | SIS | So với kế hoạch học tập và ngoại lệ học vụ đã xác nhận | Hậu MVP |
+| CAND-01 | GPA và xu hướng GPA | SIS | Ưu tiên delta theo kỳ; ngưỡng tuyệt đối không đứng một mình | Hậu MVP — MVP chỉ có derive `latest_term_gpa` (CORE-04), chưa GPA tích lũy SIS |
+| CAND-02 | Tín chỉ tích lũy và môn không đạt | SIS | So với kế hoạch học tập và ngoại lệ học vụ đã xác nhận | Hậu MVP — MVP chỉ có proxy `failed_credits` (CORE-05) |
 | CAND-03 | Credit momentum | SIS | So với tiến độ chương trình/cohort ẩn danh; rà bias theo ngành/hệ | Hậu MVP |
 | CAND-04 | Hoạt động LMS | Metadata LMS | Chỉ tần suất/khoảng hoạt động; không đọc nội dung; ưu tiên within-student | Hậu MVP, cần privacy review |
 | CAND-05 | Nộp bài và thời điểm nộp | LMS gradebook | Chỉ trạng thái/timing, không đánh giá nội dung bài | Hậu MVP |

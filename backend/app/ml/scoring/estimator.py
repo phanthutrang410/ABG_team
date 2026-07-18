@@ -39,8 +39,13 @@ from app.ml.scoring.models import DEFAULT_THRESHOLDS, MODEL_VERSION, ThresholdCo
 #: baseline is auditable, not a black box.
 GRADE_TREND_SCALE = 2.0
 GRADE_VOLATILITY_SCALE = 3.0
+LATEST_TERM_GPA_TARGET = 5.0  # uncalibrated floor on 0–10 scale (decision #26)
+FAILED_CREDITS_SCALE = 9.0  # uncalibrated; ~3 failed 3-credit courses
 ATTENDANCE_RATE_TARGET = 0.8
 ATTENDANCE_TREND_SCALE = 0.1
+
+#: Normalized fail markers for `failed_credits` (case-folded match after strip).
+_FAIL_GRADE_STATUSES = frozenset({"không đạt", "khong dat", "fail", "failed"})
 
 #: Minimum clamped sub-signal value to surface as a contributing factor —
 #: avoids flagging noise-level slope/volatility as an explained risk driver.
@@ -49,6 +54,12 @@ FACTOR_MATERIALITY = 0.05
 
 def _clamp01(value: float) -> float:
     return max(0.0, min(1.0, value))
+
+
+def _is_fail_grade_status(status: Optional[str]) -> bool:
+    if status is None:
+        return False
+    return status.strip().casefold() in _FAIL_GRADE_STATUSES
 
 
 def _ols_slope(xs: List[float], ys: List[float]) -> Optional[float]:
@@ -78,6 +89,33 @@ def _term_avg(term_grades: List[NormalizedTermGrade]) -> Dict[str, float]:
     return {t: sums[t] / weights[t] for t in sums}
 
 
+def compute_latest_term_gpa(term_grades: List[NormalizedTermGrade]) -> Optional[float]:
+    """Credit-weighted GPA of the latest `term_code` with ≥1 valid grade (Data-ML §2.1)."""
+    term_avg = _term_avg(term_grades)
+    if not term_avg:
+        return None
+    latest = max(term_avg)
+    return term_avg[latest]
+
+
+def compute_failed_credits(term_grades: List[NormalizedTermGrade]) -> Optional[float]:
+    """Sum of `credits` for fail-status courses; `None` if no term_grades rows.
+
+    Missing/non-positive `credits` on a fail row are skipped (not counted as 0
+    credit failures). Zero when grades exist but none match fail status.
+    """
+    if not term_grades:
+        return None
+    total = 0.0
+    for g in term_grades:
+        if not _is_fail_grade_status(g.grade_status):
+            continue
+        if g.credits is None or g.credits <= 0:
+            continue
+        total += g.credits
+    return total
+
+
 def compute_grade_trend_slope(term_grades: List[NormalizedTermGrade]) -> Optional[float]:
     """OLS slope of `term_avg` over normalized term order (Data-ML §2.1).
 
@@ -98,6 +136,20 @@ def compute_grade_volatility(term_grades: List[NormalizedTermGrade]) -> Optional
     if len(values) < 2:
         return None
     return statistics.stdev(values)
+
+
+def compute_attendance_rate_window(
+    events: List[NormalizedAttendanceEvent],
+) -> Optional[float]:
+    """Presence rate over non-excused events (Data-ML §2.2). `None` if gate fails."""
+    valid = [e for e in events if e.presence_status is not None]
+    if len(valid) < ATTENDANCE_MIN_EVENTS:
+        return None
+    counted = [e for e in valid if e.excused is not True]
+    if not counted:
+        return None
+    n_present = sum(1 for e in counted if e.presence_status == "present")
+    return round(n_present / len(counted), 6)
 
 
 def compute_attendance_trend_slope(
@@ -145,8 +197,11 @@ def score_student(
         model_version=model_version,
         threshold_config_version=threshold_config_version,
         calculated_at=calculated_at,
+        latest_term_gpa=compute_latest_term_gpa(record.term_grades),
         grade_trend_slope=compute_grade_trend_slope(record.term_grades),
         grade_volatility=compute_grade_volatility(record.term_grades),
+        failed_credits=compute_failed_credits(record.term_grades),
+        attendance_rate_window=compute_attendance_rate_window(record.attendance_events),
         attendance_trend_slope=compute_attendance_trend_slope(record.attendance_events),
     )
 
@@ -154,6 +209,10 @@ def score_student(
 def _grade_signals(features: ScoringFeatures) -> Dict[str, float]:
     """Clamped [0,1] risk contribution per grade sub-signal; empty keys omitted."""
     signals: Dict[str, float] = {}
+    if features.latest_term_gpa is not None:
+        signals["gpa_below_target"] = _clamp01(
+            (LATEST_TERM_GPA_TARGET - features.latest_term_gpa) / LATEST_TERM_GPA_TARGET
+        )
     if features.grade_trend_slope is not None:
         signals["grade_trend_declining"] = _clamp01(
             -features.grade_trend_slope / GRADE_TREND_SCALE
@@ -161,6 +220,10 @@ def _grade_signals(features: ScoringFeatures) -> Dict[str, float]:
     if features.grade_volatility is not None:
         signals["grade_volatility_elevated"] = _clamp01(
             features.grade_volatility / GRADE_VOLATILITY_SCALE
+        )
+    if features.failed_credits is not None:
+        signals["failed_credits_elevated"] = _clamp01(
+            features.failed_credits / FAILED_CREDITS_SCALE
         )
     return signals
 
@@ -179,6 +242,19 @@ def _attendance_signals(features: ScoringFeatures) -> Dict[str, float]:
     return signals
 
 
+def _grade_feature_count(features: ScoringFeatures) -> int:
+    return sum(
+        1
+        for f in (
+            features.latest_term_gpa,
+            features.grade_trend_slope,
+            features.grade_volatility,
+            features.failed_credits,
+        )
+        if f is not None
+    )
+
+
 def compute_model_score(features: ScoringFeatures) -> Optional[float]:
     """Internal risk score in [0,1] from ready branches only (Data-ML §§2.3, 4).
 
@@ -191,7 +267,8 @@ def compute_model_score(features: ScoringFeatures) -> Optional[float]:
     """
     grade_signals = _grade_signals(features)
     attendance_signals = _attendance_signals(features)
-    grade_ready = features.grade_trend_slope is not None or features.grade_volatility is not None
+    grade_n = _grade_feature_count(features)
+    grade_ready = grade_n > 0
     attendance_ready = (
         features.attendance_rate_window is not None or features.attendance_trend_slope is not None
     )
@@ -200,8 +277,7 @@ def compute_model_score(features: ScoringFeatures) -> Optional[float]:
 
     branch_scores: List[float] = []
     if grade_ready:
-        n = sum(1 for f in (features.grade_trend_slope, features.grade_volatility) if f is not None)
-        branch_scores.append(sum(grade_signals.values()) / n)
+        branch_scores.append(sum(grade_signals.values()) / grade_n)
     if attendance_ready:
         n = sum(
             1
@@ -233,8 +309,10 @@ def contributing_factors(features: ScoringFeatures) -> List[ContributingFactor]:
     """
     signals = {**_grade_signals(features), **_attendance_signals(features)}
     evidence_ref = {
+        "gpa_below_target": "latest_term_gpa",
         "grade_trend_declining": "grade_trend_slope",
         "grade_volatility_elevated": "grade_volatility",
+        "failed_credits_elevated": "failed_credits",
         "attendance_rate_below_target": "attendance_rate_window",
         "attendance_trend_declining": "attendance_trend_slope",
     }

@@ -115,7 +115,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | H07 | Deployment/runbook docs | H05a | [x] Done — runbook draft; finalize Live/smoke/rollback tại D4a/D4b |
 | H19 | MVP persistence schema versioned + legacy mapping | H10 | [x] Done — Alembic 7 bảng `dwh` + 4 migrate tests; schema doc |
 | H20 | Transactional approved-fixture import vào `dwh` | H19, M06 | [x] **Done** — `app/dwh` import_gate/importer/cli; attendance + semester paths; tests `test_h20_*` |
-| H08 | `dwh` → normalized internal DTO read adapter | H20, H06a | [x] **Done** — `app/dwh/read_adapter.py` + `NormalizedStudentRecord`; unlocks M02/H03 |
+| H08 | `dwh` → normalized internal DTO read adapter | H20, H06a | [x] **Done** — + **#27 join** khi linked approval; Mode B khi tắt; unlocks M02/H03 |
 | H18 | Quarantine legacy ML synthetic khỏi API/MVP path | M01 | [x] **Done** — API/MVP quarantine tests; leftover `early_warning` gỡ; mở khóa blocker H18 trên H02 |
 | H14 | Decision/contract research forecast/fusion từ M07 | M07 | [ ] BLOCKED → M07 · **FREEZE** tới sau submission |
 | H02 | API list/detail ReviewCase public | H06a, M02, H18 | [x] **Done** - GET /review-cases list/detail; review_projection + review_router; tests/test_h02_review_case_api.py |
@@ -153,9 +153,10 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | D4b | Product smoke list→case trên Live URL | D4a, H02, G02 | [x] **Done** — 2026-07-18 ~13:05 +07: health `database:true`; `GET /review-cases` state=ok n=50; detail `rc-s-00518c9485a9` band=`can_ra_soat`; FE `/login` `/dashboard` 200; no forbidden fields; images `:d4b` + Postgres import |
 | D4r | Fix từ QA → redeploy → re-smoke | D4b, V07, A05 | [x] **Done** — Vercel Live URL; API `:d4r`; advisor+explanation envelopes; evidence [07](07-release-evidence.md) |
 | H16 | Acceptance matrix + release evidence | A05, V07, V05 | [x] **Done** — [20-h16…](20-h16-cp2-acceptance-matrix.md) · CP2 §2 tick · unlock H09 |
-| H09 | README + verify/known-limit note cuối | H02, D4r, H16 | [ ] **TODO — unblocked** · H16 Done · D4r Done · H02 Done |
+| H09 | README + verify/known-limit note cuối | H02, D4r, H16 | [x] **Done — D460 Live API** — linked att + writers · [23-d460…](23-d460-live-redeploy-evidence.md) · Vercel FE `/auth` redeploy còn |
 | D5 | AI collaboration log từ V08 | V08 | [ ] BLOCKED → V08 · V08 **defer** gần CP2/D5 |
-| H15 | Attendance source approval + amendment (**MVP**) | H10 + approval artifact | [x] **Done** — decision #18; fixture `mvp-attendance-over-time`; [12-h15…](12-h15-attendance-approval-prep.md) |
+| H15 | Attendance source approval + amendment (**MVP**) | H10 + approval artifact | [x] **Done** — decision #18; **H15b/#27** linked 460 refs, 7360 session events; [12-h15…](12-h15-attendance-approval-prep.md) · [21…](21-mvp-linked-attendance-approval.md) |
+| H08b | H08 join semester↔attendance khi linked approval | H15b, H08 | [x] **Done** — `LINKED_NAMESPACE_APPROVAL` + exact `student_ref`; Mode B khi tắt |
 | H17 | Post-MVP hybrid public API/envelope (forecast/fusion) | H14, M08 | [ ] BLOCKED → H14, M08 · **FREEZE** |
 
 ### Khánh Duy (FE — decision #24)
@@ -170,9 +171,9 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | G03 | Care UI review/handoff | H03, H12a | [x] **Done** — `CareActions.tsx` Process §4; AI-log G03 · historical |
 | G04 | Fairness/privacy/threshold panel | H04, H12a | [x] **Done** — login/role + Fairness/Threshold; AI-log G04; PR #23 · historical |
 | G06 | FE filter theo advisor + Copy/`mailto:` draft lô | H22, G05 | [ ] **TODO — owner Duy** · unblocked (H22+G05 Done); stretch FR-12 |
-| G07 | Authenticated layout + global Agent shell | H36 | [ ] **TODO — owner Duy** · unblocked (H36 Done); PR #35: `/analysis`→`/advisor#cases` + fail-closed default (local demo flag only) — **chưa** Done: cần wire scoped API + auth shell thật, không coi localStorage demo là Done |
-| G08 | Weekly briefing/report UI | H34b, G07 | [ ] BLOCKED → G07 · **owner Duy** |
-| G09 | `/notify` advisor draft FE | H35, G07 | [ ] BLOCKED → G07 · **owner Duy** |
+| G07 | Authenticated layout + global Agent shell | H36 | [x] **Done — D460-13** — FE `/auth/*` cookie session; demo localStorage chỉ khi `NEXT_PUBLIC_ADVISOR_LOCAL_DEMO` |
+| G08 | Weekly briefing/report UI | H34b, G07 | [x] **Done — D460-14** — `WeeklyBriefingPanel` trên `/overview` (fail-closed) |
+| G09 | `/notify` advisor draft FE | H35, G07 | [x] **Done** — `/notify` consumes H22 drafts (G06/G09 surface) |
 
 ### Giang (ML — decision #24)
 
@@ -186,10 +187,11 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | M05a | Build semester source gate (code/tests) | H10 | [x] **Done** — PR #17 · historical |
 | M05b | Approved source available (artifact duyệt) | M05a + approval | [x] **Done** — [14-m05b…](14-m05b-semester-approval.md) · historical |
 | M06 | Fixture 4 bảng domain + manifests + quality tests | M05b | [x] **Done** — `app/ml/domain` · historical |
-| M02 | Baseline semester ML | M06, H06a, H08 | [x] **Done** — `app/ml/scoring` · historical |
+| M02 | Baseline semester ML | M06, H06a, H08 | [x] **Done** — `app/ml/scoring` · historical; **#26** bump `m02-baseline-0.2` (`latest_term_gpa` + `failed_credits`) |
 | M07 | Nghiên cứu hybrid (research-only) | M02, H02, H13 | [ ] **FREEZE** · **owner Giang** tới sau submission |
 | M03 | Fairness gate FPR/ΔFPR/N | M02, H06c | [x] **Done** — fairness gate · historical |
 | M08 | Attendance forecast + gated fusion (Post-MVP) | H15, M02, H14 | [ ] **FREEZE** · **owner Giang** tới sau submission |
+| M09 | Eval synthetic generator + harness (lane #26) | Decision #26, M02 | [x] **Done** — catalog EPU-weighted + smoke n=12 + full **n=2000** (`data/eval/full/`, gitignored) · [EDA](../04-engineering/16-m09-eval-synthetic-eda.md) |
 
 ### Thu Trang
 
@@ -281,7 +283,8 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | H16 | P3 · sau V05 · **Done** | Acceptance matrix + release evidence | **Done:** [20-h16…](20-h16-cp2-acceptance-matrix.md); FR Pass/Limit; CP2 tick; **không** còn deliverable slide/pitch (decision #25) |
 | H09 | P3 · 09:00 · **unblocked** | README + verify/known-limit | Khớp deploy và scope thật; known-limit từ H16 §1 (README only) |
 | D5 | P3 · 10:00 | AI collaboration log từ V08 | Gap có owner; sạch PII/secret |
-| H15 | P1 · MVP | Attendance source approval + amendment contract | **Done** decision #18: [12-h15…](12-h15-attendance-approval-prep.md) + fixture `mvp-attendance-over-time`; team approver |
+| H15 | P1 · MVP | Attendance source approval + amendment contract | **Done** #18 + **H15b/#27**: session-grain 7360 events / 460 SV; [12-h15…](12-h15-attendance-approval-prep.md) · [21…](21-mvp-linked-attendance-approval.md) |
+| H08b | P1 · sau H15b | Linked join trên H08 read adapter | **Done:** Settings handle `approval:mvp-linked-v59-att:v1:acfb7d80dc3a`; `tests/test_h08_linked_attendance.py` |
 | H17 | Post-MVP · **FREEZE** | Hybrid forecast/fusion public API theo H14 | Không làm tới sau submission |
 
 **Verify:** link/traceability, contract test, docs khớp code/public DTO.
@@ -397,7 +400,7 @@ Chỉ chạy sau submission / khi unfreeze (**owner Giang**). So sánh semester 
 | H06a/H11a semantic | `H06a-r` + `H11a-r` **Done**; `G05`/`T03` **Done** |
 | H06b ≠ deploy-ready (lịch sử) | Transition-core Done; deploy-blocker harden landed (seed-only create / server actor / no public `advisor_ref`) |
 | Critical path song song | Data/API/FE tới **V05+H16 Done**; còn `H09`/P3 release |
-| Source gate ≠ approved data | `M05b`/`H15` Done (decision #18); Live import LF hashes `73274079…` / `78d7153f…` |
+| Source gate ≠ approved data | `M05b`/`H15`/`H15b` Done (#18+#27); linked handle `acfb7d80dc3a…`; Live re-import attendance may cần clear old hash |
 | D3 residual history | Accept CP2; quyết định clean submission trước final |
 | Release dồn muộn | Slide/pitch **self-owned** Hạ Giang+Hải (#25); `V08` AI log **một thể** gần D5 (#19) |
 | Advisor mail draft | Stretch `H21`→`H22`✓→`G06` (FR-12); **không** block G02/D4b; draft-only |
@@ -412,6 +415,6 @@ Chỉ chạy sau submission / khi unfreeze (**owner Giang**). So sánh semester 
 
 1. **Ngay:** Hoàng — **`H09`** README/known-limit. **Hạ Giang + Hải** — D1/V02/D2 tự làm (#25). **Khánh Duy** — `G06`. **Giang** — ML freeze.
 2. Critical path CP2: `D4b` ✓ → `V07`✓+`A05`✓ → `D4r`✓ → **`V05`✓** → **`H16`✓**. Stretch mail: H22 Live + G06 (**Duy**).
-3. Attendance Live: known-limit `attendance_source_unapproved` (H16 §1 FR-02) trừ khi Duy/Giang kịp.
+3. Attendance Live: H08 join khi `LINKED_NAMESPACE_APPROVAL` set; re-import fixture hash `acfb7d80…` nếu DB còn snapshot cũ.
 4. `V07`/`A05`/`D4r`/`V05`/`H16` **Done**; decision **#24** Duy↔Giang + **#25** slide self-owned; Hoàng tiếp `H09`/P3.
 5. Trước handoff: verify phù hợp; trước final: `scripts/verify.ps1`, `git diff --check`, `git status --short`.

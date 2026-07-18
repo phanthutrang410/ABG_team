@@ -11,7 +11,7 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 #: Feature-spec + estimator version (Data-ML §1). Bump when the formula changes.
-MODEL_VERSION = "m02-baseline-0.1"
+MODEL_VERSION = "m02-baseline-0.2"
 
 #: Wiring-only threshold set — matches H08's DEFAULT_THRESHOLD_VERSION placeholder.
 THRESHOLD_CONFIG_VERSION = "thr-epu-0.1-uncalibrated"

@@ -70,6 +70,8 @@ docs/
 | 07 | [Persistence schema MVP](04-engineering/07-mvp-persistence-schema.md) | Thiết kế DB `dwh` versioned, mapping metadata legacy và gate import đã duyệt cho H19/H20 |
 | 14 | [Database schema & ERD](04-engineering/14-database-schema-erd.md) | SoT vật lý Postgres `dwh`: ERD Mermaid, catalog cột, migration H19→H30, gap in-memory |
 | 08 | [Data/ML scoring & fairness](04-engineering/08-data-ml-scoring-fairness-contract.md) | H10: features hai nhánh, coverage/`insufficient_data`, threshold, evaluation, fairness fail-closed |
+| 15 | [ML eval synthetic proposal](04-engineering/15-ml-eval-synthetic-proposal.md) | Decision #26 / M09: lane eval feature-complete |
+| 16 | [M09 eval synthetic EDA](04-engineering/16-m09-eval-synthetic-eda.md) | Thống kê smoke n=12 seed=42 |
 | 08b | [Agent grounding & guardrails](04-engineering/08-agent-grounding-guardrails.md) | H11b canonical: I/O, 7 refusals, adversarial; runtime pointer `POST …/explanation` (khác số với Data-ML `08-`) |
 | 09 | [Synthetic Data/ML contract (superseded)](04-engineering/09-synthetic-data-ml-fairness-contract-superseded.md) | Lịch sử synthetic — không dùng cho MVP path |
 | 10 | [FE/Agent integration contract](04-engineering/10-fe-agent-integration-contract.md) | H11a/H11b schema + current delta: case-local `AgentPanel` có; Global Agent chưa ship |
