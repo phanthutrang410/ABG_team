@@ -1,4 +1,11 @@
-import type { CaseDetailResponse, CaseListResponse } from "@/lib/types";
+import type {
+  CaseAction,
+  CaseDetailResponse,
+  CaseListResponse,
+  TransitionErrorBody,
+  TransitionResponse,
+  TransitionResult,
+} from "@/lib/types";
 
 /**
  * G02 — real fetch client for GET /review-cases (H02, consumes H11a envelopes).
@@ -35,6 +42,41 @@ export async function fetchReviewCases(signal?: AbortSignal): Promise<CaseListRe
     return body;
   } catch {
     return UPSTREAM_UNAVAILABLE_LIST;
+  }
+}
+
+/**
+ * G03 — POST /cases/{id}/transitions (H03 care workflow).
+ * Server derives the trusted actor (app/cases/auth.py) — we do NOT send
+ * actor/actor_kind, and never send advisor_ref (assign resolves via H08).
+ */
+export async function postCaseTransition(
+  caseId: string,
+  payload: {
+    action: CaseAction;
+    reason_code?: string;
+    review_at?: string;
+    monitoring_until?: string;
+  },
+): Promise<TransitionResult> {
+  try {
+    const res = await fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}/transitions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const body = await res.json().catch(() => null);
+    if (res.ok && body && typeof body.state === "string") {
+      return { ok: true, data: body as TransitionResponse };
+    }
+    // FastAPI wraps TransitionErrorBody in {detail: {...}}; plain {detail: "..."} for 404.
+    const detail = body?.detail;
+    if (detail && typeof detail === "object" && typeof detail.code === "string") {
+      return { ok: false, error: detail as TransitionErrorBody };
+    }
+    return { ok: false, error: null };
+  } catch {
+    return { ok: false, error: null };
   }
 }
 

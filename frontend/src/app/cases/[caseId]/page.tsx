@@ -3,13 +3,14 @@
 import { use, useCallback, useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { BandBadge, CaseStateBadge } from "@/components/badges";
+import { CareActions } from "@/components/CareActions";
 import { LimitationsList } from "@/components/LimitationsList";
 import { fetchReviewCase } from "@/lib/api";
-import type { CaseDetailResponse } from "@/lib/types";
+import type { CaseDetailResponse, CaseState } from "@/lib/types";
 
 /**
- * G02 — case detail wired to live GET /review-cases/{caseId} (H02, H11a envelopes).
- * Display-only: review actions belong to G03, agent explain belongs to T02.
+ * G02+G03 — case detail on live GET /review-cases/{caseId} (H02) with the
+ * care workflow panel (H03 transitions). Agent explain still belongs to T02.
  */
 export default function CaseDetailPage({ params }: { params: Promise<{ caseId: string }> }) {
   const { caseId } = use(params);
@@ -31,6 +32,12 @@ export default function CaseDetailPage({ params }: { params: Promise<{ caseId: s
     return () => controller.abort();
   }, [load]);
 
+  const handleStateChange = useCallback((next: CaseState) => {
+    setResponse((prev) =>
+      prev && prev.case ? { ...prev, case: { ...prev.case, case_state: next } } : prev,
+    );
+  }, []);
+
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "2rem 1.5rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -41,17 +48,17 @@ export default function CaseDetailPage({ params }: { params: Promise<{ caseId: s
       {loading ? (
         <DetailSkeleton />
       ) : response ? (
-        <Body response={response} />
+        <Body response={response} onStateChange={handleStateChange} />
       ) : null}
 
       <p style={{ marginTop: "1.25rem", fontSize: 12, color: "#94a3b8" }}>
-        G02 — dữ liệu tải trực tiếp từ API. Hành động duyệt/loại/hoãn/bàn giao thuộc G03, giải thích agent thuộc T02.
+        G02+G03 — dữ liệu và hành động đi thẳng API; con người duyệt trước bàn giao. Giải thích agent thuộc T02.
       </p>
     </main>
   );
 }
 
-function Body({ response }: { response: CaseDetailResponse }) {
+function Body({ response, onStateChange }: { response: CaseDetailResponse; onStateChange: (next: CaseState) => void }) {
   if (response.state === "error") {
     return <Notice tone="error">Không tải được case này — máy chủ tạm thời không phản hồi. Bấm “Tải lại” để thử lại.</Notice>;
   }
@@ -61,6 +68,8 @@ function Body({ response }: { response: CaseDetailResponse }) {
   if (!response.case) return null;
 
   const c = response.case;
+  const insufficient = c.data_state === "insufficient_data";
+
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", margin: "12px 0 4px" }}>
@@ -75,35 +84,50 @@ function Body({ response }: { response: CaseDetailResponse }) {
       {response.state === "stale" && <Notice tone="warning">Dữ liệu có thể đã cũ — snapshot chưa được cập nhật gần đây.</Notice>}
       {response.state === "insufficient_data" && <Notice tone="warning">Chưa đủ dữ liệu để tạo mức ưu tiên rà soát cho case này.</Notice>}
 
-      <section style={card}>
-        <h2 style={h2}>YẾU TỐ ĐÓNG GÓP (từ model/API)</h2>
-        {c.contributing_factors.length === 0 ? (
-          <p style={{ margin: 0, fontSize: 14, color: "#64748b", fontStyle: "italic" }}>Không có yếu tố khi thiếu dữ liệu.</p>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(250px, 320px)", gap: "1rem", alignItems: "start" }}>
+        <div style={{ display: "grid", gap: "1rem" }}>
+          <section style={card}>
+            <h2 style={h2}>YẾU TỐ ĐÓNG GÓP (từ model/API)</h2>
+            {c.contributing_factors.length === 0 ? (
+              <p style={{ margin: 0, fontSize: 14, color: "#64748b", fontStyle: "italic" }}>Không có yếu tố khi thiếu dữ liệu.</p>
+            ) : (
+              <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 6, fontSize: 14 }}>
+                {c.contributing_factors.map((f) => (
+                  <li key={f.code}>
+                    <code>{f.code}</code>
+                    {f.evidence_refs.length > 0 && <span style={{ color: "#94a3b8" }}> — {f.evidence_refs.join(", ")}</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section style={card}>
+            <h2 style={h2}>ĐỘ PHỦ DỮ LIỆU</h2>
+            <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 6, fontSize: 14 }}>
+              <li>{c.coverage.n_valid_terms} học kỳ hợp lệ · {c.coverage.n_courses} học phần</li>
+              <li>Kỳ gần nhất: {c.coverage.last_term_code ?? "—"}</li>
+              <li>Trạng thái coverage: {c.coverage.status}</li>
+            </ul>
+          </section>
+
+          <section style={card}>
+            <h2 style={h2}>GIỚI HẠN DỮ LIỆU</h2>
+            <LimitationsList limitations={c.limitations} />
+          </section>
+        </div>
+
+        {insufficient ? (
+          <aside style={{ ...card, alignSelf: "start" }}>
+            <h2 style={h2}>HÀNH ĐỘNG RÀ SOÁT</h2>
+            <p style={{ margin: 0, fontSize: 13, color: "#64748b", fontStyle: "italic" }}>
+              Không đủ dữ liệu để tạo mức ưu tiên — hệ thống không đề xuất hành động rà soát cho case này.
+            </p>
+          </aside>
         ) : (
-          <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 6, fontSize: 14 }}>
-            {c.contributing_factors.map((f) => (
-              <li key={f.code}>
-                <code>{f.code}</code>
-                {f.evidence_refs.length > 0 && <span style={{ color: "#94a3b8" }}> — {f.evidence_refs.join(", ")}</span>}
-              </li>
-            ))}
-          </ul>
+          <CareActions caseId={c.case_id} caseState={c.case_state} onStateChange={onStateChange} />
         )}
-      </section>
-
-      <section style={{ ...card, marginTop: "1rem" }}>
-        <h2 style={h2}>ĐỘ PHỦ DỮ LIỆU</h2>
-        <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 6, fontSize: 14 }}>
-          <li>{c.coverage.n_valid_terms} học kỳ hợp lệ · {c.coverage.n_courses} học phần</li>
-          <li>Kỳ gần nhất: {c.coverage.last_term_code ?? "—"}</li>
-          <li>Trạng thái coverage: {c.coverage.status}</li>
-        </ul>
-      </section>
-
-      <section style={{ ...card, marginTop: "1rem" }}>
-        <h2 style={h2}>GIỚI HẠN DỮ LIỆU</h2>
-        <LimitationsList limitations={c.limitations} />
-      </section>
+      </div>
     </>
   );
 }

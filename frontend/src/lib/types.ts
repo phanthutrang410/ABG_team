@@ -95,6 +95,44 @@ export type CaseDetailResponse = {
   problem: IntegrationProblem | null;
 };
 
+/* ---------- Care workflow (H03) — POST /cases/{id}/transitions ---------- */
+
+/** Process §4.2 action codes — mirror backend app/cases/domain.py CaseAction. */
+export type CaseAction =
+  | "queue_for_review"
+  | "approve"
+  | "dismiss"
+  | "defer"
+  | "assign"
+  | "accept"
+  | "resolve"
+  | "monitor";
+
+/** Narrow care-surface response (NOT public ReviewCase) — mirror TransitionResponse. */
+export type TransitionResponse = {
+  case_id: string;
+  state: CaseState;
+  advisor_ref: string | null;
+  review_at: string | null;
+  reason_code: string | null;
+  monitoring_until: string | null;
+  mapping_repair_queued: boolean;
+  updated_at: string | null;
+};
+
+/** mirror TransitionErrorBody (wrapped in FastAPI {detail: ...}). */
+export type TransitionErrorBody = {
+  detail: string;
+  code: string;
+  case_id: string;
+  state: string;
+  mapping_repair_queued: boolean;
+};
+
+export type TransitionResult =
+  | { ok: true; data: TransitionResponse }
+  | { ok: false; error: TransitionErrorBody | null };
+
 /* ---------- Nhãn hiển thị (đã dùng nhất quán trong docs/prototype trước) ---------- */
 
 export const BAND_LABEL: Record<ReviewPriorityBand, string> = {
