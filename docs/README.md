@@ -65,6 +65,7 @@ docs/
 | 05 | [Kiến trúc hệ thống tối thiểu](04-engineering/05-system-architecture.md) | Container, luồng dữ liệu, care/state boundary MVP; SoT mỏng cho H06b/H10/H07 |
 | 06 | [Deploy / ops runbook](04-engineering/06-deploy-runbook.md) | Env, CORS, seed, health, smoke, rollback — **draft from arch; finalize at D4**; no secrets |
 | 07 | [Persistence schema MVP](04-engineering/07-mvp-persistence-schema.md) | Thiết kế DB `dwh` versioned, mapping metadata legacy và gate import đã duyệt cho H19/H20 |
+| 14 | [Database schema & ERD](04-engineering/14-database-schema-erd.md) | SoT vật lý Postgres `dwh`: ERD Mermaid, catalog cột, migration H19→H30, gap in-memory |
 | 08 | [Data/ML scoring & fairness](04-engineering/08-data-ml-scoring-fairness-contract.md) | H10: features hai nhánh, coverage/`insufficient_data`, threshold, evaluation, fairness fail-closed |
 | 08b | [Agent grounding & guardrails](04-engineering/08-agent-grounding-guardrails.md) | H11b canonical: I/O, 7 refusals, adversarial; runtime pointer `POST …/explanation` (khác số với Data-ML `08-`) |
 | 09 | [Synthetic Data/ML contract (superseded)](04-engineering/09-synthetic-data-ml-fairness-contract-superseded.md) | Lịch sử synthetic — không dùng cho MVP path |

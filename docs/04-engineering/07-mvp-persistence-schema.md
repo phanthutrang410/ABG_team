@@ -3,6 +3,8 @@
 > **Trạng thái:** `H19`/`H20` Done. `H30` **Done** — Alembic `20260718_h30_snapshot` thêm `dataset_source`, `dataset_snapshot`, `active_dataset_snapshot`, `workflow_run`, `workflow_step_run`; backfill từ `source_manifest` thành snapshot v1 (`legacy_source_id`). Domain rows vẫn keyed by `source_id` (chưa rewrite weekly IDs).
 >
 > **Owner:** Hoàng · **Evidence:** `tests/test_dwh_migrate.py`, `tests/test_h30_h31_weekly_workflow.py`; CLI `python -m app.dwh.cli weekly run`.
+>
+> **ERD + catalog cột hiện tại:** [14-database-schema-erd](14-database-schema-erd.md) (SoT vật lý; tài liệu này giữ quyết định thiết kế / import gate).
 
 ## 1. Quyết định persistence
 
