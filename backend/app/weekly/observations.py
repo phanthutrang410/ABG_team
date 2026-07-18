@@ -1,14 +1,15 @@
 """H32 — Mode B linked-bundle adapter → immutable signal observations.
 
-Decision #23 item 2: there is no approved canonical linked namespace yet, so
-semester and attendance stay in separate branches (Mode B). A `"combined"`
-branch request must fail loudly instead of falling back to a heuristic
-cross-source join on `student_ref`.
+Decision #23 item 2 / #27: without linked-namespace approval, semester and
+attendance stay in separate branches (Mode B). A ``"combined"`` branch request
+fails with ``linked_namespace_pending`` unless ``linked_namespace_active()``
+(decision #27 handle). When active, combined uses H08 joined records on the
+primary semester ``source_id`` (exact ``student_ref`` join — no fuzzy match).
 
-Each observation is immutable output for one `(snapshot_id, student_ref,
-branch)`; it never carries `model_score`, PII, or `is_dropout_outcome` —
-only the same public-safe projection fields as `ReviewCase`
-(`review_priority_band` + factor codes + coverage).
+Each observation is immutable output for one ``(snapshot_id, student_ref,
+branch)``; it never carries ``model_score``, PII, or ``is_dropout_outcome`` —
+only the same public-safe projection fields as ``ReviewCase``
+(``review_priority_band`` + factor codes + coverage).
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.dwh.models import DatasetSnapshot
-from app.dwh.read_adapter import ReadAdapterError, list_normalized_students
+from app.dwh.read_adapter import ReadAdapterError, linked_namespace_active, list_normalized_students
 from app.ml.scoring import (
     DEFAULT_THRESHOLDS,
     MODEL_VERSION,
@@ -34,9 +35,13 @@ from app.ml.scoring import (
 )
 from app.ml.source_gate.gate import SOURCE_ALLOWLIST
 
-#: Mode B branch -> expected `app.ml.source_gate.gate.SOURCE_ALLOWLIST` role.
-#: No `"combined"` entry — see `build_observations_mode_b`.
-BRANCH_ROLES: Dict[str, str] = {"semester": "primary", "attendance": "attendance"}
+#: Branch -> expected ``SOURCE_ALLOWLIST`` role.
+#: ``combined`` resolves to the primary semester source (H08 join when linked).
+BRANCH_ROLES: Dict[str, str] = {
+    "semester": "primary",
+    "attendance": "attendance",
+    "combined": "primary",
+}
 
 
 class NamespaceMismatchError(ValueError):
@@ -89,7 +94,7 @@ def evidence_fingerprint(
 
 
 def resolve_source_id(snapshot: DatasetSnapshot, branch: str) -> str:
-    """Resolve the dwh `source_id` backing a Mode B branch — no fuzzy join.
+    """Resolve the dwh `source_id` backing a Mode B / combined branch.
 
     Uses `legacy_source_id` when the H30 snapshot carries one (bridging the
     H19/H20 `source_manifest` bytes), otherwise falls back to `dataset_key`.
@@ -139,14 +144,14 @@ def build_observations_mode_b(
     thresholds: ThresholdConfig = DEFAULT_THRESHOLDS,
     model_version: str = MODEL_VERSION,
 ) -> List[SignalObservation]:
-    """Normalize one approved snapshot's own branch into immutable observations.
+    """Normalize one approved snapshot's branch into immutable observations.
 
-    Mode B only (Decision #23 item 2): `branch` must be `"semester"` or
-    `"attendance"`. A `"combined"` request means the canonical linked
-    namespace is not approved yet — refuse instead of joining semester and
-    attendance rows heuristically by `student_ref`.
+    Branches ``semester`` / ``attendance`` are always Mode B (single source).
+    ``combined`` is allowed only when ``linked_namespace_active()`` (decision #27);
+    otherwise raises ``linked_namespace_pending``. Combined reads the primary
+    semester source so H08 attaches linked attendance by exact ``student_ref``.
     """
-    if branch == "combined":
+    if branch == "combined" and not linked_namespace_active():
         raise ValueError("linked_namespace_pending")
     if branch not in BRANCH_ROLES:
         raise ValueError(f"unknown_branch:{branch}")

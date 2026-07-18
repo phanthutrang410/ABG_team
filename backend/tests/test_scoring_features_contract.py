@@ -38,6 +38,8 @@ def load_fixture() -> dict:
 def test_scoring_features_fixture_validates() -> None:
     features = ScoringFeatures.model_validate(load_fixture())
     assert features.student_ref.startswith("stu_pseudo_")
+    assert features.latest_term_gpa == pytest.approx(6.5)
+    assert features.failed_credits == pytest.approx(3.0)
     assert features.attendance_rate_window is None
     assert features.attendance_trend_slope is None
     assert ATTENDANCE_SOURCE_UNAPPROVED in features.coverage.reason_codes
@@ -142,7 +144,9 @@ def test_scoring_features_rejects_coverage_ok_with_zero_counts() -> None:
         "status": "ok",
         "reason_codes": [],
     }
+    data["latest_term_gpa"] = None
     data["grade_trend_slope"] = None
     data["grade_volatility"] = None
+    data["failed_credits"] = None
     with pytest.raises(ValidationError, match="status=ok"):
         ScoringFeatures.model_validate(data)

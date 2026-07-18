@@ -46,3 +46,6 @@ Thumbs.db
 *.pem
 *.key
 credentials.json
+
+# M09 local full eval package (smoke under data/eval/smoke is committed)
+data/eval/full/

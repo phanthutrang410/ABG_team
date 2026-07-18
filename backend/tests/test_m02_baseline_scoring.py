@@ -24,8 +24,10 @@ from app.ml.scoring import (
     ThresholdConfig,
     band_for_score,
     compute_attendance_trend_slope,
+    compute_failed_credits,
     compute_grade_trend_slope,
     compute_grade_volatility,
+    compute_latest_term_gpa,
     compute_model_score,
     contributing_factors,
     score_student,
@@ -34,9 +36,19 @@ from app.ml.scoring import (
 _CALC_AT = datetime(2026, 7, 18, tzinfo=timezone.utc)
 
 
-def _grade(term_code: str, grade: float, credits: float = 3.0, course: str = "c1") -> NormalizedTermGrade:
+def _grade(
+    term_code: str,
+    grade: float,
+    credits: float = 3.0,
+    course: str = "c1",
+    grade_status: str | None = None,
+) -> NormalizedTermGrade:
     return NormalizedTermGrade(
-        term_code=term_code, course_ref=course, credits=credits, final_grade=grade
+        term_code=term_code,
+        course_ref=course,
+        credits=credits,
+        final_grade=grade,
+        grade_status=grade_status,
     )
 
 
@@ -127,6 +139,52 @@ def test_grade_volatility_ignores_null_final_grade():
     assert compute_grade_volatility(grades) is None
 
 
+def test_latest_term_gpa_none_without_grades():
+    assert compute_latest_term_gpa([]) is None
+    assert compute_latest_term_gpa(
+        [NormalizedTermGrade(term_code="t1", course_ref="c", final_grade=None)]
+    ) is None
+
+
+def test_latest_term_gpa_picks_latest_term_credit_weighted():
+    grades = [
+        _grade("t1", 8.0, credits=1.0, course="a"),
+        _grade("t1", 4.0, credits=3.0, course="b"),
+        _grade("t2", 6.0, credits=2.0, course="a"),
+        _grade("t2", 8.0, credits=2.0, course="b"),
+    ]
+    assert compute_latest_term_gpa(grades) == pytest.approx(7.0)
+
+
+def test_failed_credits_none_without_term_grades():
+    assert compute_failed_credits([]) is None
+
+
+def test_failed_credits_zero_when_no_fail_status():
+    assert compute_failed_credits([_grade("t1", 8.0, grade_status="[B - ]")]) == pytest.approx(0.0)
+
+
+def test_failed_credits_sums_fail_rows_skips_missing_credits():
+    grades = [
+        _grade("t1", 3.0, credits=3.0, course="a", grade_status="Không đạt"),
+        _grade("t1", 2.0, credits=2.0, course="b", grade_status="không đạt"),
+        NormalizedTermGrade(
+            term_code="t1",
+            course_ref="c",
+            credits=None,
+            final_grade=1.0,
+            grade_status="Không đạt",
+        ),
+        _grade("t2", 7.0, credits=3.0, course="d", grade_status="[C - ]"),
+    ]
+    assert compute_failed_credits(grades) == pytest.approx(5.0)
+
+
+def test_failed_credits_ignores_non_fail_status():
+    grades = [_grade("t1", 1.0, credits=3.0, grade_status="[D - ]")]
+    assert compute_failed_credits(grades) == pytest.approx(0.0)
+
+
 # --- Attendance branch feature computation ----------------------------------
 
 
@@ -168,12 +226,19 @@ def test_attendance_trend_slope_improving_is_positive():
 
 
 def test_score_student_semester_only_fills_grade_branch():
-    record = _semester_record([_grade("t1", 8.0), _grade("t2", 6.0)])
+    record = _semester_record(
+        [
+            _grade("t1", 8.0, grade_status="[B - ]"),
+            _grade("t2", 6.0, grade_status="Không đạt"),
+        ]
+    )
     features = score_student(record, calculated_at=_CALC_AT)
     assert isinstance(features, ScoringFeatures)
     assert features.model_version == MODEL_VERSION
+    assert features.latest_term_gpa == pytest.approx(6.0)
     assert features.grade_trend_slope == pytest.approx(-2.0)
     assert features.grade_volatility == pytest.approx(math.sqrt(2))
+    assert features.failed_credits == pytest.approx(3.0)
     assert features.attendance_rate_window is None
     assert features.attendance_trend_slope is None
 
@@ -195,8 +260,10 @@ def test_score_student_no_cross_join_attendance_only():
     ]
     record = _attendance_record(events, coverage)
     features = score_student(record, calculated_at=_CALC_AT)
+    assert features.latest_term_gpa is None
     assert features.grade_trend_slope is None
     assert features.grade_volatility is None
+    assert features.failed_credits is None
     assert features.attendance_rate_window == 1.0
 
 
@@ -343,6 +410,25 @@ def test_contributing_factors_report_correct_codes():
     }
     for factor in contributing_factors(features):
         assert factor.evidence_refs
+
+
+def test_contributing_factors_include_gpa_and_failed_credits():
+    coverage = attendance_unapproved_defaults(n_valid_terms=1, n_courses=2, last_term_code="t1")
+    features = ScoringFeatures(
+        dataset_version="v59-empty-program-students:abcd1234:epu-1",
+        model_version=MODEL_VERSION,
+        threshold_config_version=DEFAULT_THRESHOLDS.version,
+        calculated_at=_CALC_AT,
+        student_ref="s-1",
+        latest_term_gpa=2.0,
+        failed_credits=6.0,
+        coverage=coverage,
+    )
+    codes = {f.code for f in contributing_factors(features)}
+    assert codes == {"gpa_below_target", "failed_credits_elevated"}
+    refs = {f.code: f.evidence_refs for f in contributing_factors(features)}
+    assert refs["gpa_below_target"] == ["latest_term_gpa"]
+    assert refs["failed_credits_elevated"] == ["failed_credits"]
 
 
 @pytest.mark.parametrize("tau_case", [0.1, 0.2, 0.35, 0.5, 0.8])

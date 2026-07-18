@@ -83,7 +83,46 @@ docker compose up -d db
 
 Backend lifespan calls `init_schemas()` when DB is reachable (`backend/app/main.py`).
 
-**Live D4a:** no Postgres attached; `/health` reports `"database": false`. Seed/import for product demo stays **`H08` / `H20` / D4b** — not claimed here.
+### 5.1 D460 bootstrap — 460 SV + linked attendance + writers
+
+One-shot operator path (idempotent imports; materialize/rollup replace by `source_id`):
+
+```powershell
+# From repo root; uses DATABASE_URL from .env / env
+python scripts/bootstrap_d460.py
+# or:
+python scripts/bootstrap_d460.py --database-url postgresql+psycopg://...
+```
+
+Equivalent CLI steps (from `backend/`):
+
+```text
+# ensure head includes 20260719_ml_attendance_week
+python -c "from app.dwh.migrate import upgrade_head; from app.config import get_settings; upgrade_head(get_settings().database_url)"
+python -m app.dwh.cli import-semester
+python -m app.dwh.cli import-attendance
+python -m app.auth.cli seed          # requires AUTH_SEED_PASSWORD
+python -m app.dwh.cli materialize-ml
+python -m app.dwh.cli rollup-attendance-week
+python -m app.dwh.cli readiness
+```
+
+**Expected checks (no PII):**
+
+| Check | Expect |
+|:--|:--|
+| semester `student_dimension` | 460 |
+| attendance events | 7360 · hash `acfb7d80dc3a…` |
+| `LINKED_NAMESPACE_APPROVAL` | `approval:mvp-linked-v59-att:v1:acfb7d80dc3a` |
+| `ml_term_snapshot` | 460 rows |
+| `attendance_week` distinct students | 460 |
+| readiness | `ready: true` |
+
+**Live D460 (19/7 ~03:10 +07):** API `:d460` digest `sha256:4f1fb57b7e4f259fdf9751a88cd54f57316a92e70dbb088302308a5d05d1714a` · linked attendance **7360** (`acfb7d80…`) · `ml_term_snapshot` 460 · `attendance_week` 1840/460 · auth smoke **0** `attendance_source_unapproved` · evidence [23-d460…](../03-project/23-d460-live-redeploy-evidence.md). H39: anon `/review-cases` → 401; seed accounts `quanly`/`gvcn`/`demo`. **Vercel FE** still needs production redeploy for `/auth/*` rewrite (until then browser login via Vercel 404).
+
+**If re-bootstrap:** (1) image with `/data/approved` fixtures + writers, (2) env `LINKED_NAMESPACE_APPROVAL`, (3) on `snapshot_conflict` → clear attendance `source_id` rows **after** `upgrade_head` (separate tx per table), (4) import + materialize + rollup. SSM helpers: `deploy/aws/ssm-d460-redeploy-api.json`, `ssm-d460-bootstrap.json`.
+
+**Live D4a historical:** early shell had no Postgres; D4b+ reports `database: true`. Seed/import remains operator CLI — not automatic in `user-data.sh`.
 
 ## 6. Health check
 
@@ -142,7 +181,8 @@ Independent smoke owner from P2: Văn Hải (`V07`). Hoàng owns first Live shel
 | EC2 instance | `i-0b0576945d080cb3f` |
 | AMI | `ami-0b31875bb70b82eb2` |
 | Elastic IP allocation | `eipalloc-09066880c09305fbe` → `52.74.255.88` |
-| API image digest (D4r) | `sha256:2b01b24a233e374b655fab55bf8bf9be2ff886437c202a7a9b51e9d957f256a1` (`:d4r`) |
+| API image digest (D460) | `sha256:4f1fb57b7e4f259fdf9751a88cd54f57316a92e70dbb088302308a5d05d1714a` (`:d460`) |
+| API image digest (D4r rollback) | `sha256:2b01b24a233e374b655fab55bf8bf9be2ff886437c202a7a9b51e9d957f256a1` (`:d4r`) |
 | API image digest (D4b) | `sha256:bab21546c5ce4fb24277bcb59e9276416a956dabf6168b6ce0a2330cd11ae58a` (`:d4b`) |
 | FE image digest (D4b) | `sha256:70eb44b5aab652626aa695631ed5ac4d8158316a29f369e34f61b4f0d43a35fe` (`:d4b`) |
 | API image digest (D4a rollback) | `sha256:7a6ba16516bcc33beb58f4497f0583b220061e2f502f7ff913656319c523a23b` (`:d4a`) |

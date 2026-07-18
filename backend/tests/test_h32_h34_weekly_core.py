@@ -14,9 +14,10 @@ from sqlalchemy.orm import sessionmaker
 
 from app.config import get_settings
 from app.contracts.integration import assert_no_forbidden_keys
-from app.dwh.importer import ATTENDANCE_SOURCE_ID, import_attendance
+from app.dwh.importer import ATTENDANCE_SOURCE_ID, SEMESTER_SOURCE_ID, import_attendance, import_semester
 from app.dwh.migrate import upgrade_head
 from app.dwh.models import DatasetSnapshot, DatasetSource
+from app.dwh.read_adapter import linked_namespace_active
 from app.weekly import briefing as briefing_mod
 from app.weekly.briefing import BriefingStore, get_or_create_briefing, mark_ack, mark_shown
 from app.weekly.cases_durable import CaseRepository, DurableCaseError
@@ -116,10 +117,55 @@ def _add_snapshot(
     session.commit()
 
 
-def test_mode_b_rejects_combined_branch(weekly_database_url: str) -> None:
+def test_mode_b_rejects_combined_when_linked_inactive(
+    weekly_database_url: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("LINKED_NAMESPACE_APPROVAL", "")
+    get_settings.cache_clear()
+    assert not linked_namespace_active()
     with _session(weekly_database_url) as session:
         with pytest.raises(ValueError, match="linked_namespace_pending"):
             build_observations_mode_b(session, "snap-any", "combined")
+    get_settings.cache_clear()
+
+
+def test_combined_branch_when_linked_active(
+    weekly_database_url: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Decision #27: combined uses H08 joined primary semester records."""
+    monkeypatch.setenv(
+        "LINKED_NAMESPACE_APPROVAL",
+        "approval:mvp-linked-v59-att:v1:acfb7d80dc3a",
+    )
+    get_settings.cache_clear()
+    assert linked_namespace_active()
+
+    import_semester(weekly_database_url, ensure_schema=False)
+
+    with _session(weekly_database_url) as session:
+        _add_snapshot(
+            session,
+            snapshot_id="snap-combined-1",
+            dataset_key="epu-care-signals-combined-1",
+            legacy_source_id=SEMESTER_SOURCE_ID,
+        )
+        observations = build_observations_mode_b(session, "snap-combined-1", "combined")
+
+    assert len(observations) == 460
+    with_att_signal = [
+        o
+        for o in observations
+        if o.coverage_status in ("ok", "partial") and o.review_priority_band is not None
+    ]
+    # Linked join should produce bands for at least some students (grades + attendance).
+    assert len(with_att_signal) >= 1
+    for obs in observations:
+        assert obs.branch == "combined"
+        assert obs.snapshot_id == "snap-combined-1"
+        blob = dataclasses.asdict(obs)
+        assert_no_forbidden_keys(blob)
+        assert "model_score" not in blob
+    get_settings.cache_clear()
 
 
 def test_mode_b_builds_real_observations_from_attendance_branch(
@@ -134,7 +180,7 @@ def test_mode_b_builds_real_observations_from_attendance_branch(
         )
         observations = build_observations_mode_b(session, "snap-att-1", "attendance")
 
-    assert len(observations) == 3
+    assert len(observations) == 460
     for obs in observations:
         assert obs.snapshot_id == "snap-att-1"
         assert obs.branch == "attendance"
@@ -190,7 +236,7 @@ def test_mode_b_dataset_key_fallback_resolves_source(weekly_database_url: str) -
             legacy_source_id=None,
         )
         observations = build_observations_mode_b(session, "snap-fallback", "attendance")
-    assert len(observations) == 3
+    assert len(observations) == 460
 
 
 def test_mode_b_unknown_branch_raises(weekly_database_url: str) -> None:

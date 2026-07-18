@@ -1,0 +1,7 @@
+{
+  "commands": [
+    "set -euo pipefail",
+    "docker exec silent-shield-api python -c \"from app.config import get_settings; from app.database import init_schemas, get_session_factory; from app.auth.cli import seed_accounts; get_settings.cache_clear(); pw=get_settings().auth_seed_password.get_secret_value(); assert pw.strip(), 'empty_seed'; init_schemas(); Session=get_session_factory(); db=Session(); print('auth_seeded', seed_accounts(db, pw)); db.close()\"",
+    "curl -sS http://127.0.0.1:8000/health; echo"
+  ]
+}

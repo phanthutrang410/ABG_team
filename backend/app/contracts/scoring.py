@@ -25,8 +25,10 @@ class ScoringFeatures(BaseModel):
     calculated_at: datetime
 
     student_ref: str = Field(min_length=1, description="Pseudonym; không phải MSSV")
+    latest_term_gpa: Optional[float] = Field(default=None, ge=0.0, le=10.0)
     grade_trend_slope: Optional[float] = None
     grade_volatility: Optional[float] = None
+    failed_credits: Optional[float] = Field(default=None, ge=0.0)
     attendance_rate_window: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     attendance_trend_slope: Optional[float] = None
     coverage: Coverage

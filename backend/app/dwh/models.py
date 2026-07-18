@@ -1,19 +1,23 @@
-"""SQLAlchemy models for the MVP `dwh` schema (H19).
+"""SQLAlchemy models for the MVP `dwh` schema (H19+).
 
-Constraints follow docs/04-engineering/07-mvp-persistence-schema.md and
+Constraints follow docs/04-engineering/07-mvp-persistence-schema.md,
+docs/04-engineering/14-database-schema-erd.md, and
 docs/04-engineering/04-epu-data-integration-contract.md §2.
-No case-state or ML prediction tables in this revision.
+
+Case-state / care ReviewCase tables remain out of scope. ML term snapshot and
+attendance week rollup are materialization targets (empty until a writer task).
 """
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
@@ -42,6 +46,9 @@ DWH_TABLE_NAMES = (
     "active_dataset_snapshot",
     "workflow_run",
     "workflow_step_run",
+    # ML + attendance week materializations
+    "ml_term_snapshot",
+    "attendance_week",
 )
 
 
@@ -364,5 +371,142 @@ class WorkflowStepRun(Base):
         CheckConstraint(
             "status IN ('queued','running','succeeded','failed','skipped')",
             name="ck_workflow_step_status",
+        ),
+    )
+
+
+class MlTermSnapshot(Base):
+    """Per-student ML feature + review-band materialization for a semester source.
+
+    Grain: one row per ``(source_id, student_ref)`` (upsert on re-score).
+    ``model_score`` is internal-only; public/agent consumers must use
+    ``review_priority_band``, factor codes, coverage, and ``agent_explain_json``.
+    """
+
+    __tablename__ = "ml_term_snapshot"
+
+    source_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    student_ref: Mapped[str] = mapped_column(String(128), primary_key=True)
+    dataset_version: Mapped[str] = mapped_column(String(128), nullable=False)
+    model_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    threshold_config_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    calculated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    last_term_code: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+
+    latest_term_gpa: Mapped[Optional[Decimal]] = mapped_column(Numeric(5, 2), nullable=True)
+    grade_trend_slope: Mapped[Optional[Decimal]] = mapped_column(Numeric(12, 6), nullable=True)
+    grade_volatility: Mapped[Optional[Decimal]] = mapped_column(Numeric(12, 6), nullable=True)
+    failed_credits: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 2), nullable=True)
+    attendance_rate_window: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(6, 4), nullable=True
+    )
+    attendance_trend_slope: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(12, 6), nullable=True
+    )
+
+    coverage_status: Mapped[str] = mapped_column(String(32), nullable=False)
+    coverage_json: Mapped[str] = mapped_column(Text, nullable=False)
+    # Null when below tau_case (no public review band).
+    review_priority_band: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    contributing_factors_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    # Internal only — never project to public API / agent context.
+    model_score: Mapped[Optional[Decimal]] = mapped_column(Numeric(6, 4), nullable=True)
+    explain_schema_version: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    agent_explain_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    evidence_fingerprint: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["source_id", "student_ref"],
+            [
+                f"{DWH_SCHEMA}.student_dimension.source_id",
+                f"{DWH_SCHEMA}.student_dimension.student_ref",
+            ],
+            ondelete="CASCADE",
+            name="fk_ml_term_snapshot_student",
+        ),
+        CheckConstraint(
+            "coverage_status IN ('ok', 'partial', 'insufficient')",
+            name="ck_ml_term_snapshot_coverage_status",
+        ),
+        CheckConstraint(
+            "review_priority_band IS NULL OR "
+            "review_priority_band IN ('uu_tien_som', 'can_ra_soat')",
+            name="ck_ml_term_snapshot_band",
+        ),
+        CheckConstraint(
+            "model_score IS NULL OR (model_score >= 0 AND model_score <= 1)",
+            name="ck_ml_term_snapshot_model_score",
+        ),
+        CheckConstraint(
+            "latest_term_gpa IS NULL OR (latest_term_gpa >= 0 AND latest_term_gpa <= 10)",
+            name="ck_ml_term_snapshot_gpa",
+        ),
+        CheckConstraint(
+            "attendance_rate_window IS NULL OR "
+            "(attendance_rate_window >= 0 AND attendance_rate_window <= 1)",
+            name="ck_ml_term_snapshot_att_rate",
+        ),
+        CheckConstraint(
+            "failed_credits IS NULL OR failed_credits >= 0",
+            name="ck_ml_term_snapshot_failed_credits",
+        ),
+    )
+
+
+class AttendanceWeek(Base):
+    """Student × ISO-week attendance rollup derived from ``attendance_event``.
+
+    Grain: ``(source_id, student_ref, week_start_date)`` where ``week_start_date``
+    is the Monday of the ISO week. Excused rows are counted separately and
+    excluded from the rate denominator (Data-ML §2.2).
+    """
+
+    __tablename__ = "attendance_week"
+
+    source_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    student_ref: Mapped[str] = mapped_column(String(128), primary_key=True)
+    week_start_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    week_end_date: Mapped[date] = mapped_column(Date, nullable=False)
+    n_events: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    n_in_denominator: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    n_present: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    n_absent: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    n_excused_excluded: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    attendance_rate: Mapped[Optional[Decimal]] = mapped_column(Numeric(6, 4), nullable=True)
+    first_observed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_observed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["source_id", "student_ref"],
+            [
+                f"{DWH_SCHEMA}.student_dimension.source_id",
+                f"{DWH_SCHEMA}.student_dimension.student_ref",
+            ],
+            ondelete="CASCADE",
+            name="fk_attendance_week_student",
+        ),
+        CheckConstraint("n_events >= 0", name="ck_attendance_week_n_events"),
+        CheckConstraint("n_in_denominator >= 0", name="ck_attendance_week_n_denom"),
+        CheckConstraint("n_present >= 0", name="ck_attendance_week_n_present"),
+        CheckConstraint("n_absent >= 0", name="ck_attendance_week_n_absent"),
+        CheckConstraint("n_excused_excluded >= 0", name="ck_attendance_week_n_excused"),
+        CheckConstraint(
+            "attendance_rate IS NULL OR (attendance_rate >= 0 AND attendance_rate <= 1)",
+            name="ck_attendance_week_rate",
+        ),
+        CheckConstraint(
+            "week_end_date >= week_start_date",
+            name="ck_attendance_week_range",
+        ),
+        CheckConstraint(
+            "(n_in_denominator = 0 AND attendance_rate IS NULL) OR "
+            "(n_in_denominator > 0 AND attendance_rate IS NOT NULL)",
+            name="ck_attendance_week_rate_null_when_empty",
         ),
     )

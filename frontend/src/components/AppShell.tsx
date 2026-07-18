@@ -13,14 +13,12 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { initialsFromName, roleHome, splitAccountName, useSession } from "@/lib/session";
-import { ROLE_LABEL, type DemoAccount, type Role } from "@/lib/types";
+import { ROLE_LABEL, type Role, type SessionAccount } from "@/lib/types";
 
 /**
- * Khung trang + guard theo vai (demo, client-side — không phải bảo mật production).
- * Sidebar EduSignal (mockup 18/7 v4): logo asset, nav icon line và thẻ Silent Shield.
- * Topbar: chuông + thời điểm cập nhật + menu người dùng duy nhất.
- * Thời điểm cập nhật / số cảnh báo do trang con bơm vào qua TopbarInfo context —
- * KHÔNG hardcode; luôn tính từ dữ liệu API (calculated_at, band ưu tiên).
+ * Khung trang + guard theo vai (client shell).
+ * Identity/role production: cookie session H39 via SessionProvider — không tin
+ * client-declared role cho API; redirect khi chưa đăng nhập hoặc sai vai.
  */
 
 /* ---------- TopbarInfo: trang con bơm dữ liệu thật lên topbar của shell ---------- */
@@ -73,12 +71,12 @@ export function AppShell({ role, title, subtitle, children }: { role: Role; titl
   }
 
   const multi = account.roles.length > 1;
-  const onChooseRole = (next: Role) => {
-    chooseRole(next);
-    router.push(roleHome(next));
+  const onChooseRole = async (next: Role) => {
+    const ok = await chooseRole(next);
+    if (ok) router.push(roleHome(next));
   };
-  const onLogout = () => {
-    logout();
+  const onLogout = async () => {
+    await logout();
     router.push("/login");
   };
 
@@ -185,7 +183,7 @@ function UserMenu({
   onChooseRole,
   onLogout,
 }: {
-  account: DemoAccount;
+  account: SessionAccount;
   role: Role;
   multi: boolean;
   onChooseRole: (next: Role) => void;

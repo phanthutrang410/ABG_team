@@ -2,6 +2,7 @@ import type {
   AdvisorHandoffDraftListResponse,
   AgentExplanation,
   AgentIntent,
+  AuthMeResponse,
   CaseAction,
   CaseDetailResponse,
   CaseListResponse,
@@ -48,9 +49,139 @@ export function apiBase(): string {
   return API_BASE;
 }
 
+/** Cookie session fetches — must include credentials for ``ss_session``. */
+const CREDENTIALS: RequestInit = { credentials: "include", cache: "no-store" };
+
+export type AuthApiError = {
+  status: number;
+  code: string | null;
+  message: string | null;
+};
+
+function authErrorFromResponse(status: number, body: unknown): AuthApiError {
+  const detail =
+    body && typeof body === "object" && "detail" in body
+      ? (body as { detail: unknown }).detail
+      : null;
+  if (detail && typeof detail === "object" && detail !== null && "code" in detail) {
+    const d = detail as { code?: unknown; message?: unknown };
+    return {
+      status,
+      code: typeof d.code === "string" ? d.code : null,
+      message: typeof d.message === "string" ? d.message : null,
+    };
+  }
+  return { status, code: null, message: null };
+}
+
+/** POST /auth/login — sets HttpOnly ``ss_session`` cookie. */
+export async function postAuthLogin(
+  username: string,
+  password: string,
+): Promise<{ ok: true; data: AuthMeResponse } | { ok: false; error: AuthApiError }> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      ...CREDENTIALS,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+    const body = await res.json().catch(() => null);
+    if (res.ok && body && typeof body.account_id === "string") {
+      return { ok: true, data: body as AuthMeResponse };
+    }
+    return { ok: false, error: authErrorFromResponse(res.status, body) };
+  } catch {
+    return { ok: false, error: { status: 0, code: "upstream_unavailable", message: null } };
+  }
+}
+
+/** GET /auth/me — null when unauthenticated / transport failure. */
+export async function fetchAuthMe(signal?: AbortSignal): Promise<AuthMeResponse | null> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/me`, { ...CREDENTIALS, signal });
+    if (!res.ok) return null;
+    const body = (await res.json()) as AuthMeResponse;
+    if (!body || typeof body.account_id !== "string") return null;
+    return body;
+  } catch {
+    return null;
+  }
+}
+
+/** POST /auth/active-role — multi-role accounts must select before scoped APIs. */
+export async function postAuthActiveRole(
+  role: string,
+): Promise<{ ok: true; data: AuthMeResponse } | { ok: false; error: AuthApiError }> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/active-role`, {
+      ...CREDENTIALS,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+    const body = await res.json().catch(() => null);
+    if (res.ok && body && typeof body.account_id === "string") {
+      return { ok: true, data: body as AuthMeResponse };
+    }
+    return { ok: false, error: authErrorFromResponse(res.status, body) };
+  } catch {
+    return { ok: false, error: { status: 0, code: "upstream_unavailable", message: null } };
+  }
+}
+
+/** POST /auth/logout — revokes session + clears cookie (204). */
+export async function postAuthLogout(): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/logout`, {
+      ...CREDENTIALS,
+      method: "POST",
+    });
+    return res.status === 204 || res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** G08 consumer — GET /weekly-reports/latest (auth required). */
+export async function fetchWeeklyReportLatest(
+  branch: "semester" | "attendance" = "semester",
+  signal?: AbortSignal,
+): Promise<unknown | null> {
+  try {
+    const qs = new URLSearchParams({ branch });
+    const res = await fetch(`${API_BASE}/weekly-reports/latest?${qs}`, {
+      ...CREDENTIALS,
+      signal,
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/** G08 consumer — GET /weekly-briefings/latest (auth + active role). */
+export async function fetchWeeklyBriefingLatest(
+  branch: "semester" | "attendance" = "semester",
+  signal?: AbortSignal,
+): Promise<unknown | null> {
+  try {
+    const qs = new URLSearchParams({ branch });
+    const res = await fetch(`${API_BASE}/weekly-briefings/latest?${qs}`, {
+      ...CREDENTIALS,
+      signal,
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchReviewCases(signal?: AbortSignal): Promise<CaseListResponse> {
   try {
-    const res = await fetch(`${API_BASE}/review-cases`, { cache: "no-store", signal });
+    const res = await fetch(`${API_BASE}/review-cases`, { ...CREDENTIALS, signal });
     if (!res.ok) return UPSTREAM_UNAVAILABLE_LIST;
     const body = (await res.json()) as CaseListResponse;
     if (!body || typeof body.state !== "string") return UPSTREAM_UNAVAILABLE_LIST;
@@ -76,6 +207,7 @@ export async function postCaseTransition(
 ): Promise<TransitionResult> {
   try {
     const res = await fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}/transitions`, {
+      ...CREDENTIALS,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -98,7 +230,7 @@ export async function postCaseTransition(
 /** G04 — GET /config/thresholds (H04). null = upstream unavailable (fail-closed hiển thị lỗi). */
 export async function fetchThresholds(signal?: AbortSignal): Promise<PublicThresholdConfig | null> {
   try {
-    const res = await fetch(`${API_BASE}/config/thresholds`, { cache: "no-store", signal });
+    const res = await fetch(`${API_BASE}/config/thresholds`, { ...CREDENTIALS, signal });
     if (!res.ok) return null;
     return (await res.json()) as PublicThresholdConfig;
   } catch {
@@ -114,7 +246,7 @@ export async function fetchThresholdImpact(
 ): Promise<ThresholdImpactResponse | null> {
   try {
     const qs = new URLSearchParams({ tau_case: String(tauCase), tau_high: String(tauHigh) });
-    const res = await fetch(`${API_BASE}/config/thresholds/impact?${qs}`, { cache: "no-store", signal });
+    const res = await fetch(`${API_BASE}/config/thresholds/impact?${qs}`, { ...CREDENTIALS, signal });
     if (!res.ok) return null;
     return (await res.json()) as ThresholdImpactResponse;
   } catch {
@@ -125,7 +257,7 @@ export async function fetchThresholdImpact(
 /** G04 — GET /fairness/report (MVP: status=insufficient_data, fail-closed). */
 export async function fetchFairnessReport(signal?: AbortSignal): Promise<FairnessReport | null> {
   try {
-    const res = await fetch(`${API_BASE}/fairness/report`, { cache: "no-store", signal });
+    const res = await fetch(`${API_BASE}/fairness/report`, { ...CREDENTIALS, signal });
     if (!res.ok) return null;
     return (await res.json()) as FairnessReport;
   } catch {
@@ -145,6 +277,7 @@ export async function postAgentExplanation(
 ): Promise<AgentExplanation | null> {
   try {
     const res = await fetch(`${API_BASE}/review-cases/${encodeURIComponent(caseId)}/explanation`, {
+      ...CREDENTIALS,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...payload, locale: "vi" }),
@@ -175,7 +308,7 @@ export async function fetchAdvisorHandoffDrafts(
   signal?: AbortSignal,
 ): Promise<AdvisorHandoffDraftListResponse> {
   try {
-    const res = await fetch(ADVISOR_HANDOFF_DRAFTS_URL, { cache: "no-store", signal });
+    const res = await fetch(ADVISOR_HANDOFF_DRAFTS_URL, { ...CREDENTIALS, signal });
     if (!res.ok) return UPSTREAM_UNAVAILABLE_HANDOFF;
     const body = (await res.json()) as AdvisorHandoffDraftListResponse;
     if (!body || typeof body.state !== "string") return UPSTREAM_UNAVAILABLE_HANDOFF;
@@ -188,7 +321,7 @@ export async function fetchAdvisorHandoffDrafts(
 export async function fetchReviewCase(caseId: string, signal?: AbortSignal): Promise<CaseDetailResponse> {
   try {
     const res = await fetch(`${API_BASE}/review-cases/${encodeURIComponent(caseId)}`, {
-      cache: "no-store",
+      ...CREDENTIALS,
       signal,
     });
     if (!res.ok) return UPSTREAM_UNAVAILABLE_DETAIL;

@@ -30,11 +30,13 @@ Feature trên `student_ref`, chỉ từ `term_grade` + `student_dimension` đã 
 | Feature | Định nghĩa | Điều kiện hợp lệ |
 |:--|:--|:--|
 | `term_avg[t]` | Trung bình `final_grade` theo `term_code`, trọng số `credits` | Bản ghi hợp lệ EPU §3 |
+| `latest_term_gpa` | `term_avg` của `term_code` mới nhất có ≥1 điểm hợp lệ; thang 0–10 như EPU `Điểm tổng kết` (**không** convert GPA 4.0) | ≥ 1 môn có `final_grade` |
 | `grade_trend_slope` | OLS của `term_avg` theo thứ tự `term_code` chuẩn hóa | ≥ 2 kỳ hợp lệ |
 | `grade_volatility` | Độ lệch chuẩn `final_grade` trong cửa sổ kỳ hợp lệ | ≥ 2 bản ghi điểm |
+| `failed_credits` | Σ `credits` các môn `grade_status` khớp fail (`Không đạt` hoặc tương đương đã chuẩn hóa); thiếu `credits` → bỏ môn đó khỏi tổng | Luôn ≥0 khi có `term_grades`; `0` nếu không có môn fail; **proxy** — không claim SIS `Tổng tín chỉ nợ` |
 | `n_valid_terms`, `n_courses`, `last_term_code` | Coverage/freshness | Luôn kèm output |
 
-V59-empty (ứng viên primary) thường ~8 môn/SV trong 2 kỳ → trend là delta hai điểm dữ liệu; **cấm** copy/slide claim “xu hướng dài hạn”.
+V59-empty (ứng viên primary) thường ~8 môn/SV trong 2 kỳ → trend là delta hai điểm dữ liệu; **cấm** copy/slide claim “xu hướng dài hạn”. Decision #26: `latest_term_gpa` / `failed_credits` derive từ `term_grade` đã duyệt; eval synthetic lane riêng — xem [15…](15-ml-eval-synthetic-proposal.md).
 
 ### 2.2 Attendance evidence (điểm danh theo thời gian — MVP)
 
@@ -57,11 +59,15 @@ V59-empty (ứng viên primary) thường ~8 môn/SV trong 2 kỳ → trend là 
 | Trường tối thiểu | Kiểu | Semantics |
 |:---|:---|:---|
 | `student_ref` | str | Pseudonym; không phải MSSV |
+| `latest_term_gpa` | float \| null | null nếu không có môn có `final_grade` |
 | `grade_trend_slope` | float \| null | null nếu thiếu ≥2 kỳ |
 | `grade_volatility` | float \| null | |
+| `failed_credits` | float \| null | null nếu không có `term_grades`; else ≥0 (kể cả 0) |
 | `attendance_rate_window` | float \| null | null nếu nhánh attendance không ready |
 | `attendance_trend_slope` | float \| null | |
 | `coverage` | object | §3 — bắt buộc |
+
+Đổi công thức / thêm field scoring → bump `model_version` (decision #26: `m02-baseline-0.2`).
 
 ## 3. Coverage và `insufficient_data`
 

@@ -1,8 +1,11 @@
 """H08 — read adapter: approved `dwh` snapshot → NormalizedStudentRecord / ScoringFeatures.
 
 Fail-closed on missing/unapproved provenance. Does not project `is_dropout_outcome`
-into ScoringFeatures. Does not cross-join semester and attendance sources.
-Missing `advisor_ref` ⇒ `mapping_repair=True` (routing stop for H03).
+into ScoringFeatures. Default Mode B: no semester↔attendance cross-join.
+Decision #27: when ``linked_namespace_approval`` is active, primary semester
+records may attach attendance events from ``mvp-attendance-over-time`` by
+exact ``student_ref`` (no fuzzy match).
+Missing ``advisor_ref`` ⇒ ``mapping_repair=True`` (routing stop for H03).
 """
 
 from __future__ import annotations
@@ -13,6 +16,7 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.contracts.coverage import (
     Coverage,
     CoverageStatus,
@@ -37,6 +41,18 @@ from app.ml.source_gate.gate import SOURCE_ALLOWLIST
 
 DEFAULT_MODEL_VERSION = "h08-features-0.1-passthrough"
 DEFAULT_THRESHOLD_VERSION = "thr-epu-0.1-uncalibrated"
+
+#: Attendance source paired with V59-empty under decision #27.
+LINKED_ATTENDANCE_SOURCE_ID = "mvp-attendance-over-time"
+LINKED_SEMESTER_SOURCE_ID = "v59-empty-program-students"
+LINKED_APPROVAL_PREFIX = "approval:mvp-linked-v59-att:v1:"
+
+
+def linked_namespace_active(handle: Optional[str] = None) -> bool:
+    """True when Settings (or explicit handle) enables MVP linked join."""
+    raw = (handle if handle is not None else get_settings().linked_namespace_approval) or ""
+    text = raw.strip()
+    return bool(text.startswith(LINKED_APPROVAL_PREFIX) and len(text) > len(LINKED_APPROVAL_PREFIX))
 
 
 class ReadAdapterError(Exception):
@@ -152,11 +168,70 @@ def _coverage_for_role(
     )
 
 
+def _coverage_linked_primary(
+    *,
+    n_valid_terms: int,
+    n_courses: int,
+    last_term_code: Optional[str],
+    term_reasons: list[ReasonCode],
+    n_attendance_events: int,
+    last_attendance_at: Optional[datetime],
+    attendance_reasons: list[ReasonCode],
+) -> Coverage:
+    """Coverage for semester primary after decision #27 attendance join."""
+    reasons: list[ReasonCode] = list(term_reasons)
+    for code in attendance_reasons:
+        if code not in reasons:
+            reasons.append(code)
+
+    grade_ready = n_valid_terms >= TERM_MIN_FOR_TREND
+    att_ready = n_attendance_events >= ATTENDANCE_MIN_EVENTS
+    if grade_ready and att_ready:
+        status: CoverageStatus = "ok"
+    elif n_valid_terms == 0 and n_attendance_events == 0:
+        status = "insufficient"
+        if "grade_coverage_insufficient" not in reasons:
+            reasons.append("grade_coverage_insufficient")
+        if "attendance_coverage_insufficient" not in reasons:
+            reasons.append("attendance_coverage_insufficient")
+    else:
+        status = "partial"
+        if 0 < n_valid_terms < TERM_MIN_FOR_TREND and "single_term" not in reasons:
+            reasons.append("single_term")
+        if 0 < n_attendance_events < ATTENDANCE_MIN_EVENTS and (
+            "attendance_coverage_insufficient" not in reasons
+        ):
+            reasons.append("attendance_coverage_insufficient")
+
+    # Dedup preserve order
+    seen: set[str] = set()
+    deduped: list[ReasonCode] = []
+    for r in reasons:
+        if r not in seen:
+            seen.add(r)
+            deduped.append(r)
+
+    return Coverage(
+        n_valid_terms=n_valid_terms,
+        n_courses=n_courses,
+        n_attendance_events=n_attendance_events,
+        last_term_code=last_term_code,
+        last_attendance_at=last_attendance_at,
+        status=status,
+        reason_codes=deduped,
+    )
+
+
 def list_normalized_students(session: Session, source_id: str) -> List[NormalizedStudentRecord]:
     """Load all students for one approved snapshot. Empty list if no students."""
     manifest = require_approved_manifest(session, source_id)
     role = SOURCE_ALLOWLIST[source_id]
     version = dataset_version(manifest)
+    join_attendance = (
+        role == "primary"
+        and source_id == LINKED_SEMESTER_SOURCE_ID
+        and linked_namespace_active()
+    )
 
     students = session.scalars(
         select(StudentDimension)
@@ -171,10 +246,19 @@ def list_normalized_students(session: Session, source_id: str) -> List[Normalize
         grades_by_ref.setdefault(g.student_ref, []).append(g)
 
     events_by_ref: dict[str, list[AttendanceEvent]] = {}
-    for e in session.scalars(
-        select(AttendanceEvent).where(AttendanceEvent.source_id == source_id)
-    ).all():
-        events_by_ref.setdefault(e.student_ref, []).append(e)
+    event_source = LINKED_ATTENDANCE_SOURCE_ID if join_attendance else source_id
+    if join_attendance:
+        # Exact student_ref match only — require attendance manifest approved.
+        try:
+            require_approved_manifest(session, LINKED_ATTENDANCE_SOURCE_ID)
+        except ReadAdapterError:
+            join_attendance = False
+            event_source = source_id
+    if join_attendance or role == "attendance":
+        for e in session.scalars(
+            select(AttendanceEvent).where(AttendanceEvent.source_id == event_source)
+        ).all():
+            events_by_ref.setdefault(e.student_ref, []).append(e)
 
     advisors: dict[str, Optional[str]] = {}
     for a in session.scalars(
@@ -194,18 +278,32 @@ def list_normalized_students(session: Session, source_id: str) -> List[Normalize
         )
         n_terms, n_courses, last_term, term_reasons = _term_coverage(grades)
         n_att, last_att, _rate, att_reasons = _attendance_coverage(events)
-        coverage = _coverage_for_role(
-            role,
-            n_valid_terms=n_terms,
-            n_courses=n_courses,
-            last_term_code=last_term,
-            term_reasons=term_reasons,
-            n_attendance_events=n_att if role == "attendance" else 0,
-            last_attendance_at=last_att if role == "attendance" else None,
-            attendance_reasons=att_reasons,
-        )
+
+        if join_attendance and role == "primary":
+            coverage = _coverage_linked_primary(
+                n_valid_terms=n_terms,
+                n_courses=n_courses,
+                last_term_code=last_term,
+                term_reasons=term_reasons,
+                n_attendance_events=n_att,
+                last_attendance_at=last_att,
+                attendance_reasons=att_reasons,
+            )
+        else:
+            coverage = _coverage_for_role(
+                role,
+                n_valid_terms=n_terms,
+                n_courses=n_courses,
+                last_term_code=last_term,
+                term_reasons=term_reasons,
+                n_attendance_events=n_att if role == "attendance" else 0,
+                last_attendance_at=last_att if role == "attendance" else None,
+                attendance_reasons=att_reasons,
+            )
+            if role == "primary":
+                events = []  # Mode B: never attach foreign attendance rows
+
         advisor_ref = advisors.get(student.student_ref)
-        # mapping_repair only meaningful on semester routing path
         mapping_repair = role == "primary" and not advisor_ref
         records.append(
             NormalizedStudentRecord(
@@ -268,8 +366,10 @@ def to_scoring_features(
     model_version: str = DEFAULT_MODEL_VERSION,
     threshold_config_version: str = DEFAULT_THRESHOLD_VERSION,
     calculated_at: Optional[datetime] = None,
+    latest_term_gpa: Optional[float] = None,
     grade_trend_slope: Optional[float] = None,
     grade_volatility: Optional[float] = None,
+    failed_credits: Optional[float] = None,
     attendance_rate_window: Optional[float] = None,
     attendance_trend_slope: Optional[float] = None,
 ) -> ScoringFeatures:
@@ -297,8 +397,10 @@ def to_scoring_features(
         threshold_config_version=threshold_config_version,
         calculated_at=calculated_at or datetime.now(timezone.utc),
         student_ref=record.student_ref,
+        latest_term_gpa=latest_term_gpa,
         grade_trend_slope=grade_trend_slope,
         grade_volatility=grade_volatility,
+        failed_credits=failed_credits,
         attendance_rate_window=rate,
         attendance_trend_slope=attendance_trend_slope,
         coverage=record.coverage,

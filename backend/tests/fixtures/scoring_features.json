@@ -1,11 +1,13 @@
 {
   "dataset_version": "epu-v59-empty:deadbeef:schema-1",
-  "model_version": "m02-baseline-0.1",
+  "model_version": "m02-baseline-0.2",
   "threshold_config_version": "thr-epu-0.1-uncalibrated",
   "calculated_at": "2026-07-18T04:00:00Z",
   "student_ref": "stu_pseudo_001",
+  "latest_term_gpa": 6.5,
   "grade_trend_slope": -0.42,
   "grade_volatility": 1.15,
+  "failed_credits": 3.0,
   "attendance_rate_window": null,
   "attendance_trend_slope": null,
   "coverage": {

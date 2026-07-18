@@ -91,19 +91,19 @@ def _session(url: str):
 def test_attendance_import_happy_and_idempotent(import_database_url: str) -> None:
     first = import_attendance(import_database_url, ensure_schema=False)
     assert first.status == "imported"
-    assert first.row_counts["attendance_event"] == 15
-    assert first.row_counts["student_dimension"] == 3  # stub refs
+    assert first.row_counts["attendance_event"] == 7360
+    assert first.row_counts["student_dimension"] == 460  # stub refs
     assert first.row_counts["source_manifest"] == 1
 
     second = import_attendance(import_database_url, ensure_schema=False)
     assert second.status == "idempotent_skip"
-    assert second.row_counts["attendance_event"] == 15
+    assert second.row_counts["attendance_event"] == 7360
 
     with _session(import_database_url) as session:
         n_events = session.scalar(select(func.count()).select_from(AttendanceEvent))
         n_students = session.scalar(select(func.count()).select_from(StudentDimension))
-        assert n_events == 15
-        assert n_students == 3
+        assert n_events == 7360
+        assert n_students == 460
         stubs = session.scalars(select(StudentDimension)).all()
         assert {s.source_id for s in stubs} == {ATTENDANCE_SOURCE_ID}
 
@@ -113,7 +113,7 @@ def test_attendance_gate_reject_leaves_zero_rows(import_database_url: str, tmp_p
     bad = ApprovalArtifact(
         source_id=ATTENDANCE_SOURCE_ID,
         snapshot_sha256="0" * 64,
-        record_count=15,
+        record_count=7360,
         provenance_approved=True,
         schema_version="epu-1",
         extracted_at=_EXTRACTED,
@@ -301,3 +301,4 @@ def test_readiness_report_no_pii_keys(import_database_url: str) -> None:
     # Report talks about student_ref as a concept in notes; must not embed values.
     assert "s-1001" not in blob
     assert "s-1002" not in blob
+    assert "mssv" not in blob

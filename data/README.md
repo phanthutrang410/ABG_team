@@ -3,6 +3,7 @@
 | Path | In git? | Role |
 |:---|:---|:---|
 | [`approved/`](approved/) | Yes | Pseudonymous M06 domain packages for team import (`H20`) |
+| [`eval/`](eval/) | Yes (README / samples only) | Decision #26 ML eval lane — proposal path; generator `M09` chưa ship |
 | [`synthetic/`](synthetic/) | Quarantine only | Legacy synthetic removed (M01) — do not regenerate |
 
 ## Bootstrap (sau `git pull`)

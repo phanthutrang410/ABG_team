@@ -1,6 +1,8 @@
 """H02 — project NormalizedStudentRecord → public ReviewCase (no raw score).
 
-Consumes M02 scoring + CaseStore. Does not invent scores or change formulas.
+Consumes M02 scoring + CaseStore. Prefers ``ml_term_snapshot`` when a DB session
+is provided and a row exists (D460-11); otherwise live ``score_student``.
+Does not invent scores or change formulas.
 """
 
 from __future__ import annotations
@@ -8,10 +10,14 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Tuple
 
+from sqlalchemy.orm import Session
+
 from app.cases.store import CaseStore
 from app.contracts.coverage import Coverage
 from app.contracts.normalized import NormalizedStudentRecord
-from app.contracts.review_case import ReviewCase
+from app.contracts.review_case import ContributingFactor, ReviewCase
+from app.contracts.scoring import ScoringFeatures
+from app.dwh.ml_snapshot_reader import get_ml_term_projection, get_ml_term_snapshot
 from app.ml.scoring import (
     DEFAULT_THRESHOLDS,
     MODEL_VERSION,
@@ -86,6 +92,41 @@ def ensure_case_snapshot(
     return existing.state.value
 
 
+def _resolve_scored(
+    record: NormalizedStudentRecord,
+    *,
+    session: Optional[Session],
+    thresholds: ThresholdConfig,
+    calculated_at: datetime,
+) -> tuple[ScoringFeatures, Optional[str], List[ContributingFactor], Optional[float]]:
+    """Prefer materialized ``ml_term_snapshot``; else live M02.
+
+    Returns ``(features, band, factors, model_score_or_none)``.
+    ``model_score_or_none`` is only for internal callers (H04); public path
+    must ignore it. Snapshot path never recomputes M02.
+    """
+    if session is not None:
+        projection = get_ml_term_projection(session, record.source_id, record.student_ref)
+        if projection is not None:
+            return (
+                projection.features,
+                projection.review_priority_band,
+                list(projection.contributing_factors),
+                None,
+            )
+
+    features = score_student(
+        record,
+        calculated_at=calculated_at,
+        model_version=MODEL_VERSION,
+        threshold_config_version=thresholds.version,
+    )
+    score = compute_model_score(features)
+    band = band_for_score(score, thresholds)
+    factors = contributing_factors(features)
+    return features, band, factors, score
+
+
 def project_review_case(
     record: NormalizedStudentRecord,
     store: CaseStore,
@@ -93,6 +134,7 @@ def project_review_case(
     thresholds: ThresholdConfig = DEFAULT_THRESHOLDS,
     calculated_at: Optional[datetime] = None,
     include_below_threshold: bool = False,
+    session: Optional[Session] = None,
 ) -> Optional[ReviewCase]:
     """Build a public ReviewCase, or None when no case should be surfaced.
 
@@ -100,19 +142,23 @@ def project_review_case(
     - coverage.status=insufficient -> ReviewCase with band=None (detail insufficient_data).
     - score/band is None and coverage ready -> no case (unless include_below_threshold).
     - band set -> ensure CaseStore snapshot; never attach model_score / advisor_ref / PII.
+    - When ``session`` is set and ``ml_term_snapshot`` exists, use that band/factors
+      (no live M02 recompute).
     """
     calc_at = calculated_at or datetime.now(timezone.utc)
-    features = score_student(
+    features, band, factors, _score = _resolve_scored(
         record,
+        session=session,
+        thresholds=thresholds,
         calculated_at=calc_at,
-        model_version=MODEL_VERSION,
-        threshold_config_version=thresholds.version,
     )
-    score = compute_model_score(features)
-    band = band_for_score(score, thresholds)
-    factors = contributing_factors(features)
-    coverage = record.coverage
+    # Prefer materialization clock when snapshot was used.
+    calc_at = features.calculated_at
+    coverage = features.coverage
     data_state = _data_state_for(coverage)
+    model_version = features.model_version
+    threshold_version = features.threshold_config_version
+    dataset_version = features.dataset_version
 
     if coverage.status == "insufficient":
         case_id = case_id_for_student(record.student_ref)
@@ -131,9 +177,9 @@ def project_review_case(
             coverage=coverage,
             data_state="insufficient_data",
             limitations=_limitations(coverage),
-            dataset_version=record.dataset_version,
-            model_version=MODEL_VERSION,
-            threshold_config_version=thresholds.version,
+            dataset_version=dataset_version,
+            model_version=model_version,
+            threshold_config_version=threshold_version,
             calculated_at=calc_at,
         )
 
@@ -157,14 +203,14 @@ def project_review_case(
         case_id=case_id,
         student_ref=record.student_ref,
         case_state=case_state,  # type: ignore[arg-type]
-        review_priority_band=band,
+        review_priority_band=band,  # type: ignore[arg-type]
         contributing_factors=factors,
         coverage=coverage,
         data_state=data_state,  # type: ignore[arg-type]
         limitations=_limitations(coverage),
-        dataset_version=record.dataset_version,
-        model_version=MODEL_VERSION,
-        threshold_config_version=thresholds.version,
+        dataset_version=dataset_version,
+        model_version=model_version,
+        threshold_config_version=threshold_version,
         calculated_at=calc_at,
     )
 
@@ -175,6 +221,7 @@ def project_list_items(
     *,
     thresholds: ThresholdConfig = DEFAULT_THRESHOLDS,
     calculated_at: Optional[datetime] = None,
+    session: Optional[Session] = None,
 ) -> List[ReviewCase]:
     """List only cases with a public band (skips below-threshold + insufficient)."""
     items: List[ReviewCase] = []
@@ -187,6 +234,7 @@ def project_list_items(
             thresholds=thresholds,
             calculated_at=calculated_at,
             include_below_threshold=False,
+            session=session,
         )
         if case is not None and case.review_priority_band is not None:
             items.append(case)
@@ -197,8 +245,15 @@ def score_band_only(
     record: NormalizedStudentRecord,
     *,
     thresholds: ThresholdConfig = DEFAULT_THRESHOLDS,
+    session: Optional[Session] = None,
 ) -> Tuple[Optional[float], Optional[str]]:
     """Internal helper for H04 impact aggregates — callers must not leak score."""
+    if session is not None:
+        row = get_ml_term_snapshot(session, record.source_id, record.student_ref)
+        if row is not None:
+            score = float(row.model_score) if row.model_score is not None else None
+            return score, row.review_priority_band
+
     features = score_student(
         record,
         model_version=MODEL_VERSION,
