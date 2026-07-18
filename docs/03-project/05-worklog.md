@@ -1,11 +1,32 @@
 # Nhật ký công việc
 
+## 2026-07-18 (V05 Done — Thu Trang nộp CP2)
+
+- Thu Trang nộp Checkpoint 2: Live URL `https://abg-team.vercel.app` + GitHub `https://github.com/phanthutrang410/ABG_team`.
+- Receipt/xác nhận BTC giữ ngoài repo.
+- Unblock: Hoàng `H16` (acceptance/evidence CP2).
+
+## 2026-07-18 (D4r Done — Vercel Live URL + API :d4r)
+
+- Live URL nộp CP2: `https://abg-team.vercel.app` (flip từ EC2 FE).
+- API EC2 redeploy `:d4r` digest `sha256:2b01b24a233e374b655fab55bf8bf9be2ff886437c202a7a9b51e9d957f256a1`; `/advisor-handoff-drafts` 200; explanation POST 200 `unavailable` (no provider key).
+- FE: ẩn bulk “Xuất báo cáo tổng thể”; Vercel dpl `dpl_7EFasiFPqP4HUCwoqKUSaBkoaRGi`.
+- Known-limit: attendance vẫn `attendance_source_unapproved` trên cases; không claim chuyên cần đủ / Global Agent.
+- Unblock: Thu Trang `V05`.
+
+## 2026-07-18 (Decision #24 — đảo lane Duy↔Giang)
+
+- **Khánh Duy** = Frontend (`G06` Notify, attendance UI, `G07`–`G09`).
+- **Giang** (Nguyễn Trường Giang) = Data/ML / model / predict (`M07`/`M08` freeze owner).
+- **Hạ Giang** không đổi. Task ID giữ nguyên; Done giữ lịch sử người làm.
+- Unlock FE open tasks → Duy; ML open → Giang. SoT: [04-decisions.md](04-decisions.md) #24 + [Sprint](03-sprint.md).
+
 ## 2026-07-18 (Wave H28a–D6 backend Done — weekly + OpenAI + Global Agent)
 
 - Slice 0–5 backend landed: Decision #23; OpenAI runtime (`H29`); snapshot ledger + CLI (`H30`/`H31`); Mode B observations + durable cases + delta + report/briefing (`H32`–`H34b`); RBAC (`H36`); advisor draft v2 (`H35`); `POST /agent/turns` (`H37`); safe export (`H38`); ops kill-switch/`scheduler_tick` (`D6` foundation).
 - Checks: backend `pytest -m "not slow and not eval"` → **548 passed, 1 skipped**; Ruff clean.
 - **Gaps:** Case store still in-memory (not Alembic); linked namespace combined feed still pending approval; EventBridge live wiring manual; FE `G07–G09` + `T05` chưa ship — không overclaim trên Live URL nộp bài.
-- Unlock: Giang `G07` (sau H36); `G08`/`G09` sau G07; Thu Trang `T05` sau G07.
+- Unlock: **Khánh Duy** `G07` (sau H36 / decision #24); `G08`/`G09` sau G07; Thu Trang `T05` sau G07.
 
 ## 2026-07-18 (H29 Done — OpenAI Responses provider)
 

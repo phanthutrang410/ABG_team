@@ -111,4 +111,4 @@ Nguồn: `Khảo sát ABG(1-6).xlsx` — **6 phản hồi** (15/07 – 17/07/202
 
 **Tóm tắt (khảo sát ban đầu):** **Hoàng** AI/LLM + PM kỹ thuật, **Khánh Duy** ML/Research, **Thu Trang** hỗ trợ AI/Data, **Trường Giang** Data/FE linh hoạt, **Hạ Giang** BA Lead & pitch, **Văn Hải** docs/demo/nộp bài.
 
-> **Lane vận hành 48h (nguồn chuẩn task, cập nhật 18/7):** xem [Sprint](03-sprint.md) — **Hoàng** = canonical docs/contract + API/deploy; **Khánh Duy** = Data/ML và hybrid research; **Giang** = Frontend; **Thu Trang** = Agent; **giang** và **Văn Hải** = chỉ từ P2: QA/review, presentation asset, rehearsal/submission. Bảng “Gợi ý phân vai” phía trên là ngữ cảnh khảo sát, không ghi đè Sprint.
+> **Lane vận hành 48h (nguồn chuẩn task, cập nhật 18/7 tối — decision #24):** xem [Sprint](03-sprint.md) — **Hoàng** = canonical docs/contract + API/deploy; **Khánh Duy** = Frontend; **Giang** (Nguyễn Trường Giang) = Data/ML / model / predict; **Thu Trang** = Agent; **giang** (Hạ Giang) và **Văn Hải** = chỉ từ P2: QA/review, presentation asset, rehearsal/submission. Bảng “Gợi ý phân vai” phía trên là ngữ cảnh khảo sát ban đầu, **không** ghi đè Sprint sau #24.

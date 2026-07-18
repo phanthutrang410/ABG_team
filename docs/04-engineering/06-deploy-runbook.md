@@ -142,6 +142,7 @@ Independent smoke owner from P2: Văn Hải (`V07`). Hoàng owns first Live shel
 | EC2 instance | `i-0b0576945d080cb3f` |
 | AMI | `ami-0b31875bb70b82eb2` |
 | Elastic IP allocation | `eipalloc-09066880c09305fbe` → `52.74.255.88` |
+| API image digest (D4r) | `sha256:2b01b24a233e374b655fab55bf8bf9be2ff886437c202a7a9b51e9d957f256a1` (`:d4r`) |
 | API image digest (D4b) | `sha256:bab21546c5ce4fb24277bcb59e9276416a956dabf6168b6ce0a2330cd11ae58a` (`:d4b`) |
 | FE image digest (D4b) | `sha256:70eb44b5aab652626aa695631ed5ac4d8158316a29f369e34f61b4f0d43a35fe` (`:d4b`) |
 | API image digest (D4a rollback) | `sha256:7a6ba16516bcc33beb58f4497f0583b220061e2f502f7ff913656319c523a23b` (`:d4a`) |
@@ -190,7 +191,7 @@ Independent smoke owner from P2: Văn Hải (`V07`). Hoàng owns first Live shel
 | Secrets on Vercel | **None** — no `FPT_API_KEY` / `DATABASE_URL` on the FE project |
 | Optional Dashboard env | `BACKEND_URL=http://52.74.255.88:8000` · `NEXT_PUBLIC_API_BASE=` (empty) |
 | Rollback | Vercel → Deployments → prior Ready deployment → Promote / Rollback |
-| Submission Live URL | Keep EC2 FE until V07+A05 re-smoke on this URL, then owner may flip via `D4r` |
+| Submission Live URL | **`https://abg-team.vercel.app`** (flipped in `D4r` 18/7 tối; EC2 FE `:3000` no longer submission URL) |
 
 **Smoke (incognito):**
 
