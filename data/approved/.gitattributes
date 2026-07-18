@@ -1,0 +1,4 @@
+# Keep approved fixtures byte-stable across OS (import gate SHA-256).
+* text=auto eol=lf
+*.json text eol=lf
+*.md text eol=lf

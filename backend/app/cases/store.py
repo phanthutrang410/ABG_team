@@ -35,6 +35,11 @@ class CaseStore:
         with self._lock:
             return self._cases.get(case_id)
 
+    def list_snapshots(self) -> list[CaseSnapshot]:
+        """Return a shallow copy of all snapshots (H22 aggregation)."""
+        with self._lock:
+            return list(self._cases.values())
+
     def create(
         self,
         case_id: str,

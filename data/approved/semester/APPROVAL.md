@@ -9,7 +9,7 @@
 | Rights | MVP Silent Shield pipeline only; no raw redistribution; no PII/map in git |
 | `source_id` | `v59-empty-program-students` |
 | Committed artifact | `data/approved/semester/domain_package.json` |
-| **Package** `snapshot_sha256` (H20 gate) | `a6bfdc959c83282e607e23dc115eb84980b8930338d94b7b72bc6c74a1fc1cae` |
+| **Package** `snapshot_sha256` (H20 gate) | `73274079b30487f066cb2e1751c7ec70e2737ff794d6ae76e3e26ec4cf86df24` |
 | `record_count` (students) | `460` |
 | Raw provenance SHA-256 (M05b, ngoài git) | `34a53298df3dafd4d248496e75fbc10d95f997b76d0a7e6566e04ea97c367c66` |
 | Raw path (ngoài git) | `reference-Learning-Analytics-AI/backend/db/v59-empty-program-students.json` |

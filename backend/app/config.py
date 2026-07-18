@@ -23,9 +23,6 @@ class Settings(BaseSettings):
     fpt_max_response_bytes: int = Field(default=16 * 1024, ge=1, le=16 * 1024)
     max_concurrent_agent_runs: int = Field(default=3, ge=1)
     agent_run_timeout_seconds: int = Field(default=30, ge=1, le=30)
-    langchain_tracing_v2: bool = False
-    langchain_api_key: str = ""
-    langchain_project: str = "silent-shield"
 
     # Care /cases harden (H06b deploy-blocker)
     app_env: str = "local"

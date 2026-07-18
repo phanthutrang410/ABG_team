@@ -33,7 +33,7 @@
 | P0 | 17/7 11:00–15:00 | Scaffold | Health, FE shell | [x] (M01 Done — PR #16) |
 | P0.5 | kế hoạch 17/7 22:30–18/7 00:30 | Contract lock | `H05a` + `M04` Done; schema/code chỉ theo contract | **[x] Done** — `H05a` + `M04` + `H10` (mốc cũ đã trễ) |
 | P1 | recovery 18/7 sáng → CP1 | Vertical slice | Baseline điểm theo kỳ + điểm danh theo thời gian + CP1 | Mở — `M05b`/`H15` Done; còn `M06`… |
-| P2 | 18/7 11:00–23:00 | Rubric + live | UI/API/test + QA→fix→re-smoke + CP2 | Chưa mở đủ |
+| P2 | 18/7 11:00–23:00 | Rubric + live | UI/API/test + QA→fix→re-smoke + CP2 | **D4b Done** — còn V07+A05→D4r→V05 |
 | P3 | 18/7 23:00–19/7 11:00 | Release | Docs cuối, slide/video, AI log, form nộp | Chưa |
 
 ### 1.1 Recovery P0.5 → P1 (chốt lúc ~02:03 +07)
@@ -63,9 +63,9 @@ Baseline khóa sau review progress/direction. **Không đổi** product directio
 | 7 | Go/no-go nguồn (~07:00–08:00): fail → chỉ demo `insufficient_data` + fail-closed workflow; **cấm** synthetic thay E2E |
 | 8 | Freeze hybrid/forecast/Post-MVP; **V08** + AI log backfill và release skeleton chạy ngay |
 
-**Bổ sung board:** Critical path Data hoàn tất tới `M02` (sau `H20`+`H08` **Done**) — Profile `M01`+`H18` **Done**; `M05a`/`H06c`/`M05b`/`H15`/`M06`/`H20`/`H08`/`M02`/`M03`/`H02`/`H04`/`H13` **Done** (decision #18). `H06b` = **Done — transition core** + deploy-blocker harden. `T02` = core/library Done; runtime FR-08 theo `H23`–`H26`. Stretch FR-12: `H21` Done → `H22`/`G06`. `V08` defer (decision #19). **Board sync 18/7 (sau merge `d579909`):** FE `G05`/`G02`/`G03`/`G04` **Done** (evidence AI-log `.ai-log/manifest.csv` + code merged; AI-log `review_status` còn `pending`) → `D4b`/`H11b` unblocked; `A05` chỉ còn chờ `D4b`.
+**Bổ sung board:** Critical path Data hoàn tất tới `M02` (sau `H20`+`H08` **Done**) — Profile `M01`+`H18` **Done**; `M05a`/`H06c`/`M05b`/`H15`/`M06`/`H20`/`H08`/`M02`/`M03`/`H02`/`H04`/`H13` **Done** (decision #18). `H06b` = **Done — transition core** + deploy-blocker harden. `T02` = core/library Done; runtime FR-08 theo `H23`–`H26`. Stretch FR-12: `H21` Done → `H22`/`G06`. `V08` defer (decision #19).
 
-**Owner ngay:** Hoàng — Agent runtime **H23–H26 Done**; **`D4b` product smoke unblocked (H02+G02 Done) — chạy ngay cho CP2**; kế đến `H11b` docs (G05 Done) hoặc stretch `H22`. Giang — G05/G02/G03/G04 **Done**; còn `G06` (BLOCKED → H22, stretch). Thu Trang — T02 core đã handoff. Văn Hải — chuẩn bị `V07` sau D4b; **`V08` defer** gần CP2/D5 (decision #19). **Hạ Giang** — UAT/slide/claim skeleton; full UAT sau D4b. Khánh Duy — M07/M08 freeze.
+**Owner ngay:** Hoàng — **`D4b`/`H11b`/`H22` Done**; chờ `V07`+`A05` → `D4r`. Giang — **G05–G04 Done** (PR #23); stretch **`G06` unblocked** (sau H22). Thu Trang — T01–T03 + T02 core Done. Văn Hải — **`V07` mở** (sau D4b); `V08` defer gần CP2/D5. **Hạ Giang** — full **A05** UAT trên Live; slide skeleton. Khánh Duy — M07/M08 freeze.
 
 ## 2. Boundary bắt buộc cho ML, agent và hybrid
 
@@ -84,15 +84,15 @@ Mỗi task có một owner. Nếu dependency chưa Done, status ghi `BLOCKED →
 
 ```text
 Data:     M05a ✓ → M05b ✓ → M06 ✓ → H20 ✓ → H08 ✓ → M02 ✓ ┐
-Profile:  M01 ✓ → H18 ✓ ───────────────────────────────────┼→ H02 ✓ → G02 ✓ → D4b
+Profile:  M01 ✓ → H18 ✓ ───────────────────────────────────┼→ H02 ✓ → G02 ✓ → D4b ✓
 Attendance: H15 ✓ (mvp-attendance-over-time) ───────────────┘
 Contract: H06a-r ✓ → H11a-r ✓ → (G05 ✓ ∥ T03 ✓)
-Deploy:   (H07 ∥ D3) → D4a (shell) ✓ → D4b (product smoke) → V07 + A05 → D4r → V05
+Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r → V05
 ```
 
-`H02` **bắt buộc** `M02` (H18 Done). `H19`/`H20`/`H08` Done. `H11a-r` **Done REVALIDATE**; **`G05`/`T03` Done**. `M05b`/`H15` **Done** — decision #18; **M02/H02 Done**; **M03 Done** (fail-closed, catalog rỗng). **`G02` Done → `D4b` unblocked (Hoàng)** — critical path CP2 chỉ còn nhánh Deploy/QA.
+`H02`/`G05`/`G02`/`G03`/`G04`/`D4b` **Done**. `H11a-r` **Done REVALIDATE**. `M05b`/`H15` **Done** — decision #18. `M03` **Done** (fail-closed, catalog rỗng).
 
-**Release loop bắt buộc:** `D4a` (Live shell) sớm sau `H07`+`D3` → `D4b` (product smoke sau `H02`/`G02`) → `V07` **và** `A05` ghi defect → owner fix → `D4r` → mới `V05`. Không nộp CP2 trong cửa sổ 10 phút sau smoke đầu.
+**Release loop bắt buộc:** `D4a` ✓ → `D4b` ✓ → `V07` **và** `A05` ghi defect → owner fix → `D4r` → mới `V05`. Không nộp CP2 trong cửa sổ 10 phút sau smoke đầu.
 
 **Freeze tới sau submission:** `M07` → `H14` → `M08` → `H17` → `T04`. `H15` **Done** (team-provisioned allowlist).
 
@@ -107,7 +107,7 @@ Deploy:   (H07 ∥ D3) → D4a (shell) ✓ → D4b (product smoke) → V07 + A05
 | H06a | Pydantic internal/public envelopes | H10 | [x] **Done** (`H06a-r`) — semantic reopen landed; 42 contract tests |
 | H06b | Transition API theo Process state machine | H05a | [x] **Done — transition core** (giữ lịch sử); deploy-blocker harden landed (seed-only create, server actor, no public `advisor_ref`; 21 tests) — public shell |
 | H11a | Integration contract tối thiểu cho G05/T03 | H06a | [x] **Done REVALIDATE** (`H11a-r`) — 19 integration tests; unlocks G05/T03 |
-| H11b | Docs agent/FE hoàn thiện sau build | H11a, G05, T03, H26 | [ ] **TODO** — unblocked (H11a/G05/T03/H26 đều Done) |
+| H11b | Docs agent/FE hoàn thiện sau build | H11a, G05, T03, H26 | [x] **Done** — arch §6 + guardrails + FE integration after-build; no FE Agent UI overclaim |
 | H07 | Deployment/runbook docs | H05a | [x] Done — runbook draft; finalize Live/smoke/rollback tại D4a/D4b |
 | H19 | MVP persistence schema versioned + legacy mapping | H10 | [x] Done — Alembic 7 bảng `dwh` + 4 migrate tests; schema doc |
 | H20 | Transactional approved-fixture import vào `dwh` | H19, M06 | [x] **Done** — `app/dwh` import_gate/importer/cli; attendance + semester paths; tests `test_h20_*` |
@@ -121,15 +121,15 @@ Deploy:   (H07 ∥ D3) → D4a (shell) ✓ → D4b (product smoke) → V07 + A05
 | H12a | Runtime privacy/care copy (UI/agent) | H05a, H10 | [x] Done — 4 copy keys Data-ML §6; bỏ “Điểm rủi ro” trên FE |
 | H12b | Post-MVP banner + asset copy | H12a | [x] Done — banner + skeleton [13-h12b-asset-copy-skeleton.md](13-h12b-asset-copy-skeleton.md) |
 | H21 | Research advisor-batch mail draft tool/contract | H13 | [x] **Done** — [11-advisor…](../04-engineering/11-advisor-batch-mail-draft.md) + decision #20; Option A = core |
-| H22 | API bundle draft theo `advisor_ref` (no send) | H21, H03, H02 | [ ] **TODO** — unblocked (H21/H03/H02 Done); stretch sau critical path |
+| H22 | API bundle draft theo `advisor_ref` (no send) | H21, H03, H02 | [x] **Done** — `GET /advisor-handoff-drafts`; mapping_repair bucket; `test_h22_*` (8); unlock G06 |
 | H23 | Server-derived AgentContext + contract reconciliation | H11a, H02, M02, T02, H12a | [x] **Done** — `context_service` + `AgentCommand` + `provider_call_allowed`; `test_h23_agent_context.py` |
 | H24 | `POST /review-cases/{case_id}/explanation` + runtime wiring | H23 | [x] **Done** — router/runtime DI; OpenAPI min body; mocked HTTP; demo identity ≠ production RBAC; `test_h24_agent_api.py` |
 | H25 | Structured grounding + FPT/provider hardening | H24, T02 | [x] **Done** — structured plan + VI renderer + FPT transport harden; `test_h25_grounding.py` + `test_h25_fpt_transport.py` |
 | H26 | Agent HTTP E2E + runtime/release evidence | H24, H25 | [x] **Done** — `test_h26_agent_e2e.py` mocked M02→HTTP; full verify 410 pass / 1 skip (live FPT SKIP); [evidence §5c](07-release-evidence.md); unlock H11b runtime side |
 | D3 | GitHub public + PII/secret scan | — | [x] Done — tree sạch; **residual history accept CP2**; trước final: clean submission repo hoặc purge có phê duyệt |
 | D4a | Deploy infrastructure / Live shell (health + rollback sẵn) | H07, D3 | [x] **Done** — Live shell: API http://52.74.255.88:8000/health · FE http://52.74.255.88:3000 · EC2 i-0b0576945d080cb3f (**NOT** D4b) |
-| D4b | Product smoke list→case trên Live URL | D4a, H02, G02 | [ ] **TODO** — unblocked (D4a/H02/G02 Done); **chạy ngay cho CP2** |
-| D4r | Fix từ QA → redeploy → re-smoke | D4b, V07, A05 | [ ] BLOCKED → D4b, V07, **A05** |
+| D4b | Product smoke list→case trên Live URL | D4a, H02, G02 | [x] **Done** — 2026-07-18 ~13:05 +07: health `database:true`; `GET /review-cases` state=ok n=50; detail `rc-s-00518c9485a9` band=`can_ra_soat`; FE `/login` `/dashboard` 200; no forbidden fields; images `:d4b` + Postgres import |
+| D4r | Fix từ QA → redeploy → re-smoke | D4b, V07, A05 | [ ] BLOCKED → V07, **A05** · D4b Done |
 | H16 | Acceptance matrix + release evidence | A05, V07, V05 | [ ] BLOCKED → A05, V07, V05 |
 | H09 | README + verify/known-limit note cuối | H02, D4r, H16 | [ ] BLOCKED → D4r, H16 · H02 Done |
 | D5 | AI collaboration log từ V08 | V08 | [ ] BLOCKED → V08 · V08 **defer** gần CP2/D5 |
@@ -155,12 +155,12 @@ Deploy:   (H07 ∥ D3) → D4a (shell) ✓ → D4b (product smoke) → V07 + A05
 
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
-| G01 | FE shell + list mock | — | [x] (mock tạm; đã bị G05 thay) |
-| G05 | Thay mock bằng public DTO/fixture đã validate | H11a | [x] **Done** — `types.ts`/`fixtures.ts` mirror schema+fixture H11a; xóa `mock-review-list.ts`; ok/empty/stale/error/`insufficient_data`; lint+build pass (AI-log `20260718-G05-…-12`) |
-| G02 | Dashboard → cohort → case dùng API | G05, H02 | [x] **Done** — `lib/api.ts` live GET /review-cases, fail-closed → `upstream_unavailable`; smoke Live URL đúng error state; **gap ghi nhận:** ReviewCase public thiếu cohort/department/class_code (AI-log `…-13`) — mở `D4b` |
-| G03 | Care UI review/handoff | H03, H12a | [x] **Done** — `CareActions.tsx` đúng Process §4 (approve/dismiss+reason/defer+review_at/assign/accept/resolve/monitor); không gửi `advisor_ref`; xử lý 409 mapping-repair (AI-log `…-15`) |
-| G04 | Fairness/privacy/threshold panel | H04, H12a | [x] **Done** — login/select-role/guard + dashboard 5 tab + `/my-class`; `FairnessPanel` fail-closed + `ThresholdPanel` nối /config/thresholds(+impact); lint+build+smoke 6 route (AI-log `…-16`) |
-| G06 | FE filter theo advisor + Copy/`mailto:` draft lô | H22, G05 | [ ] BLOCKED → H22 · stretch FR-12; không block D4b · G05 Done |
+| G01 | FE shell + list mock | — | [x] (mock tạm; G05 phải thay) |
+| G05 | Thay mock bằng public DTO/fixture đã validate | H11a | [x] **Done** — types/fixtures; xóa mock-review-list; AI-log G05; PR #23 path |
+| G02 | Dashboard → cohort → case dùng API | G05, H02 | [x] **Done** — `lib/api.ts` → `/review-cases`; fail-closed `upstream_unavailable`; AI-log G02 |
+| G03 | Care UI review/handoff | H03, H12a | [x] **Done** — `CareActions.tsx` Process §4; AI-log G03 |
+| G04 | Fairness/privacy/threshold panel | H04, H12a | [x] **Done** — login/role + Fairness/Threshold panels; AI-log G04; PR #23 |
+| G06 | FE filter theo advisor + Copy/`mailto:` draft lô | H22, G05 | [ ] **TODO** — unblocked (H22+G05 Done); stretch FR-12; không block D4b |
 
 ### Thu Trang
 
@@ -175,16 +175,16 @@ Deploy:   (H07 ∥ D3) → D4a (shell) ✓ → D4b (product smoke) → V07 + A05
 
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
-| A05 | UAT / claim-copy review → gap cho Hoàng | H02, G02, H03, G03, M03, H04, G04, H26, D4b, H12a | [ ] BLOCKED → **D4b** (mọi dep khác Done) · skeleton checklist **chạy ngay**; full UAT sau D4b; **bắt buộc trước D4r** |
+| A05 | UAT / claim-copy review → gap cho Hoàng | H02, G02, H03, G03, M03, H04, G04, H26, D4b, H12a | [ ] **TODO** — unblocked (deps Done kể cả D4b); full UAT trên Live; **bắt buộc trước D4r** |
 | D1 | Asset slide + mô tả dự án nộp | V02, H12b, H16, D4r | [ ] BLOCKED → V02… · **skeleton slide/claim matrix chạy ngay** (chưa screenshot thiếu evidence) |
 
 ### Văn Hải
 
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
-| V07 | QA release + smoke độc lập (lần 1) | D3, D4b | [ ] BLOCKED → D4b · D3 Done |
+| V07 | QA release + smoke độc lập (lần 1) | D3, D4b | [ ] **TODO** — unblocked (D4b Done); incognito smoke; defect → D4r |
 | V05 | Nộp Checkpoint 2 | D3, D4r, V07 | [ ] BLOCKED → D3, D4r, V07 |
-| V02 | Script demo 4′ + Q&A 2′, rehearsal | D4r, G02, H26, G03, G04, H12a | [ ] BLOCKED → **D4r** (G02/G03/G04/H26/H12a Done) · chỉ claim Agent runtime backend HTTP (H26); UI Agent cần consumer FE riêng |
+| V02 | Script demo 4′ + Q&A 2′, rehearsal | D4r, G02, H26, G03, G04, H12a | [ ] BLOCKED → D4r… · chỉ claim Agent runtime sau H26; UI Agent cần consumer FE riêng |
 | D2 | Video ≤5 phút đúng Live URL | D1, D4r | [ ] BLOCKED → D1, D4r |
 | V08 | Rà AI log → gap cho Hoàng | H05b | [ ] **DEFER** gần CP2 / trước D5 — log một thể (decision #19); không làm ngay |
 | V06 | Nộp cuối + lưu xác nhận BTC | D1, D2, D3, D4r, D5, H09, H16 | [ ] BLOCKED → D1…H16 |
@@ -206,7 +206,7 @@ Deploy:   (H07 ∥ D3) → D4a (shell) ✓ → D4b (product smoke) → V07 + A05
 | H06a | P1 · **Done** (`H06a-r`) | Pydantic internal/public envelopes — semantic Data-ML §3 | **Done:** semantic reopen landed; coverage/band/factors/`dataset_version`; 42 contract tests |
 | H06b | P1 · sau H05a | Transition API đúng Process | **Done — transition core** (giữ lịch sử): `backend/app/cases/*`. **Deploy-blocker harden landed:** seed-only create, server actor, no public `advisor_ref` (21 tests) — public shell |
 | H11a | P1 · **Done REVALIDATE** | Integration contract tối thiểu | **Done (`H11a-r`):** 19 integration tests; unlocks G05/T03 |
-| H11b | P2 · **TODO unblocked** (G05/T03/H26 Done) | Docs agent/FE hoàn thiện | Runtime evidence sẵn (H26); FE consumer sẵn (G05/G02); khớp guardrail/runtime docs; không claim UI Agent nếu consumer FE agent panel chưa có |
+| H11b | P2 · sau G05 · T03+H26 Done | Docs agent/FE hoàn thiện | **Done** — arch §6 + [guardrails](../04-engineering/08-agent-grounding-guardrails.md) + [doc 10](../04-engineering/10-fe-agent-integration-contract.md); FR-08 = backend HTTP only |
 | H07 | P1 · sau H05a | Deployment/runbook: env, CORS, seed, health, smoke, rollback | Runbook không secret — **Done:** [06-deploy-runbook](../04-engineering/06-deploy-runbook.md) draft từ arch; linked docs index + arch; Live URL/smoke/rollback finalize tại `D4a`/`D4b` |
 | H19 | P1 · sau H10 | Thiết kế persistence MVP versioned: mapping metadata legacy DWH → schema `dwh` mới và migration DB rỗng | **Done:** [Schema persistence](../04-engineering/07-mvp-persistence-schema.md); Alembic 7 bảng `dwh` + `tests/test_dwh_migrate.py` (4); không copy schema/row legacy/PII; attendance table rỗng tới `H15` |
 | H20 | P1 · sau H19+M06 | Nạp transactional fixture M06 đã được duyệt vào `dwh` | **Done:** CLI `python -m app.dwh.cli`; gate fail → zero write; default `data/approved/` (attendance + semester domain package); optional raw via `SILENT_SHIELD_SEMESTER_SOURCE_PATH`; readiness không PII; `tests/test_h20_import_gates.py` + `tests/test_h20_import.py` |
@@ -216,19 +216,19 @@ Deploy:   (H07 ∥ D3) → D4a (shell) ✓ → D4b (product smoke) → V07 + A05
 | H02 | P1 · sau M02+H18 | API list/detail chỉ `ReviewCase` public | **Done:** app/cases/review_projection.py + review_router.py; GET /review-cases H11a envelopes; no model_score/PII; tests/test_h02_review_case_api.py |
 | H13 | P1 · 11:00 | Nộp Checkpoint 1 | **Done** — form BTC nộp 18/7; [draft](11-h13-cp1-btc-draft.md) + evidence §1; không claim forecast/hybrid |
 | H21 | P2 · sau H13 | Research tool/contract soạn mail theo GV | **Done:** [11-advisor-batch-mail-draft](../04-engineering/11-advisor-batch-mail-draft.md) + decision #20; Option A = core; không SMTP |
-| H22 | P2 stretch · sau H21 | API `AdvisorHandoffDraftBundle` theo `advisor_ref` | **TODO** unblocked; group approved/assigned; mapping_repair bucket; draft-only; forbidden-field tests; **không** block G02/D4b |
+| H22 | P2 stretch · sau H21 | API `AdvisorHandoffDraftBundle` theo `advisor_ref` | **Done:** `GET /advisor-handoff-drafts`; draft-only; mapping_repair; forbidden-field tests; unlock G06 |
 | H23 | P2 · **Done** | Server-derived AgentContext + contract reconciliation | **Done:** `build_agent_context` / `AgentCommand` / state-intent matrix; M02 codes+version; fail-closed for H24 zero-call rule; `test_h23_agent_context.py` |
 | H24 | P2 · **Done** | Agent command API + production wiring | **Done:** `POST /review-cases/{case_id}/explanation`; server context; OpenAPI min fields; mocked HTTP; demo identity only — not production RBAC; `test_h24_agent_api.py` |
 | H25 | P2 · **Done** | Context-bound output + provider hardening | **Done:** no raw question to FPT; structured plan + backend VI render; transport/host/size/secret guards; `test_h25_*` |
-| H26 | P2 · **Done** | Agent runtime E2E + release evidence | **Done:** mocked HTTP E2E `test_h26_agent_e2e.py`; `verify.ps1` 410 passed / 1 skipped; live FPT SKIP; FR-08 claimable at **backend HTTP** level; FE UI still separate; H11b runtime unlocked (still BLOCKED → G05) |
+| H26 | P2 · **Done** | Agent runtime E2E + release evidence | **Done:** mocked HTTP E2E `test_h26_agent_e2e.py`; `verify.ps1` 410 passed / 1 skipped; live FPT SKIP; FR-08 claimable at **backend HTTP** level; FE UI still separate; `H11b` **Done** |
 | H03 | P2 · sau H08 | Care workflow API | **Done:** approve/dismiss/defer + assign-handoff; H08 `advisor_ref`/`mapping_repair` gate; client ref ignored; `tests/test_h03_care_workflow.py` — mở G03 |
 | H04 | P2 · sau M03 | Threshold/config API public semantics | **Done:** app/contracts/threshold_public.py + app/config_api/router.py; impact aggregates only; fairness MVP insufficient_data; tests/test_h04_threshold_fairness_api.py |
 | H12a | P2 · ~15:00 (trước T02/G03/G04) | Runtime privacy/care copy cho UI/agent | **Done:** `frontend/src/lib/copy.ts` 4 keys Data-ML §6; mock list không “Điểm rủi ro”; mở `H12b` / giảm blocker `G03`/`G04`/`T02` |
 | H12b | P2 · sau H12a · ~19:00 | Banner + asset copy | **Done:** banner + skeleton [13-h12b-asset-copy-skeleton.md](13-h12b-asset-copy-skeleton.md); forecast/fusion = research/blocked; điểm danh theo thời gian = MVP |
 | D3 | P2 · ~20:30 | GitHub public, PII/secret scan | **Done** tree + [scan notes](10-d3-github-pii-secret-scan.md); residual history **accept CP2**; trước final: clean submission repo hoặc purge có phê duyệt |
 | D4a | P2 · sớm sau H07+D3 | Live shell: deploy infra, health, rollback sẵn | **Done** — Live shell: API http://52.74.255.88:8000/health · FE http://52.74.255.88:3000 · EC2 i-0b0576945d080cb3f (**NOT** D4b) |
-| D4b | P2 · sau H02+G02 | Product smoke list→case ẩn danh trên Live | Happy hoặc fail-closed `insufficient_data` theo go/no-go nguồn |
-| D4r | P2 · sau V07+A05 | Owner fix → redeploy → re-smoke | **A05 bắt buộc** cùng V07 trước D4r; cửa sổ fix ≥45–60 phút trước V05 |
+| D4b | P2 · sau H02+G02 | Product smoke list→case ẩn danh trên Live | **Done** 2026-07-18 ~13:05 +07: health `database:true`; list state=ok n=50; detail `rc-s-00518c9485a9` / `can_ra_soat`; FE login+dashboard 200; CORS OK; no PII/score leak; [evidence](07-release-evidence.md) §2 |
+| D4r | P2 · sau V07+A05 | Owner fix → redeploy → re-smoke | **A05 bắt buộc** cùng V07 trước D4r; cửa sổ fix ≥45–60 phút trước V05; D4b Done |
 | H16 | P3 · sau V05 | Acceptance matrix + release evidence | Phụ thuộc **A05 + V07 + V05**; mỗi FR/CP2 item có evidence hoặc limitation |
 | H09 | P3 · 09:00 | README + verify/known-limit | Khớp deploy và scope thật |
 | D5 | P3 · 10:00 | AI collaboration log từ V08 | Gap có owner; sạch PII/secret |
@@ -278,12 +278,12 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
-| G01 | P0 | FE shell + list mock tạm | Smoke — **Done** (mock đã bị G05 thay) |
-| G05 | P1 · **Done** 18/7 | Thay hẳn mock synthetic/K-12 bằng public DTO + fixture đã validate | **Done:** `frontend/src/lib/{types,fixtures,limitations}.ts` mirror byte-đúng schema H11a + 7 fixture validated; xóa `mock-review-list.ts`; dashboard/case detail xử lý loading/ok/empty/stale/error/`insufficient_data`; 0 field cấm, không “Điểm rủi ro”; lint+build+smoke pass. Evidence: AI-log `20260718-G05-giang-claudecode-12`; code merged `d579909` (review_status AI-log còn `pending`) |
-| G02 | P1 · **Done** 18/7 | Dashboard → cohort → case dùng API | **Done:** `frontend/src/lib/api.ts` live GET `/review-cases`(+`/{id}`), fail-closed mọi lỗi network/parse → envelope `upstream_unavailable` (không tự fallback band); `.env.example` `NEXT_PUBLIC_API_BASE`; smoke qua Live URL hiển thị đúng error state. **Gap cần Hoàng chốt:** `ReviewCase` public thiếu `cohort`/`department`/`class_code` → chưa scoping khoa/lớp. Evidence: AI-log `…-13` — mở `D4b` |
-| G03 | P2 · **Done** 18/7 | Care UI theo Process states + defer = giữ Pending | **Done:** `CareActions.tsx` — `ACTIONS_BY_STATE` mirror `_ALLOWED` backend, chỉ action được phép; dismiss cần reason, defer cần `review_at`, monitor cần `monitoring_until`; không gửi actor/`advisor_ref` (server resolve H08); xử lý 409 `mapping_repair_queued` + error codes VI; case `insufficient_data` không có hành động; lint+build+smoke. Evidence: AI-log `…-15` |
-| G04 | P2 · **Done** 18/7 | Fairness/privacy/threshold panel | **Done:** login demo + select-role + guard vai (`AppShell`); dashboard BLĐ 5 tab; `FairnessPanel` fail-closed (`insufficient_data` + lý do, không chart giả) nối `/fairness/report`; `ThresholdPanel` τ_case/τ_high nối `/config/thresholds(+impact)`, chỉ count aggregate; `/my-class` GVCN chỉ case đã bàn giao; lint+build+smoke 6 route; 0 chuỗi cấm. Evidence: AI-log `…-16` |
-| G06 | P2 stretch · sau H22 | Filter theo advisor + Copy/`mailto:` bản nháp lô | FR-12; draft-only; không PII contact; **không** block D4b · BLOCKED → H22 (G05 Done) |
+| G01 | P0 | FE shell + list mock tạm | Smoke — **Done** (mock phải bị G05 thay) |
+| G05 | P1 · sau H11a-r | Thay hẳn mock synthetic/K-12 bằng public DTO + fixture đã validate | **Done** — types/fixtures/limitations; xóa mock-review-list; AI-log G05 |
+| G02 | P1 · sau H02 | Dashboard → cohort → case dùng API | **Done** — `lib/api.ts` live `/review-cases`; fail-closed; AI-log G02 |
+| G03 | P2 · sau H12a | Care UI theo Process states + defer = giữ Pending | **Done** — `CareActions.tsx`; AI-log G03 |
+| G04 | P2 · sau H12a | Fairness/privacy/threshold panel | **Done** — login/role + Fairness/Threshold; AI-log G04; PR #23 |
+| G06 | P2 stretch · sau H22 | Filter theo advisor + Copy/`mailto:` bản nháp lô | FR-12; draft-only; **TODO** unblocked (H22 Done); không block D4b (D4b Done) |
 
 **Verify:** lint, production build, behavior smoke. Chỉ public DTO.
 
@@ -313,7 +313,7 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
-| A05 | P2 · song song V07; **bắt buộc trước D4r** | UAT/claim-copy review | Skeleton checklist ngay; full UAT trên Live sau D4b; gap → Hoàng/`D4r`; không sửa docs/code |
+| A05 | P2 · song song V07; **bắt buộc trước D4r** | UAT/claim-copy review | **Unblocked** sau D4b; full UAT trên Live; gap → Hoàng/`D4r`; không sửa docs/code |
 | D1 | P3 · 09:00 | Asset slide + mô tả | Skeleton/claim matrix **ngay**; finalize URL/screenshot sau D4r + H12b/H16 |
 
 **A05:** list→case→review/handoff trên Live URL; rà care/privacy/fairness/claim; gửi Hoàng + **bắt buộc feed `D4r`**.
@@ -328,7 +328,7 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
-| V07 | P2 · sau D4b | QA release + smoke độc lập lần 1 | Incognito; ghi defect cho owner/`D4r`; không tự sửa |
+| V07 | P2 · sau D4b | QA release + smoke độc lập lần 1 | **Unblocked**; incognito; ghi defect cho owner/`D4r`; không tự sửa |
 | V05 | P2 · sau D4r | Nộp Checkpoint 2 | **Chỉ sau `D4r` xanh**; BTC nhận 2 URL + xác nhận |
 | V02 | P3 · 08:00 | Script 4′ + Q&A 2′, rehearsal | Script skeleton sớm; Live sau `D4r` |
 | D2 | P3 · 09:30 | Video ≤5 phút | Đúng Live URL sau `D4r` |
@@ -343,21 +343,20 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 |:--|:--|
 | Realign §1.2 | Board này là SoT execution; không giữ snapshot “H11a mở G05/T03” cũ |
 | H06a/H11a semantic | `H06a-r` + `H11a-r` **Done**; `G05`/`T03` **Done** |
-| FE scoping gap (G02) | `ReviewCase` public thiếu `cohort`/`department`/`class_code` — FE chưa scoping khoa/lớp; **decision cần Hoàng chốt** (mở rộng allowlist H11a hoặc chấp nhận giới hạn MVP); không tự thêm field |
-| Board sync 18/7 | G05/G02/G03/G04 tick Done từ AI-log + code merged `d579909`; AI-log `review_status` các dòng này còn `pending` — cần review trước final |
 | H06b ≠ deploy-ready (lịch sử) | Transition-core Done; deploy-blocker harden landed (seed-only create / server actor / no public `advisor_ref`) |
-| Critical path song song | Data còn `M06…`; `M05a`/`M05b`/`H15` **Done**; Profile **M01+H18 Done**; `H02` còn chờ `M02` |
-| Source gate ≠ approved data | `M05a`/`M05b`/`H15` Done (decision #18); fail gate → `insufficient_data` |
+| Critical path song song | Data/API/FE critical path tới **D4b Done**; còn `V07`+`A05`→`D4r`→`V05` |
+| Source gate ≠ approved data | `M05b`/`H15` Done (decision #18); Live import LF hashes `73274079…` / `78d7153f…` |
 | D3 residual history | Accept CP2; quyết định clean submission trước final |
 | Release dồn muộn | Slide/script skeleton **ngay**; `V08` AI log **một thể** gần CP2/D5 (decision #19) |
-| Advisor mail draft | Stretch `H21`→`H22`→`G06` (FR-12); **không** block G02/D4b; draft-only |
-| Agent runtime overclaim | `H23`–`H26` Done = FR-08 **backend HTTP** E2E (mocked FPT); **không** claim FE Agent UI / production RBAC / live FPT; H11b unblocked (G05 Done) nhưng chưa Done |
+| Advisor mail draft | Stretch `H21`→`H22`✓→`G06` (FR-12); **không** block G02/D4b; draft-only |
+| Agent runtime overclaim | `H23`–`H26` Done = FR-08 **backend HTTP** E2E (mocked FPT); **không** claim FE Agent UI / production RBAC / live FPT; `H11b` **Done** |
 | Hybrid | FREEZE `M07`/`H14`/`M08`/`H17`/`T04` tới sau submission |
+| FE scoping gap (G02) | `ReviewCase` public thiếu `cohort`/`department`/`class_code` — FE chưa scoping khoa/lớp; **decision cần Hoàng chốt** (mở rộng allowlist H11a hoặc chấp nhận giới hạn MVP); không tự thêm field |
 | Giang vs Hạ Giang | Giang = FE; Hạ Giang = UAT/slide/claim |
 | QA defects | V07 **và** A05 → owner fix → `D4r` → mới V05 |
 
-1. **Ngay:** Hoàng — **`D4b` product smoke (unblocked, critical path CP2)**; kế đến `H11b` docs (G05 Done) / chốt gap scoping G02 / stretch `H22`. Giang — G05/G02/G03/G04 **Done**; standby fix defect từ V07/A05; `G06` chờ H22. Văn Hải — chuẩn bị `V07` sau D4b; **không** V08 ngay. **Hạ Giang** — UAT/slide skeleton; full UAT sau D4b.
-2. Critical path CP2/UAT: ~~`G05`→`G02`~~ Done → `D4b`; Agent runtime đã xanh (`H26`); rồi `V07`+`A05`→`D4r`→`V05`. Stretch mail: `H22`→`G06` (FR-12).
-3. Semester + attendance đã duyệt (decision #18); `H20`/`H08`/`H02`/`H04`/`H13` Done. Legacy synthetic cấm vẫn fail-closed.
-4. `D4a` shell **Done**; `D4b` **unblocked** (G02 Done); `D4r` chỉ sau V07 **và** A05.
+1. **Ngay:** Văn Hải — **V07** smoke độc lập. **Hạ Giang** — **A05** UAT trên Live. Giang — stretch `G06` nếu còn slot. Hoàng — chờ V07+A05 → `D4r`.
+2. Critical path CP2: `D4b` ✓ → `V07`+`A05`→`D4r`→`V05`. Stretch mail: `H22`✓ → `G06` (FR-12).
+3. Semester + attendance đã duyệt + **Live DB import**; `H20`/`H08`/`H02`/`H04`/`H13`/`G05`–`G04` Done. Legacy synthetic cấm vẫn fail-closed.
+4. `D4a`/`D4b` **Done**; `D4r` chỉ sau V07 **và** A05.
 5. Trước handoff: verify phù hợp; trước final: `scripts/verify.ps1`, `git diff --check`, `git status --short`.
