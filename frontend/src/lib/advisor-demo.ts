@@ -254,3 +254,36 @@ export function transitionAdvisorDemoCase(
 export function advisorDemoStorageKey(accountId: string): string {
   return `silentshield.advisor-demo.v1.${accountId}`;
 }
+
+/** Queue page size for the advisor "Hàng đợi của tôi" list (10 case / trang). */
+export const ADVISOR_QUEUE_PAGE_SIZE = 10;
+
+export type AdvisorQueuePage<T> = {
+  page: number;
+  totalPages: number;
+  pageItems: T[];
+  start: number;
+  end: number;
+  total: number;
+};
+
+/**
+ * Pure, deterministic pagination for the advisor queue.
+ *
+ * Clamps `page` into `[1, totalPages]` so a filter/search change that shrinks
+ * the list can never strand the view on an empty page. `start`/`end` are
+ * 0-based/exclusive slice bounds; the UI shows `start + 1`–`end`.
+ */
+export function paginateAdvisorQueue<T>(
+  items: readonly T[],
+  page: number,
+  pageSize: number = ADVISOR_QUEUE_PAGE_SIZE,
+): AdvisorQueuePage<T> {
+  const size = Math.max(1, Math.trunc(pageSize) || ADVISOR_QUEUE_PAGE_SIZE);
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / size));
+  const clamped = Math.min(Math.max(1, Math.trunc(page) || 1), totalPages);
+  const start = total === 0 ? 0 : (clamped - 1) * size;
+  const end = Math.min(start + size, total);
+  return { page: clamped, totalPages, pageItems: items.slice(start, end), start, end, total };
+}
