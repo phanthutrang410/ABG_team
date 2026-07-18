@@ -184,6 +184,54 @@ export type FairnessReport = {
   fairness_flag?: { flagged: boolean; delta_fpr_threshold: number; triggered_group_types: string[] } | null;
 };
 
+/* ---------- H22 / FR-12 — Advisor handoff mail draft (draft-only) ----------
+ * Mirror backend app/contracts/advisor_handoff_draft.py CHÍNH XÁC.
+ * Exception H11a: `advisor_ref` được phép DUY NHẤT trên envelope này (pseudonym
+ * routing) — không lan sang ReviewCase/agent. Vẫn cấm PII/score/outcome/audit.
+ * Không có endpoint send: mọi draft requires_human_approval=true (invariant).
+ */
+
+export type HandoffDraftCaseLine = {
+  case_id: string;
+  student_ref: string;
+  review_priority_band: ReviewPriorityBand | null;
+  contributing_factor_codes: string[];
+  coverage_status: string;
+  coverage_reason_codes: string[];
+  case_state: string;
+  class_code: string | null;
+};
+
+export type AdvisorHandoffDraft = {
+  subject: string;
+  body: string;
+  /** Invariant: luôn true — hệ thống KHÔNG bao giờ tự gửi. */
+  requires_human_approval: true;
+};
+
+export type AdvisorHandoffDraftBundle = {
+  advisor_ref: string;
+  case_count: number;
+  cases: HandoffDraftCaseLine[];
+  draft: AdvisorHandoffDraft;
+  limitations: string[];
+};
+
+export type MappingRepairBucket = {
+  case_count: number;
+  cases: HandoffDraftCaseLine[];
+  limitations: string[];
+};
+
+export type HandoffDraftListState = "ok" | "empty" | "error";
+
+export type AdvisorHandoffDraftListResponse = {
+  state: HandoffDraftListState;
+  bundles: AdvisorHandoffDraftBundle[];
+  mapping_repair: MappingRepairBucket;
+  problem: IntegrationProblem | null;
+};
+
 /* ---------- Phiên demo (không phải auth thật — PRD §9) ---------- */
 
 export type Role = "ban_quan_ly" | "gvcn";
