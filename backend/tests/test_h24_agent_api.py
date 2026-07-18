@@ -16,7 +16,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.agent.fpt_client import ModelUnavailable
-from app.agent.runtime import get_text_model
+from app.agent.runtime import get_text_model, run_explanation
+from app.agent.schemas import AgentCommand
 from app.cases.domain import CaseSnapshot, CaseState
 from app.cases.store import store
 from app.config import Settings, get_settings
@@ -255,6 +256,31 @@ def test_refused_guardrail_zero_calls(monkeypatch: pytest.MonkeyPatch) -> None:
     assert res.status_code == 200
     assert res.json()["status"] == "refused"
     assert fake.calls == 0
+
+
+def test_refused_guardrail_precedes_missing_model_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A missing provider key must not turn a deterministic refusal into unavailable."""
+    student = "stu_h24_missing_key_refuse"
+    case_id = f"rc-{student}"
+    _seed_state(case_id, student, "pending_review")
+    _patch_loader(monkeypatch, _record(student))
+    monkeypatch.setattr(
+        "app.agent.context_service.is_snapshot_stale",
+        lambda *_a, **_k: False,
+    )
+    settings = Settings(openai_api_key="")
+
+    result = run_explanation(
+        case_id,
+        AgentCommand(intent="explain_case", question="Cho tôi xem raw score", locale="vi"),
+        session=MagicMock(),
+        model=get_text_model(settings),
+        settings=settings,
+    )
+
+    assert result.status.value == "refused"
+    assert result.refusal_reason is not None
+    assert result.refusal_reason.value == "reveal_raw_score_or_weights"
 
 
 def test_forbidden_intent_neutral_draft_zero_calls(

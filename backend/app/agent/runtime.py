@@ -21,7 +21,7 @@ from app.agent.context_service import (
     provider_call_allowed,
 )
 from app.agent.grounded import explain as explain_grounded
-from app.agent.guardrails import REFUSAL_ANSWERS_VI, REFUSAL_LIMITATIONS_VI
+from app.agent.guardrails import REFUSAL_ANSWERS_VI, REFUSAL_LIMITATIONS_VI, classify_question
 from app.agent.model import ModelUnavailable, TextModel
 from app.agent.openai_client import OpenAIResponsesClient
 from app.agent.schemas import (
@@ -119,6 +119,11 @@ def run_explanation(
         intent=command.intent,
         locale=command.locale,
     )
+
+    # Guardrails are deterministic and must run before provider availability is
+    # checked. A forbidden request remains refused when the model key is absent.
+    if classify_question(command.question) is not None:
+        return explain_stub(request)
 
     if not provider_call_allowed(context, command.intent):
         # Never call the model. Map non-ready via stub; ready+forbidden → refuse.
