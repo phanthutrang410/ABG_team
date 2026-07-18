@@ -104,6 +104,7 @@ Người có thẩm quyền có thể:
 - loại tín hiệu với lý do chuẩn hóa như dữ liệu sai, nghỉ có phép, đã được hỗ trợ hoặc không đủ căn cứ;
 - hoãn (`defer`): giữ `Pending Review` + `review_at` — không tạo state riêng;
 - bàn giao (`assign`) đúng GVCN/đơn vị hỗ trợ **chỉ khi** có `advisor_ref`; thiếu thì dừng và đưa mapping-repair queue;
+- (stretch FR-12) lọc/gom case đã duyệt theo từng `advisor_ref` và nhận **bản nháp mail** kèm danh sách `student_ref` — Copy/`mailto:` only; không tự gửi;
 - lưu phản hồi tối thiểu để tránh cảnh báo lặp.
 
 ### 5.4 Agent giải thích có căn cứ
@@ -123,7 +124,7 @@ Agent có thể tóm tắt biến động, giải thích các yếu tố do mode
 3. Mở dashboard toàn đơn vị, xem danh sách tín hiệu và trạng thái fairness.
 4. Mở một case, kiểm tra thay đổi, yếu tố đóng góp và giới hạn dữ liệu.
 5. Hỏi agent “Vì sao case này cần được rà soát?” và nhận câu trả lời bám dữ liệu.
-6. Phê duyệt hoặc loại/hoãn case; nếu phê duyệt thì bàn giao cho người hỗ trợ.
+6. Phê duyệt hoặc loại/hoãn case; nếu phê duyệt thì bàn giao cho người hỗ trợ (và tùy chọn: xem bản nháp mail theo từng GV — FR-12 stretch).
 7. Thay đổi ngưỡng để minh họa trade-off giữa bỏ sót, báo động giả và tải review.
 
 ## 7. Yêu cầu chức năng và acceptance
@@ -141,6 +142,7 @@ Agent có thể tóm tắt biến động, giải thích các yếu tố do mode
 | FR-09 | Fairness audit | Khi có nhóm audit được phê duyệt + ground truth + cỡ mẫu đủ, hiển thị FPR, chênh lệch FPR và mẫu số; nếu chưa có thì trả `insufficient_data`. Thuộc tính nhóm không tham gia scoring |
 | FR-10 | False-alarm control | Demo được tác động của ngưỡng; có luồng loại false positive, ngoại lệ và chống lặp |
 | FR-11 | Privacy/care copy | Dashboard nêu rõ mục đích hỗ trợ, dữ liệu được dùng, dữ liệu bị cấm và quyền quyết định của con người |
+| FR-12 | Advisor-batch mail draft (**stretch**) | Ban Lãnh đạo lọc case đã duyệt theo `advisor_ref`; nhận bản nháp trung lập kèm danh sách `student_ref` / case; `requires_human_approval=true`; Copy hoặc `mailto:` only — **không** SMTP/auto-send; **không** trả email/SĐT/họ tên. Contract: [11-advisor…](../04-engineering/11-advisor-batch-mail-draft.md). Tasks `H22`/`G06`. **Không** bắt buộc cho CP2 nếu chưa kịp |
 
 ## 8. Non-functional requirements
 
@@ -164,7 +166,7 @@ Agent có thể tóm tắt biến động, giải thích các yếu tố do mode
 MVP chỉ được coi là hoàn thành khi:
 
 1. luồng demo ở mục 6 chạy end-to-end trên Live URL;
-2. FR-01 đến FR-11 có bằng chứng trên UI/API hoặc test phù hợp;
+2. FR-01 đến FR-11 có bằng chứng trên UI/API hoặc test phù hợp; FR-12 (stretch) có evidence hoặc limitation rõ nếu chưa ship;
 3. bốn rubric privacy, care, fairness và false-alarm/explainability xuất hiện trong sản phẩm, không chỉ trong slide;
 4. README, video, slide và AI log dùng cùng thuật ngữ và không tuyên bố vượt quá bằng chứng;
 5. `scripts/verify.ps1` chạy đạt hoặc mọi bước bị skip/fail được ghi rõ trước khi nộp.

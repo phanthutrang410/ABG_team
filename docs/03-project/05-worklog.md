@@ -1,11 +1,31 @@
 # Nhật ký công việc
 
+## 2026-07-18 (H23–H26 Done — Agent runtime FR-08 backend HTTP)
+
+- `H23`–`H26` **Done**: server-derived `AgentContext` → `POST /review-cases/{case_id}/explanation` → structured grounding + hardened FPT client → mocked HTTP E2E.
+- Evidence: `backend/tests/test_h23_agent_context.py`, `test_h24_agent_api.py`, `test_h25_grounding.py`, `test_h25_fpt_transport.py`, `test_h26_agent_e2e.py`; release [07-release-evidence §5c](07-release-evidence.md).
+- Checks: targeted H23–H26 + `tests/agent/` → **130 passed, 1 skipped** (live FPT SKIP — no approved key); `.\scripts\verify.ps1` → **410 passed, 1 skipped**; Ruff clean; `git diff --check` clean.
+- **Claim:** FR-08 E2E ở mức **backend HTTP** (FakeModel structured plan). **Không** claim FE Agent UI, production RBAC, hay live FPT. `H11b` unlock phía runtime; vẫn **BLOCKED → G05** cho docs/FE consumer.
+
+## 2026-07-18 (Agent runtime gap plan — H23–H26)
+
+- Audit sau merge xác nhận `T02` **Done ở mức core/library**: chưa có server context service, agent HTTP route, production FPT wiring hoặc HTTP E2E; không dùng T02 riêng để claim FR-08 end-to-end.
+- Chốt decision #21 và [implementation brief](../04-engineering/12-agent-runtime-integration-plan.md): Hoàng làm `H23` contract/context → `H24` HTTP runtime → `H25` structured grounding/provider hardening → `H26` E2E/release gate. `H22` mail-draft vẫn là FR-12 stretch riêng, không phải Agent send tool.
+- Gap an toàn cần sửa: raw reviewer question hiện vẫn nằm trong payload T02 nên có thể mang PII/prompt injection; H25 phải bỏ raw question khỏi provider và validate output theo context. Chưa sửa runtime, chưa live FPT call và chưa claim Done cho H23–H26.
+
 ## 2026-07-18 (T02 Done — grounded explanation qua FPT adapter)
 
-- `T02` **Done**: `backend/app/agent/fpt_client.py` gọi FPT Chat Completions tương thích OpenAI; `grounded.py` tái dùng pre-LLM guardrail và context fail-closed của T01. Prompt chỉ nhận band, factor codes, coverage và limitation keys; không gửi `student_ref`, score, PII hay audit attrs.
+- `T02` **Done core/library**: `backend/app/agent/fpt_client.py` gọi FPT Chat Completions tương thích OpenAI; `grounded.py` tái dùng pre-LLM guardrail và context fail-closed của T01. Payload không chủ động gửi `student_ref`, score hay audit attrs, nhưng vẫn chứa raw reviewer question chưa qua DLP; runtime/PII hardening được theo dõi ở H23–H26.
 - LLM chỉ được sinh `answer_vi`/`draft_body_vi`; facts, factor codes, limitations, model version và cờ human approval luôn dựng xác định từ H11a context. JSON sai shape, draft rỗng, outage hoặc copy chứa score/%/chẩn đoán/nguyên nhân nhạy cảm đều trả `unavailable`, không fallback bịa.
 - Evidence: `backend/tests/agent/test_t02_grounded.py`; agent suite **59 passed**, Ruff sạch. Quick verify xanh; full verify **338 passed, 1 skipped**, frontend lint/build xanh. Skip trong suite: external raw V59 không được cấu hình. Live FPT eval không chạy vì `FPT_API_KEY` chưa cấu hình; frontend `npm test` vẫn là placeholder theo repo gate.
 - Môi trường local: `backend/.venv` đã có backend dev dependencies; PostgreSQL test container dùng cổng `55432` vì máy có PostgreSQL khác trên `5432`. Cache legacy `early_warning` chỉ gồm `.pyc` đã chuyển có thể khôi phục sang `C:\tmp\abg-team-generated-cache\early_warning` để quarantine tests phản ánh đúng source Git.
+
+## 2026-07-18 (~09:30 H13 Done + V08 defer + advisor mail FR-12)
+
+- `H13` **Done** — CP1 form BTC đã nộp; evidence [07-release-evidence](07-release-evidence.md) §1 `[x]`; draft [11-h13…](11-h13-cp1-btc-draft.md).
+- `V08` **defer** (decision #19): Hải không backfill AI log ngay; thu thập **một thể** gần CP2 / trước `D5`.
+- Advisor-batch mail draft: research [11-advisor-batch-mail-draft](../04-engineering/11-advisor-batch-mail-draft.md) + decision #20 + PRD **FR-12** + Process bước 9–11. Tasks: `H21` **Done** → `H22` API (Hoàng, stretch) → `G06` FE (Giang). Option A = in-app aggregate + Copy/`mailto:`; **cấm** SMTP. **Không** block `G02`→`D4b`/CP2.
+- Owner ngay: Hoàng `H22` nếu còn slot; Giang `G05`/`G02`; Trang `T02`.
 
 ## 2026-07-18 (H02 + H04 Done — review/threshold APIs)
 

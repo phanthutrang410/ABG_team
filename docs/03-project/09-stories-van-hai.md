@@ -51,16 +51,16 @@ Script demo điểm theo kỳ + điểm danh theo thời gian (hoặc `insuffici
 
 Kiểm thời lượng, human review, fairness hoặc threshold, không PII/secret và không quay bản local khác bản deploy đã `D4r`.
 
-## V08 — Audit AI log
+## V08 — Audit AI log (defer — gần CP2 / trước D5)
 
 | | |
 |:--|:--|
-| Outcome | Gap AI log được ghi để Hoàng hoàn thiện D5. |
-| Gate / deadline | P3 · 09:45 |
+| Outcome | Gap AI log được ghi **một thể** để Hoàng hoàn thiện D5. |
+| Gate / deadline | **Defer** tới cửa sổ gần nộp CP2 → trước `D5` (decision #19). **Không** làm “ngay” sau H05b. |
 | Owner | Văn Hải |
 | Depends | H05b |
 
-Rà manifest và online-chats theo template `H05b`: link ẩn danh, không secret/PII/raw session, không bịa log hộ thành viên. Bàn giao gap/đường dẫn cho Hoàng.
+Khi tới cửa sổ: yêu cầu từng thành viên backfill manifest + link online **một lần**; rà theo template `H05b` (link ẩn danh, không secret/PII/raw session); không bịa log hộ. Bàn giao gap/đường dẫn cho Hoàng/`D5`. CP2 (Live URL + GitHub) không phụ thuộc V08.
 
 ## V06 — Nộp cổng cuối
 

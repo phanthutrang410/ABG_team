@@ -274,7 +274,7 @@ Hữu ích để chuẩn hóa lớp ↔ ngành ↔ khoa khi gom danh sách lãnh
 | Label học vụ | `Trạng thái` (V59 / `epu_data`) | Taxonomy `Thôi học` + `Buộc thôi học`; không lấy từ profile replacements |
 | Danh sách theo khoa/lớp | `Khoa`, `Lớp`, `Ngành` | Pseudonymize mã SV, bỏ PII thừa |
 | Giao GV phụ trách | `Cố vấn học tập` (V59) | Chuẩn hóa thành `advisor_ref`; không seed/mock email hoặc liên hệ |
-| Soạn mail | `student_ref`, lớp và `advisor_ref` sau khi case được duyệt | Chỉ tạo bản nháp; dữ liệu liên hệ nằm ngoài artifact nộp bài |
+| Soạn mail theo GV | `student_ref`, lớp, `advisor_ref` sau duyệt; FR-12 / [11-advisor…](11-advisor-batch-mail-draft.md) | Chỉ bản nháp + Copy/`mailto:`; liên hệ thật ngoài artifact; **cấm** SMTP trong MVP |
 | Điểm danh theo thời gian | Catalog reference hiện chưa có chuỗi | **MVP** qua `H15`: lấy export đã duyệt; thiếu → `insufficient_data`; **không** tạo chuỗi giả và không đẩy Post-MVP |
 | Fairness nhóm kinh tế/dân tộc | Không có | Không proxy hoặc bịa nhóm; audit trả `insufficient_data` đến khi có nguồn được phê duyệt |
 

@@ -50,7 +50,7 @@ Việc phê duyệt nghĩa là phê duyệt **chuyển một tín hiệu tới n
 - Đầu ra là **tín hiệu cần rà soát** thuộc về một case, không phải nhãn thuộc về sinh viên.
 - UI dùng “mức độ ưu tiên rà soát”, “cần xem xét sớm” và “yếu tố đóng góp”; không dùng `high-risk student`, “cảnh báo đỏ” hay “model kết luận bỏ học”.
 - Con người rà soát trước mọi bàn giao; GVCN/đơn vị hỗ trợ quyết định cách tiếp cận dựa trên bối cảnh thực tế.
-- Email/thông báo do agent soạn chỉ là bản nháp trung lập và phải được người có trách nhiệm duyệt trước khi gửi.
+- Email/thông báo do agent hoặc hệ thống soạn (kể cả bản nháp theo từng `advisor_ref`, FR-12) chỉ là bản nháp trung lập và phải được người có trách nhiệm duyệt trước khi gửi; **không** auto-send / SMTP trong MVP.
 - Silent Shield không tự động kỷ luật, hạn chế quyền lợi, thay đổi điểm, trạng thái học vụ hoặc ưu tiên dịch vụ.
 - Sinh viên phải có kênh phản hồi dữ liệu sai và không bị bất lợi chỉ vì một case bị tạo.
 

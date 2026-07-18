@@ -24,7 +24,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.contracts.integration import AgentContextResponse, AgentIntent
 
@@ -34,11 +34,36 @@ DEFAULT_DISCLAIMER_VI = (
 )
 
 
+class AgentCommand(BaseModel):
+    """Public HTTP command body (H23/H24) — browser must not send context.
+
+    Only ``intent`` / ``question`` / ``locale``. Server builds AgentContextResponse.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    intent: AgentIntent
+    question: str = Field(
+        min_length=1,
+        max_length=500,
+        description="Reviewer question (local policy only; not sent raw to provider)",
+    )
+    locale: Literal["vi"] = "vi"
+
+    @field_validator("question", mode="before")
+    @classmethod
+    def _trim_question(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+
 class AgentExplanationRequest(BaseModel):
-    """Input to the explanation agent.
+    """Library input to the explanation agent (T02/H25).
 
     ``context`` is Hoàng's H11a envelope, passed through unchanged — the agent
     must not widen it, query around it, or fall back when it is not ready.
+    Keep this shape for library callers; HTTP uses ``AgentCommand`` + server context.
     """
 
     model_config = ConfigDict(extra="forbid")

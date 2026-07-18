@@ -1,35 +1,56 @@
-"""T02 grounded explanation runtime using the safe H11a context and FPT AI."""
+"""H25 grounded explanation — structured plan + backend VI render (no raw question)."""
 
 from __future__ import annotations
 
 import json
-import re
-from typing import Optional
 
 from app.agent.fpt_client import ModelUnavailable, TextModel
-from app.agent.schemas import AgentExplanation, AgentExplanationRequest, DraftMessage
-from app.agent.stub import _UNAVAILABLE, explain as explain_stub
+from app.agent.schemas import AgentExplanation, AgentExplanationRequest, ExplanationStatus
+from app.agent.stub import explain as explain_stub
+from app.agent.vi_renderer import (
+    parse_structured_plan,
+    render_answer_vi,
+    render_draft_message,
+    validate_plan_against_context,
+)
 from app.contracts.integration import assert_no_forbidden_keys
 
-_SYSTEM = """Bạn là trợ lý giải thích case rà soát bằng tiếng Việt trung lập.
+_SYSTEM = """Bạn là trợ lý lập kế hoạch giải thích case rà soát.
 Chỉ dùng đúng dữ kiện JSON được cấp. Không tính/đoán/tiết lộ điểm, xác suất hay trọng số;
 không chẩn đoán hoặc suy đoán nguyên nhân cá nhân; không quyết định hay gửi liên hệ.
-Trả duy nhất JSON: {\"answer_vi\": string, \"draft_body_vi\": string|null}.
-Nếu intent explain_case thì draft_body_vi phải null. Nếu neutral_draft, bản nháp phải chờ con
-người duyệt, không nhắc rủi ro/điểm/chẩn đoán."""
+Trả duy nhất JSON với đúng các khóa:
+{"template_key": string, "used_factor_codes": string[], "limitation_keys": string[],
+ "draft_variant_key": string|null}.
+template_key phải thuộc allowlist: explain_case→explain_review_priority;
+neutral_draft→neutral_draft_ready.
+used_factor_codes và limitation_keys chỉ được lấy từ JSON đã cấp (subset).
+Với explain_case: draft_variant_key=null. Với neutral_draft: draft_variant_key=warm_checkin.
+Không trả prose tiếng Việt — backend sẽ render."""
 
-_FORBIDDEN_OUTPUT = re.compile(
-    r"(?i)(\b\d+(?:[.,]\d+)?\s*%|điểm\s+rủi\s+ro|xác\s+suất|trọng\s+số|"
-    r"trầm\s+cảm|tự\s+tử|dân\s+tộc|nhà\s+nghèo|đã\s+gửi|tôi\s+đã\s+gửi)"
+_MODEL_UNAVAILABLE = AgentExplanation(
+    status=ExplanationStatus.UNAVAILABLE,
+    answer_vi=(
+        "Dịch vụ mô hình tạm thời không phản hồi hoặc trả kết quả không hợp lệ. "
+        "Anh/chị vui lòng thử lại sau. Dữ liệu case vẫn dùng được cho thao tác rà soát "
+        "của con người."
+    ),
+    limitations_vi=(
+        "Lỗi nhà cung cấp mô hình — không phải kết luận về dữ liệu hay về sinh viên."
+    ),
 )
 
 
 def _model_payload(request: AgentExplanationRequest) -> str:
+    """Canonical provider payload — never includes raw question or identifiers."""
     case = request.context.case
     assert case is not None
     safe = {
         "intent": request.intent,
-        "question": request.question,
+        "canonical_task": (
+            "draft_neutral_checkin"
+            if request.intent == "neutral_draft"
+            else "explain_review_priority"
+        ),
         "review_priority_band": case.review_priority_band,
         "factor_codes": [factor.code for factor in case.contributing_factors],
         "coverage": {
@@ -39,53 +60,49 @@ def _model_payload(request: AgentExplanationRequest) -> str:
             "reason_codes": case.coverage.reason_codes,
         },
         "limitations": case.limitations,
+        "allowed_template_keys": (
+            ["neutral_draft_ready"]
+            if request.intent == "neutral_draft"
+            else ["explain_review_priority"]
+        ),
+        "allowed_draft_variant_keys": (
+            ["warm_checkin"] if request.intent == "neutral_draft" else []
+        ),
     }
     assert_no_forbidden_keys(safe)
+    assert "question" not in safe
     return json.dumps(safe, ensure_ascii=False)
 
 
-def _parse_model_json(raw: str, *, wants_draft: bool) -> tuple[str, Optional[str]]:
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise ModelUnavailable("model output is not JSON") from exc
-    if not isinstance(payload, dict) or set(payload) != {"answer_vi", "draft_body_vi"}:
-        raise ModelUnavailable("model output shape is invalid")
-    answer = payload["answer_vi"]
-    draft = payload["draft_body_vi"]
-    if not isinstance(answer, str) or not answer.strip():
-        raise ModelUnavailable("model answer is empty")
-    if wants_draft != isinstance(draft, str):
-        raise ModelUnavailable("model draft does not match intent")
-    if isinstance(draft, str) and not draft.strip():
-        raise ModelUnavailable("model draft is empty")
-    combined = f"{answer} {draft or ''}"
-    if _FORBIDDEN_OUTPUT.search(combined):
-        raise ModelUnavailable("model output violated grounding policy")
-    return answer.strip(), draft.strip() if isinstance(draft, str) else None
-
-
 def explain(request: AgentExplanationRequest, model: TextModel) -> AgentExplanation:
-    """Run guardrails/fail-closed mapping, then ground the ready answer via FPT."""
+    """Run guardrails/fail-closed mapping, then ground via structured FPT plan."""
     baseline = explain_stub(request)
     if baseline.status.value != "ok":
         return baseline
 
+    case = request.context.case
+    assert case is not None
+
     try:
         raw = model.complete(system=_SYSTEM, user=_model_payload(request))
-        answer, draft_body = _parse_model_json(
-            raw, wants_draft=request.intent == "neutral_draft"
+        plan = validate_plan_against_context(
+            parse_structured_plan(raw),
+            intent=request.intent,
+            case=case,
         )
+        answer = render_answer_vi(plan, case)
+        draft = render_draft_message(plan, channel="copy")
+        if request.intent == "neutral_draft" and draft is None:
+            raise ModelUnavailable("neutral_draft produced no draft_message")
+        if request.intent == "explain_case" and draft is not None:
+            raise ModelUnavailable("explain_case must not produce draft_message")
     except ModelUnavailable:
-        return _UNAVAILABLE
+        return _MODEL_UNAVAILABLE
 
-    # Facts, factor codes, limits and model version remain deterministic and
-    # are never accepted from the LLM.
+    # Facts, factor codes, limits and model_version stay deterministic from case.
     return baseline.model_copy(
         update={
             "answer_vi": answer,
-            "draft_message": (
-                DraftMessage(body_vi=draft_body) if draft_body is not None else None
-            ),
+            "draft_message": draft,
         }
     )

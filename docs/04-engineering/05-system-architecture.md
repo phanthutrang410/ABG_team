@@ -2,7 +2,7 @@
 
 > **Owner:** Hoàng · **Task:** H05a · **Vai trò:** SoT kiến trúc tối thiểu cho `H06b` / `H10` / `H07`.
 >
-> Tài liệu này làm rõ ranh giới kỹ thuật và luồng vận hành; không thay [PRD](../02-product/04-prd.md), [Ethics](../02-product/05-ethics.md) hay [Process](../02-product/03-process.md). Đặc biệt, nó **không tự tạo** API/schema Agent khi `H11a` và `T03` chưa hoàn thành.
+> Tài liệu này làm rõ ranh giới kỹ thuật và luồng vận hành; không thay [PRD](../02-product/04-prd.md), [Ethics](../02-product/05-ethics.md) hay [Process](../02-product/03-process.md). Status/delta triển khai Agent sau T02 được khóa tại [plan H23–H26](12-agent-runtime-integration-plan.md).
 
 ## 1. Cách đọc tài liệu và trạng thái hiện tại
 
@@ -24,12 +24,12 @@ Các ô trong sơ đồ dưới đây là **kiến trúc mục tiêu**; không p
 |:--|:--|:--|
 | H06b — core transition | Có `FastAPI` route + in-memory store và test cho state machine | Đây chưa phải public `ReviewCase`, RBAC hay persistence production |
 | H10 — EPU/Data-ML contract | **Done** — EPU + Data-ML + decision #17 | Contract khóa; **chưa** có import EPU hay nguồn đã duyệt (`M05b`) |
-| H19 / H20 / H08 | Done | Schema + import CLI + read adapter; **M02** còn lại cho scoring output / case generation |
-| H06a / H11a | H06a Done; H11a Done | Public `ReviewCase` + [integration envelopes](10-fe-agent-integration-contract.md) (empty/stale/insufficient/error) cho G05/T03; H02/T03 runtime vẫn pending |
-| T03 / T01 / T02 | Blocked theo Sprint | Chưa có `app/agent`, FPT client, endpoint, tool dispatcher, fixture hay grounding/refusal suite |
-| FPT settings | Có cấu hình FPT/timeout/concurrency trong `backend/app/config.py` | Đây chỉ là cấu hình, **không** chứng minh ReAct hoặc agent runtime đang chạy |
+| H19 / H20 / H08 / M02 | Done | Schema + import CLI + read adapter + baseline scoring đã có; public projection thuộc H02 |
+| H06a / H11a / H02 | Done | Public `ReviewCase`, integration envelopes và GET list/detail đã có; Agent context service/command route chưa có |
+| T03 / T01 / T02 | **Done — core/library** | Có `app/agent`, schema/fixture/guardrail/stub/FPT text adapter và mocked tests; chưa có server context service, HTTP endpoint hoặc production provider wiring |
+| FPT settings/client | Có settings + minimal sync client | Chưa dùng timeout/concurrency settings đầy đủ, chưa được instantiate trong app; runtime/hardening theo H23–H26 |
 
-Vì vậy, phần Agent bên dưới mô tả **target pattern có rào chắn** cho `H11a → T03 → T01 → T02`. Trước gate đó, MVP không được tuyên bố có ReAct/tool loop.
+Vì vậy, phần Agent bên dưới mô tả target pattern có rào chắn. `T02` chứng minh core/library; chỉ sau `H23`–`H26` mới được tuyên bố có Agent HTTP/runtime FR-08.
 
 ## 2. System context, trust zones và containers
 
@@ -160,11 +160,11 @@ stateDiagram-v2
 
 Không dùng `new`, `in_review`, `deferred`, `handed_off`, `Low/Medium/High Risk` làm state/field alias. Agent/LLM không được gọi `queue_for_review`, `approve`, `dismiss`, `defer`, `assign`, `accept`, `resolve` hay `monitor`; H06b đã reject `actor_kind=agent|llm`.
 
-## 6. Agent và bounded ReAct — target pattern, chưa phải runtime
+## 6. Agent và bounded ReAct — core có, HTTP/runtime còn pending
 
 ### 6.1 Điều đang có và điều chưa có
 
-Hiện không có module `app/agent`, FPT/OpenAI client, chat endpoint, tool registry/dispatcher, LangGraph, fixture Agent hoặc test grounding/refusal. `backend/app/main.py` chỉ mount health và case router; FPT/timeout/tracing mới là settings. Vì thế, cách mô tả chính xác của MVP hiện tại là: **chưa có Agent/ReAct runtime**; chỉ có guard cấm Agent/LLM đổi state.
+Hiện đã có module `app/agent`, schema/fixture, guardrail/refusal suite, deterministic stub và minimal FPT text adapter từ T03/T01/T02. Tuy nhiên `backend/app/main.py` chưa mount Agent endpoint, context vẫn chưa được dựng server-side và FPT client chưa có production wiring/hardening. Vì thế, cách mô tả chính xác là: **core/library đã có; Agent HTTP/runtime chưa hoàn thành**. Kế hoạch thực thi thuộc [H23–H26](12-agent-runtime-integration-plan.md).
 
 Tài liệu flow LangGraph của EduInsight được dùng như **tham khảo kiến trúc**, không phải source of truth hoặc code để copy sang Silent Shield. ReAct trong Silent Shield phải bị thu hẹp theo PRD FR-08, Ethics §8 và boundary dữ liệu dưới đây.
 
@@ -207,7 +207,7 @@ stateDiagram-v2
   OutputGuard --> [*]: answered / insufficient_data / unavailable
 ```
 
-Đồ thị này là **target design** cho runtime. Schema context/error tối thiểu đã khóa ở [H11a](10-fe-agent-integration-contract.md) (`AgentContextResponse`, problem codes); endpoint HTTP và tool dispatcher vẫn là T03/H02. Với câu hỏi đơn giản, backend có thể dựng single-turn grounded context và không cần tool call; điều đó vẫn an toàn hơn một ReAct loop không cần thiết.
+Đồ thị này là target design cho runtime. Schema context/error tối thiểu đã khóa ở [H11a](10-fe-agent-integration-contract.md) (`AgentContextResponse`, problem codes); server context service và HTTP command endpoint thuộc H23/H24. Với câu hỏi đơn giản, backend dựng single-turn grounded context và không cần tool call; điều đó an toàn hơn một ReAct loop không cần thiết.
 
 ### 6.4 Tool boundary tối thiểu sau khi T03 bắt đầu
 
@@ -235,7 +235,7 @@ Chỉ audit metadata đã giảm thiểu (tool name/status, model/version, durat
 
 ### 6.6 Điều kiện nghiệm thu khi triển khai Agent
 
-`T03` cần mock test cho ít nhất năm case: answer grounded có refs; `insufficient_data`; yêu cầu score/dropout/cause; cố gọi transition/send; tool timeout/error; leakage PII/outcome/audit attribute; neutral draft không tự gửi. Đây bổ sung cho, không thay thế, test H06b đã có về việc Agent/LLM bị cấm đổi case state.
+T03/T01/T02 đã có mocked contract/grounding tests. Runtime gate H23–H26 phải bổ sung HTTP E2E cho answer grounded có refs; `insufficient_data`/stale; yêu cầu score/dropout/cause; cố transition/send; provider timeout/error/malformed; leakage PII/outcome/audit attribute; neutral draft không tự gửi. Đây bổ sung cho, không thay thế, test H06b đã có về việc Agent/LLM bị cấm đổi case state.
 
 ## 7. Trust, privacy và care boundary
 
@@ -269,6 +269,7 @@ Chỉ audit metadata đã giảm thiểu (tool name/status, model/version, durat
 | Scoring / fairness semantics | [Data-ML contract](08-data-ml-scoring-fairness-contract.md) |
 | Versioned DWH/import | [Persistence schema](07-mvp-persistence-schema.md) |
 | FPT provider setup only | [FPT AI API](01-fpt-ai-api.md) |
+| Agent runtime integration/hardening | [Plan H23–H26](12-agent-runtime-integration-plan.md) |
 | Current task gates | [Sprint](../03-project/03-sprint.md) |
 | H06b evidence that Agent cannot transition | [`domain.py`](../../backend/app/cases/domain.py) · [`test_case_transitions.py`](../../backend/tests/test_case_transitions.py) |
 | Deploy/ops (draft) | [06-deploy-runbook.md](06-deploy-runbook.md) |

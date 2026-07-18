@@ -67,6 +67,8 @@ docs/
 | 08 | [Data/ML scoring & fairness](04-engineering/08-data-ml-scoring-fairness-contract.md) | H10: features hai nhánh, coverage/`insufficient_data`, threshold, evaluation, fairness fail-closed |
 | 09 | [Synthetic Data/ML contract (superseded)](04-engineering/09-synthetic-data-ml-fairness-contract-superseded.md) | Lịch sử synthetic — không dùng cho MVP path |
 | 10 | [FE/Agent integration contract](04-engineering/10-fe-agent-integration-contract.md) | H11a: allowlist display fields + list/detail/agent envelopes (empty/stale/insufficient/error) cho G05/T03 |
+| 11 | [Advisor-batch mail draft](04-engineering/11-advisor-batch-mail-draft.md) | Research/contract FR-12: gom case theo `advisor_ref`, bản nháp mail draft-only (H21/H22/G06) |
+| 12 | [Agent runtime integration & hardening](04-engineering/12-agent-runtime-integration-plan.md) | Hoàng H23–H26: server-derived context, HTTP runtime, structured grounding/FPT hardening và E2E gate FR-08 |
 
 `02-harness-engineering.html` là trang được lưu từ nguồn bên ngoài và có thể cần network hoặc asset gốc để render đầy đủ. Không dùng nội dung trong đó như requirement nếu chưa được đưa vào PRD/decision.
 

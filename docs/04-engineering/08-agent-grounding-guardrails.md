@@ -84,7 +84,7 @@ Case công khai (H06a-r) agent được đọc: `case_id`, `student_ref` (pseudo
 
 ## 4. Tools — read-only, thiếu tool = không thể vi phạm
 
-T02 chỉ được cấp tool đọc trả về envelope H11a: `get_agent_context(case_id) → AgentContextResponse`. **Không tồn tại:** compute/send/update/assign/get_pii. LLM qua FPT AI Inference ([doc 01](01-fpt-ai-api.md)), ưu tiên `Qwen/Qwen3-32B`; key trong `.env`, không commit; không log chain-of-thought hay context thô chứa case ra evidence.
+Target runtime H23/H24 chỉ được dùng context đọc do server dựng: `build_agent_context(case_id, trusted_scope) → AgentContextResponse`. T02 core hiện chưa có HTTP route/tool dispatcher. **Không được tồn tại:** compute/send/update/assign/get_pii. LLM qua FPT AI Inference ([doc 01](01-fpt-ai-api.md)), ưu tiên `Qwen/Qwen3-32B`; key trong `.env`, không commit; không log chain-of-thought hay context thô chứa case ra evidence. Chi tiết runtime/hardening: [doc 12](12-agent-runtime-integration-plan.md).
 
 ## 5. Bộ adversarial — 12 ca (fixture: [`adversarial_cases.json`](../../backend/tests/fixtures/agent/adversarial_cases.json))
 
@@ -118,4 +118,4 @@ Pop-Location
 
 **DoD T03:** output contract + 6 fixtures + 12 adversarial + 26 test xanh; không vỡ 79 test contract của Hoàng/Duy; không forbidden field. **Chưa** gọi LLM thật (T01/T02).
 
-**Handoff:** T01 (stub trả `AgentExplanation` từ fixture, mock model chạy 12 ca) → T02 (grounded qua `get_agent_context` + FPT, sau H02). Gap đã biết: chưa live-LLM eval; copy VI cuối cùng theo H12a khi render UI.
+**Handoff:** T01 (stub từ fixture) → T02 (**core/library Done**: grounded wrapper + FPT text adapter, mocked tests) → H23–H26 (server context, HTTP runtime, structured grounding/provider hardening, E2E). Gap còn lại: chưa live-LLM eval; UI Agent là consumer task riêng; copy VI cuối cùng theo H12a.
