@@ -33,7 +33,7 @@ flowchart TD
         O["Robot EduSignal AI<br/>1 thông báo tình hình kỳ dữ liệu"]
         O --> T1["Tool 1: Xuất báo cáo<br/>(modal + print, không rời trang)"]
     end
-    O -->|"Tool 2: Phân tích SV"| A["/analysis<br/>Dashboard · Tín hiệu · Sinh viên<br/>Fairness · Ngưỡng (tab)<br/>+ /analysis/[caseId] chi tiết + hỏi AI"]
+    O -->|"Tool 2: Danh sách rà soát"| A["/analysis<br/>Dashboard · Danh sách rà soát · Ngưỡng<br/>+ /analysis/[caseId] chi tiết + hỏi AI"]
     O -->|"Tool 3: Soạn mail GVCN"| N["/notify<br/>Lọc SV theo advisor<br/>Bản nháp mail (draft-only)"]
     T1 -->|"click 1 SV trong báo cáo"| A
     A -->|"sau approve/assign:<br/>CTA 'Soạn mail bàn giao'"| N
@@ -46,12 +46,12 @@ flowchart TD
 |:-:|:--|:--|:--|:--|
 | 1 | `/login` | Đăng nhập | Auth demo + **chọn vai inline** khi tài khoản đa vai | `login` + `select-role` (bỏ route riêng) |
 | 2 | `/overview` | **Tổng quan — Agent Home** | Robot + 1 thông báo duy nhất + 3 tool + hỏi nhanh + modal báo cáo | `dashboard?tab=overview` (nâng cấp) |
-| 3 | `/analysis` (+ `/analysis/[caseId]`) | Phân tích | KPI/chart, danh sách tín hiệu & SV, fairness, ngưỡng (tab); chi tiết case + AgentPanel là sub-route cùng shell. **Vai GVCN dùng chính trang này ở chế độ scoped** | `dashboard?tab=analytics/signals/students/fairness/threshold` + `cases/[caseId]` + `my-class` |
+| 3 | `/analysis` (+ `/analysis/[caseId]`) | Phân tích | Dashboard tinh gọn, danh sách rà soát hợp nhất, ngưỡng; chi tiết case + AgentPanel là sub-route cùng shell. **Vai GVCN dùng chính trang này ở chế độ scoped** | `dashboard?tab=analytics/signals/students/threshold` + `cases/[caseId]` + `my-class` |
 | 4 | `/notify` | Thông báo — Soạn mail GVCN | G06/FR-12: bundle theo `advisor_ref`, xem/copy/`mailto:` bản nháp, bucket mapping-repair | **Mới** (task G06 đang mở, backend H22 Done) |
 
 `/` redirect → `/login` (giữ nguyên, không tính là page).
 
-**Mapping 6 → 4:** `select-role` gộp vào `login`; `my-class` + `cases/[caseId]` + 5 tab dashboard gộp vào `analysis`; tab `overview` tách thành page `overview` riêng (hub); thêm `notify` (vốn là task G06 chưa build).
+**Mapping 6 → 4:** `select-role` gộp vào `login`; `my-class` + `cases/[caseId]` + các view dashboard gộp vào `analysis`; `signals`/`students` hợp nhất thành `reviews`, bỏ Fairness khỏi navigation; tab `overview` tách thành page `overview` riêng (hub); thêm `notify`.
 
 ## 3. Chi tiết từng page
 
@@ -72,7 +72,7 @@ Tách tab `overview` của dashboard hiện tại thành page riêng, nâng cấ
    - Thông báo là **rule-based tính từ response** (như code hiện tại) — KHÔNG gọi LLM cho bản tóm tắt tổng (H24 chỉ per-case; xem §6 stretch).
 2. **3 tool card tương tác chuột** (thay 5 intent card hiện tại):
    - 🗂 **Xuất báo cáo tổng thể** → mở modal báo cáo (dưới).
-   - 🔍 **Phân tích sinh viên** → `/analysis` (kèm ô search mã SV → `/analysis?q=<ref>`).
+   - 🔍 **Danh sách rà soát** → `/analysis?tab=reviews`.
    - ✉️ **Soạn mail cho giảng viên phụ trách** → `/notify`.
 3. **Modal "Báo cáo tổng thể"** (component mới `ReportModal`):
    - Bảng toàn bộ case đang trong diện theo dõi (mọi `case_state` trừ `dismissed`; `resolved` tách nhóm riêng): `student_ref`, band, state, factor (nhãn VI), coverage/limitations.
@@ -83,15 +83,18 @@ Tách tab `overview` của dashboard hiện tại thành page riêng, nâng cấ
    - Copy bắt buộc ghi: *"Danh sách gồm sinh viên có tín hiệu từ nguồn đã duyệt — danh sách toàn bộ sinh viên toàn trường cần API bổ sung (design spec §9)"* — không claim quá dữ liệu đang có.
 4. Giữ **AiQuickChat** rule-based hiện có (đã ghi rõ "chưa gọi model AI").
 
-### 3.3 `/analysis` — Phân tích (gộp 5 tab dashboard + case detail + my-class)
+### 3.3 `/analysis` — Phân tích (3 mục + case detail + my-class)
 
-- Chuyển các tab hiện có sang `/analysis?tab=dashboard|signals|students|fairness|threshold` (di chuyển code `AnalyticsTab`, `SignalsList`, `StudentsTab`, `FairnessPanel`, `ThresholdPanel` — gần như move nguyên khối).
+- Chỉ giữ `/analysis?tab=dashboard|reviews|threshold`; link cũ `signals|students` ánh xạ sang `reviews`, link `fairness` về Dashboard.
+- **Dashboard tinh gọn:** 3 KPI (ưu tiên sớm, tín hiệu mới, chờ duyệt) + 1 biểu đồ trạng thái. Không bịa delta lịch sử khi API chưa có.
+- **Danh sách rà soát:** hợp nhất Tín hiệu/Sinh viên thành một bảng case có tìm kiếm, lọc band/state và sắp xếp; limitations dài chuyển sang chi tiết case.
+- Bỏ Fairness khỏi navigation/UI phân tích; backend contract fail-closed hiện có không bị sửa trong task IA này. `ThresholdPanel` giữ nguyên.
 - **Chi tiết case** chuyển từ `/cases/[caseId]` → **`/analysis/[caseId]`** và bọc trong `AppShell` (hiện case detail đứng ngoài shell, mất sidebar — sửa luôn khi move). Giữ nguyên: StateTimeline, contributing factors, coverage, `CareActions` (H03), `AgentPanel` (H24 — đây là điểm "hỏi AI về 1 sinh viên" trong concept; lưu ý claim: FR-08 mới Done ở backend, FE Agent UI ship trong plan này phải qua A05 review copy).
 - Redirect `/cases/[caseId]` → `/analysis/[caseId]` (giữ deep-link cũ trong docs/evidence).
 - **Liên kết sang notify:** trong `CareActions`, sau khi `assign` thành công (case → `assigned`) hiện CTA *"Soạn mail bàn giao cho GVCN →"* trỏ `/notify`. Đây là mắt xích Process bước 9–11.
 - **Vai GVCN (thay `my-class`):** cùng page `/analysis`, khi `activeRole = gvcn`:
-  - chỉ tab `signals`-tương-đương dạng "Case của tôi": filter client-side `HANDED_OFF_STATES` như my-class hiện tại (ghi chú gap: production cần scope server-side — giữ nguyên disclaimer Ethics §3 hiện có);
-  - ẩn tab fairness/threshold/dashboard toàn đơn vị; ẩn band của case chưa duyệt (đã đúng theo filter state).
+  - chỉ view "Case của tôi": filter client-side `HANDED_OFF_STATES` như my-class hiện tại (ghi chú gap: production cần scope server-side — giữ nguyên disclaimer Ethics §3 hiện có);
+  - ẩn dashboard/ngưỡng toàn đơn vị; ẩn band của case chưa duyệt (đã đúng theo filter state).
   - Sidebar nav render theo vai (AppShell đã hỗ trợ `NAV_BY_ROLE`).
 
 ### 3.4 `/notify` — Soạn mail cho GVCN (build mới = task G06, backend đã Done)
@@ -127,7 +130,7 @@ Consumer của `GET /advisor-handoff-drafts` (`AdvisorHandoffDraftListResponse`)
 | **F2 — Login gộp chọn vai** | Bước chọn vai inline trong `/login`; xoá page `select-role` | F1 | Smoke: tài khoản 1 vai & đa vai đều vào đúng home |
 | **F3 — Overview Agent Home** | 1 thông báo duy nhất (rule-based, đủ nhánh ok/stale/error/empty) + 3 tool card + giữ AiQuickChat | F1 | Copy review theo Ethics §4; mọi số từ response |
 | **F4 — ReportModal + print** | Modal báo cáo tổng thể + badge "Mới" + `@media print` + disclaimer phạm vi | F3 | In thử ra PDF; scan không PII/score; click row → case |
-| **F5 — Analysis hợp nhất** | Move 5 tab + case detail vào `/analysis`; case detail có AppShell; GVCN scoped view thay `my-class`; xoá `my-class`, `cases/` | F1 | Smoke cả 2 vai; CareActions/AgentPanel hoạt động như cũ; diff không đổi hành vi API |
+| **F5 — Analysis hợp nhất** | 3 mục Dashboard/Reviews/Threshold + case detail trong `/analysis`; GVCN scoped view thay `my-class`; xoá `my-class`, `cases/` | F1 | Smoke link cũ/mới ở cả 2 vai; CareActions/AgentPanel/Threshold hoạt động như cũ; diff không đổi hành vi API |
 | **F6 — Notify (G06)** | Types mirror H22 + fetch client + page notify đầy đủ (bundle/filter/draft/copy/mailto/mapping-repair/empty/error) | F1 | Không auto-send; `requires_human_approval` luôn hiển thị; fixture H22 làm test data; **đây chính là task G06 trong sprint — làm ở đây thì tick G06** |
 | **F7 — Cross-link workflow** | CTA assign→notify; notify→case detail; report→case detail; overview→analysis?q= | F4,F5,F6 | Click-through toàn vòng: login→overview→report→case→approve→assign→notify→copy draft |
 | **F8 — Gate & handoff** | `.\scripts\verify.ps1`, `git diff --check`, smoke Live URL, cập nhật Sprint board (G06 + task mới), ghi gaps | F1–F7 | Handoff format theo AGENTS §E; ghi rõ `npm test` FE vẫn placeholder |
@@ -138,7 +141,7 @@ Consumer của `GET /advisor-handoff-drafts` (`AdvisorHandoffDraftListResponse`)
 
 | # | Câu hỏi | Khuyến nghị |
 |:-:|:--|:--|
-| 1 | Fairness/Threshold giữ ở đâu khi còn 4 page? | Tab phụ trong `/analysis` (giữ demo FR-09/FR-10 cho rubric, không tốn page) |
+| 1 | Threshold giữ ở đâu khi còn 4 page? | Giữ nguyên tab Ngưỡng trong `/analysis`; bỏ Fairness khỏi navigation/UI theo quyết định mới nhất của owner. |
 | 2 | GVCN dùng `/analysis` scoped thay `my-class`? | Đồng ý — cùng shell, filter `HANDED_OFF_STATES` như cũ, giữ disclaimer Ethics §3 |
 | 3 | Thông báo tuần của robot có gọi LLM không? | **MVP: rule-based** (không cần backend mới, không rủi ro claim). Stretch sau submission: endpoint `GET /overview-briefing` dùng cùng guardrail H25 — cần decision + task backend riêng, KHÔNG tự build |
 | 4 | Báo cáo xuất dạng gì? | Print-to-PDF client-side (option A tinh thần doc 11). Không CSV/không endpoint export (tránh lộ PII khi join ngoài) |
