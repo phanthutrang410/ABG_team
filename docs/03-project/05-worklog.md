@@ -1,5 +1,12 @@
 # Nhật ký công việc
 
+## 2026-07-18 (T02 Done — grounded explanation qua FPT adapter)
+
+- `T02` **Done**: `backend/app/agent/fpt_client.py` gọi FPT Chat Completions tương thích OpenAI; `grounded.py` tái dùng pre-LLM guardrail và context fail-closed của T01. Prompt chỉ nhận band, factor codes, coverage và limitation keys; không gửi `student_ref`, score, PII hay audit attrs.
+- LLM chỉ được sinh `answer_vi`/`draft_body_vi`; facts, factor codes, limitations, model version và cờ human approval luôn dựng xác định từ H11a context. JSON sai shape, draft rỗng, outage hoặc copy chứa score/%/chẩn đoán/nguyên nhân nhạy cảm đều trả `unavailable`, không fallback bịa.
+- Evidence: `backend/tests/agent/test_t02_grounded.py`; agent suite **59 passed**, Ruff sạch. Quick verify xanh; full verify **338 passed, 1 skipped**, frontend lint/build xanh. Skip trong suite: external raw V59 không được cấu hình. Live FPT eval không chạy vì `FPT_API_KEY` chưa cấu hình; frontend `npm test` vẫn là placeholder theo repo gate.
+- Môi trường local: `backend/.venv` đã có backend dev dependencies; PostgreSQL test container dùng cổng `55432` vì máy có PostgreSQL khác trên `5432`. Cache legacy `early_warning` chỉ gồm `.pyc` đã chuyển có thể khôi phục sang `C:\tmp\abg-team-generated-cache\early_warning` để quarantine tests phản ánh đúng source Git.
+
 ## 2026-07-18 (H02 + H04 Done — review/threshold APIs)
 
 - `H02` **Done**: `GET /review-cases` + `GET /review-cases/{case_id}` — `review_projection.py` / `review_router.py`; H11a envelopes; no `model_score`/PII; tests `test_h02_review_case_api.py`.

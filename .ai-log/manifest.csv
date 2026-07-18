@@ -1,1 +1,2 @@
 session_id,member,tool,started_at,ended_at,task_id,purpose,result,artifacts,commit_sha,evidence_type,evidence_ref,screenshot,redactions,review_status
+20260718-T02-thu-trang-codex-01,Thu Trang,Codex,2026-07-18T10:00+07:00,2026-07-18T10:20+07:00,T02,Implement grounded FPT explanation adapter and adversarial verification,done,backend/app/agent/fpt_client.py;backend/app/agent/grounded.py;backend/tests/agent/test_t02_grounded.py;docs/03-project/05-worklog.md,,file,backend/tests/agent/test_t02_grounded.py,,No API key or raw context logged,pending
