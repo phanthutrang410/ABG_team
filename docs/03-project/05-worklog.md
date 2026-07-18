@@ -1,5 +1,15 @@
 # Nhật ký công việc
 
+## 2026-07-18 (M06 Done — domain transform + quality report)
+
+- `M06` **Done** (Duy): `backend/app/ml/domain/` — `models.py` (Pydantic domain rows + `DataQualityReport`, tên khớp cột `dwh`), `transform.py` (semester: term_code normalize, taxonomy `Trạng thái` decision #17, miền điểm `[0,10]`, khóa unique, reject reasons, coverage `single_term`/`grade_coverage_insufficient`/`status_unknown`), `attendance.py` (nhánh `mvp-attendance-over-time`; rate loại `excused=true`; ≥4 mốc; trend ≥2 điểm). `DataQualityReport` được lắp trong transform/attendance (không tách file riêng).
+- Fail-closed: field PII/token trong input ⇒ `PiiFieldError` (zero output). Không cross-join hai nguồn. `is_dropout_outcome` chỉ ở `academic_status` (evaluation) — test chứng minh không rò sang `student_dimension`/`term_grade`/`advisor_assignment`.
+- Committed attendance artifacts (pseudonymous, no PII): `tests/fixtures/attendance/mvp_attendance_source_manifest.json` + `…_data_quality_report.json` — regen-deterministic (test so khớp build).
+- Semester domain artifact **không commit**: sinh tại vị trí ngoài repo từ file M05b external (`v59-empty-program-students`) — `H20` đọc; repo chỉ giữ transform + tests (EPU §5). Không commit raw V59/PII/map MSSV.
+- Tests: `tests/test_m06_domain_fixture.py` (46) — normalize, taxonomy, reject layers, PII fail-closed, determinism, no cross-join, alignment field ↔ cột `dwh`, attendance rate/excused/coverage, artifact no-drift.
+- Verify: `ruff check app tests` pass; `pytest -q -m "not slow and not eval"` → **197 passed, 4 errors**. 4 errors = `test_dwh_migrate.py` (H19) yêu cầu Postgres (`docker compose up -d db`) — **không** liên quan M06 (transform thuần, không chạm DB); môi trường local không có Docker. FE không đổi (không chạy). Chưa commit trong bước này → commit/push branch `KhanhDuyBui` theo yêu cầu.
+- Mở khóa `H20` (Hoàng) — consume `app/ml/domain` output. `M02` vẫn `BLOCKED → H08` (H20→H08).
+
 ## 2026-07-18 (~07:05 M05b + H15 unlock — decision #18)
 
 - **Decision #18:** team approver (Hoàng) unlock MVP demo — semester V59 ngoài git + attendance allowlisted `mvp-attendance-over-time`.
