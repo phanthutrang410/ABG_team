@@ -13,6 +13,6 @@
   "limitations_vi": "Thiếu dữ liệu không có nghĩa là sinh viên ổn định — chỉ là chưa đủ căn cứ để nói. Cần bổ sung bản trích xuất điểm được phê duyệt trước khi đánh giá lại.",
   "refusal_reason": null,
   "draft_message": null,
-  "model_version": "ew-term-0.1-uncalibrated",
+  "model_version": "m02-baseline-0.1",
   "disclaimer_vi": "Đây là tín hiệu cần rà soát nhằm hỗ trợ con người ưu tiên sự quan tâm, không phải kết luận về sinh viên. Quyết định và việc liên hệ do con người thực hiện."
 }

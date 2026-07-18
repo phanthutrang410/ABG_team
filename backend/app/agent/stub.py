@@ -32,7 +32,7 @@ from app.contracts.review_case import ReviewCase
 #: Neutral VI labels for known factor codes (Data-ML §4 features). Unknown
 #: codes fall back to the raw code — never to an invented explanation.
 _FACTOR_LABELS_VI = {
-    "grade_trend_negative": "xu hướng điểm trung bình theo học kỳ giảm",
+    "grade_trend_declining": "xu hướng điểm trung bình theo học kỳ giảm",
     "grade_volatility_high": "điểm dao động mạnh giữa các học kỳ",
 }
 

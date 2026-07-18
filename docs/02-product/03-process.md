@@ -57,9 +57,9 @@ Ba nguyên tắc xuyên suốt:
 | 6 | Tạo báo cáo định kỳ cho Ban Lãnh đạo | Hệ thống | Tổng hợp tín hiệu mới, case đang theo dõi, freshness và trạng thái fairness (`insufficient_data` nếu chưa đủ nhóm/nhãn) |
 | 7 | Rà soát và sử dụng agent khi cần | Ban Lãnh đạo | Agent chỉ tóm tắt/giải thích từ dữ liệu được phép, không tạo điểm hoặc kết luận |
 | 8 | Phê duyệt, loại bỏ hoặc hoãn từng case | Ban Lãnh đạo/người được ủy quyền | Lưu quyết định và lý do; chưa phê duyệt thì không chuyển cho GVCN |
-| 9 | Phân nhóm case đã duyệt theo lớp và GVCN | Hệ thống | Kiểm tra mapping, quyền truy cập và người nhận |
-| 10 | Hỗ trợ soạn email hoặc thông báo | Hệ thống/agent | Chỉ tạo bản nháp trung lập, không nói sinh viên “có nguy cơ bỏ học” |
-| 11 | Gửi thông tin tới GVCN | Ban Lãnh đạo hoặc hệ thống theo hành động đã duyệt | Chỉ gửi dữ liệu tối thiểu cần thiết; lưu dấu bàn giao |
+| 9 | Phân nhóm case đã duyệt theo lớp và GVCN (`advisor_ref`) | Hệ thống | Kiểm tra mapping; thiếu → mapping-repair; không gán người nhận giả |
+| 10 | Hỗ trợ soạn email hoặc thông báo **theo từng GV** (danh sách SV kèm theo) | Hệ thống/agent | Chỉ tạo bản nháp trung lập (`requires_human_approval`); Copy/`mailto:`; không nói sinh viên “có nguy cơ bỏ học”; **không** SMTP/auto-send (FR-12 / [11-advisor…](../04-engineering/11-advisor-batch-mail-draft.md)) |
+| 11 | Gửi thông tin tới GVCN | Ban Lãnh đạo (người) | Chỉ gửi dữ liệu tối thiểu cần thiết sau khi duyệt nháp; lưu dấu bàn giao khi `assign` |
 | 12 | Liên hệ và hỗ trợ sinh viên | GVCN/đơn vị hỗ trợ | Con người lựa chọn cách liên hệ; không dùng cho kỷ luật tự động |
 | 13 | Phản hồi kết quả ở mức tối thiểu | GVCN/đơn vị hỗ trợ | Xác nhận tiếp nhận, trạng thái và bước tiếp theo; không đưa ghi chép nhạy cảm vào dashboard chung |
 | 14 | Cập nhật trạng thái và tránh tín hiệu lặp | Hệ thống | Đóng case hoặc chuyển monitoring; chỉ tạo lại khi có thay đổi mới đủ ý nghĩa |

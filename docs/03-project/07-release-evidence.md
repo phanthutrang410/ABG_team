@@ -6,15 +6,13 @@
 
 ## 1. Checkpoint 1: 18/7 11:00
 
-> **ACTION (Hoàng — human):** trước **11:00** paste 4 trường từ [11-h13-cp1-btc-draft.md](11-h13-cp1-btc-draft.md) vào form BTC → lưu screenshot/email/mã xác nhận → tick 2 hàng dưới + Sprint `H13` Done. Agent **không** nộp form hộ.
+> **H13 Done (18/7):** CP1 đã nộp form BTC. Nội dung 4 trường: [11-h13-cp1-btc-draft.md](11-h13-cp1-btc-draft.md). Receipt giữ ngoài repo (không commit PII/screenshot có identifier thừa).
 
 | Mục | Owner | Task nguồn | Evidence | Status |
 |:--|:--|:--|:--|:--|
 | Tên dự án, track, mô tả, hướng tiếp cận | Hoàng | H13 | [11-h13-cp1-btc-draft.md](11-h13-cp1-btc-draft.md) · paste-ready ~04:25 18/7 | [x] |
-| Đã nộp form/link BTC | Hoàng | H13 | BLOCKED → human BTC submit (deadline 11:00; form URL ngoài repo) · refreshed ~06:35 | [ ] |
-| Xác nhận BTC đã nhận | Hoàng | H13 | BLOCKED → human BTC submit / receipt · refreshed ~06:35 | [ ] |
-
-> **H13 partial:** nội dung 4 trường đã khóa trong draft. `H13` chưa Done cho đến khi Hoàng nộp form và lưu xác nhận BTC.
+| Đã nộp form/link BTC | Hoàng | H13 | Human submit 18/7 — form BTC ngoài repo | [x] |
+| Xác nhận BTC đã nhận | Hoàng | H13 | Receipt giữ ngoài repo (owner custody) | [x] |
 
 ## 2. Checkpoint 2: 18/7 23:00
 
@@ -61,6 +59,21 @@
 | Semester approved (M05b) | Hoàng | M05b | [14-m05b…](14-m05b-semester-approval.md) · decision #18 · hash `34a53298…` / 460 · raw ngoài git | [x] |
 | Attendance approved (H15) | Hoàng | H15 | [12-h15…](12-h15-attendance-approval-prep.md) · fixture `data/approved/attendance/mvp_attendance_over_time.json` · hash `f65573ad…` / 15 events | [x] |
 | Source gate allowlist | Hoàng | H15/M05a | `mvp-attendance-over-time` in `SOURCE_ALLOWLIST`; `tests/test_source_gate.py` 26 pass | [x] |
+
+## 5c. Agent runtime FR-08 (H23–H26) — 18/7 ~11:30
+
+> Backend HTTP E2E only. **Không** claim FE Agent UI Done, production RBAC, hoặc live FPT smoke.
+
+| Mục | Owner | Task | Evidence | Status |
+|:--|:--|:--|:--|:--|
+| Server-derived AgentContext | Hoàng | H23 | `backend/tests/test_h23_agent_context.py` · M02 factor `grade_trend_declining` / version `m02-baseline-0.1` · `provider_call_allowed` fail-closed | [x] |
+| `POST /review-cases/{case_id}/explanation` | Hoàng | H24 | `backend/tests/test_h24_agent_api.py` · OpenAPI body ⊆ `{intent,question,locale}` · demo identity (not production RBAC) · zero model calls on refuse/stale/insufficient | [x] |
+| Structured grounding + FPT harden | Hoàng | H25 | `backend/tests/test_h25_grounding.py` + `test_h25_fpt_transport.py` · no raw question in provider payload · plan allowlist · transport maps to `unavailable` | [x] |
+| Mocked HTTP E2E M02→H02→context→fake FPT→POST | Hoàng | H26 | `backend/tests/test_h26_agent_e2e.py` · happy + adversarial + `model_unavailable` · health/OpenAPI surface | [x] |
+| Targeted agent suite | Hoàng | H26 | `python -m pytest -q tests/test_h26_agent_e2e.py tests/test_h23_agent_context.py tests/test_h24_agent_api.py tests/test_h25_grounding.py tests/test_h25_fpt_transport.py tests/agent/` → **130 passed, 1 skipped** | [x] |
+| Full verify | Hoàng | H26 | `.\scripts\verify.ps1` → **410 passed, 1 skipped** · Ruff clean · FE lint/build green · `git diff --check` clean | [x] |
+| Live FPT smoke | Hoàng | H26 | **SKIP** — no approved key/deploy window this session; documented skip in `test_h26_live_fpt_smoke_skipped_by_default` | [ ] SKIP |
+| FE Agent UI / production RBAC | — | — | Out of scope H23–H26; H11b still needs G05 consumer docs; UI is separate FE task | [ ] N/A |
 
 ## 6. Fill template (H05b)
 

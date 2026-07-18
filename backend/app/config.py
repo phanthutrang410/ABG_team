@@ -4,19 +4,25 @@ from __future__ import annotations
 
 from functools import lru_cache
 from typing import Optional
+from urllib.parse import urlparse
 
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_ALLOWED_FPT_HOSTS = frozenset({"mkp-api.fptcloud.com"})
 
 
 class Settings(BaseSettings):
     database_url: str = (
         "postgresql+psycopg://silentshield:silentshield@localhost:5432/silentshield"
     )
-    fpt_api_key: str = ""
+    fpt_api_key: SecretStr = SecretStr("")
     fpt_base_url: str = "https://mkp-api.fptcloud.com"
     fpt_model: str = "Qwen/Qwen3-32B"
-    max_concurrent_agent_runs: int = 3
-    agent_run_timeout_seconds: int = 120
+    fpt_max_tokens: int = Field(default=512, ge=1, le=512)
+    fpt_max_response_bytes: int = Field(default=16 * 1024, ge=1, le=16 * 1024)
+    max_concurrent_agent_runs: int = Field(default=3, ge=1)
+    agent_run_timeout_seconds: int = Field(default=30, ge=1, le=30)
     langchain_tracing_v2: bool = False
     langchain_api_key: str = ""
     langchain_project: str = "silent-shield"
@@ -33,6 +39,42 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    @field_validator("agent_run_timeout_seconds", mode="before")
+    @classmethod
+    def _cap_agent_timeout(cls, value: object) -> object:
+        """Inference timeout is hard-capped at 30s (doc 12 §6); clamp legacy env."""
+        if value is None or value == "":
+            return 30
+        try:
+            number = int(value)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return value
+        return min(max(number, 1), 30)
+
+    @field_validator("fpt_max_tokens", mode="before")
+    @classmethod
+    def _cap_fpt_max_tokens(cls, value: object) -> object:
+        if value is None or value == "":
+            return 512
+        try:
+            number = int(value)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return value
+        return min(max(number, 1), 512)
+
+    @field_validator("fpt_base_url")
+    @classmethod
+    def _fpt_base_url_https_allowlist(cls, value: str) -> str:
+        parsed = urlparse(value)
+        if parsed.scheme != "https":
+            raise ValueError("fpt_base_url must use HTTPS")
+        host = (parsed.hostname or "").lower()
+        if host not in _ALLOWED_FPT_HOSTS:
+            raise ValueError(
+                "fpt_base_url host must be mkp-api.fptcloud.com"
+            )
+        return value.rstrip("/")
 
 
 @lru_cache

@@ -61,16 +61,19 @@ def test_guardrails_and_non_ready_states_never_call_model(case_id: str) -> None:
     assert model.calls == 0
 
 
+def _structured_plan(**overrides: object) -> str:
+    payload = {
+        "template_key": "explain_review_priority",
+        "used_factor_codes": ["grade_trend_declining"],
+        "limitation_keys": ["attendance_source_unapproved"],
+        "draft_variant_key": None,
+    }
+    payload.update(overrides)
+    return json.dumps(payload, ensure_ascii=False)
+
+
 def test_ready_explanation_uses_model_text_but_contract_fields_from_case() -> None:
-    model = FakeModel(
-        json.dumps(
-            {
-                "answer_vi": "Case cần được con người rà soát theo các tín hiệu được cung cấp.",
-                "draft_body_vi": None,
-            },
-            ensure_ascii=False,
-        )
-    )
+    model = FakeModel(_structured_plan())
     request = make_request("ADV-10")
     result = explain(request, model)
     assert result.status is ExplanationStatus.OK
@@ -80,30 +83,29 @@ def test_ready_explanation_uses_model_text_but_contract_fields_from_case() -> No
     }
     assert result.model_version == request.context.case.model_version
     assert "student_ref" not in model.last_user
+    assert "question" not in model.last_user
     assert_no_forbidden_keys(result.model_dump(mode="json"))
 
 
 def test_neutral_draft_is_always_human_approval_required() -> None:
-    raw = json.dumps(
-        {
-            "answer_vi": "Đây là bản nháp để anh/chị xem lại.",
-            "draft_body_vi": (
-                "Chào em, thầy/cô muốn hỏi thăm và lắng nghe nếu em cần hỗ trợ."
-            ),
-        },
-        ensure_ascii=False,
+    raw = _structured_plan(
+        template_key="neutral_draft_ready",
+        draft_variant_key="warm_checkin",
     )
     result = explain(make_request("ADV-06"), FakeModel(raw))
     assert result.draft_message is not None
     assert result.draft_message.requires_human_approval is True
+    assert result.draft_message.channel in ("copy", "mailto")
 
 
 @pytest.mark.parametrize(
     "raw",
     [
         "not json",
-        '{"answer_vi":"Khả năng bỏ học 87%","draft_body_vi":null}',
-        '{"answer_vi":"ok","extra":true,"draft_body_vi":null}',
+        '{"template_key":"explain_review_priority","used_factor_codes":'
+        '["grade_trend_declining"],"limitation_keys":[],"draft_variant_key":null,'
+        '"extra":true}',
+        _structured_plan(used_factor_codes=["hallucinated_factor"]),
     ],
 )
 def test_malformed_or_unsafe_model_output_fails_closed(raw: str) -> None:
@@ -118,6 +120,10 @@ def test_model_outage_fails_closed() -> None:
 
 
 def test_empty_draft_fails_closed() -> None:
-    raw = json.dumps({"answer_vi": "Bản nháp.", "draft_body_vi": ""})
+    # explain_case plan shape used for draft intent → fail closed
+    raw = _structured_plan(
+        template_key="neutral_draft_ready",
+        draft_variant_key=None,
+    )
     result = explain(make_request("ADV-06"), FakeModel(raw))
     assert result.status is ExplanationStatus.UNAVAILABLE

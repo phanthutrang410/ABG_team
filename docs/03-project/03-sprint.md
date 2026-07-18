@@ -44,7 +44,7 @@
 | `M04` handoff Data/ML | Khánh Duy | ASAP · trước 03:30 | **Done** — [handoff](10-m04-data-ml-handoff.md) |
 | `H10` contract EPU/decision | Hoàng | ngay sau `H05a`+`M04` · ~04:00 | **Done** (mốc 02:00 đã trễ) — EPU + Data-ML + decision #17 |
 | `H05b` AI-log + release template | Hoàng | sau `H05a` · trước V08 | **Done** — mở `V08` |
-| CP1 (`H13`) | Hoàng | vẫn 11:00 | Nội dung paste sẵn; **BLOCKED → human BTC submit** trước 11:00; không claim hybrid |
+| CP1 (`H13`) | Hoàng | 11:00 | **Done** — form BTC đã nộp; không claim hybrid |
 
 Deadline cũ P0.5 00:30 / `H10` 02:00 chỉ còn giá trị lịch sử. Board dưới dùng mốc recovery + realign §1.2.
 
@@ -63,9 +63,9 @@ Baseline khóa sau review progress/direction. **Không đổi** product directio
 | 7 | Go/no-go nguồn (~07:00–08:00): fail → chỉ demo `insufficient_data` + fail-closed workflow; **cấm** synthetic thay E2E |
 | 8 | Freeze hybrid/forecast/Post-MVP; **V08** + AI log backfill và release skeleton chạy ngay |
 
-**Bổ sung board:** Critical path Data hoàn tất tới `M02` (sau `H20`+`H08` **Done**) — `H02` (Hoàng) giờ unblocked; Profile `M01`+`H18` **Done**; `M05a`/`H06c`/`M05b`/`H15`/`M06`/`H20`/`H08`/`M02`/`M03` **Done** (decision #18). `H06b` = **Done — transition core** + deploy-blocker harden. **H13** vẫn human BTC (không claim Done).
+**Bổ sung board:** Critical path Data hoàn tất tới `M02` (sau `H20`+`H08` **Done**) — Profile `M01`+`H18` **Done**; `M05a`/`H06c`/`M05b`/`H15`/`M06`/`H20`/`H08`/`M02`/`M03`/`H02`/`H04`/`H13` **Done** (decision #18). `H06b` = **Done — transition core** + deploy-blocker harden. `T02` = core/library Done; runtime FR-08 theo `H23`–`H26`. Stretch FR-12: `H21` Done → `H22`/`G06`. `V08` defer (decision #19).
 
-**Owner ngay:** Hoàng — H13 (BTC submit, human) + H03 (unblocked) + `H02`/`H04` (unblocked — M02/M03 Done). Giang — `G05`. Thu Trang — `T03`. Văn Hải — `V08`. **Hạ Giang** — UAT/slide/claim skeleton. Khánh Duy — **`M02`/`M03` Done**; M07/M08 freeze tới sau submission.
+**Owner ngay:** Hoàng — Agent runtime **H23–H26 Done** (FR-08 backend HTTP); next stretch `H22` mail-draft hoặc hỗ trợ H11b docs sau G05. Giang — `G05` rồi `G02` (H11b vẫn BLOCKED → G05). Thu Trang — T02 core đã handoff. Văn Hải — **`V08` defer** gần CP2/D5 (decision #19). **Hạ Giang** — UAT/slide/claim skeleton. Khánh Duy — M07/M08 freeze.
 
 ## 2. Boundary bắt buộc cho ML, agent và hybrid
 
@@ -107,7 +107,7 @@ Deploy:   (H07 ∥ D3) → D4a (shell) → D4b (product smoke) → V07 + A05 →
 | H06a | Pydantic internal/public envelopes | H10 | [x] **Done** (`H06a-r`) — semantic reopen landed; 42 contract tests |
 | H06b | Transition API theo Process state machine | H05a | [x] **Done — transition core** (giữ lịch sử); deploy-blocker harden landed (seed-only create, server actor, no public `advisor_ref`; 21 tests) — public shell |
 | H11a | Integration contract tối thiểu cho G05/T03 | H06a | [x] **Done REVALIDATE** (`H11a-r`) — 19 integration tests; unlocks G05/T03 |
-| H11b | Docs agent/FE hoàn thiện sau build | H11a, G05, T03 | [ ] BLOCKED → G05, T03 |
+| H11b | Docs agent/FE hoàn thiện sau build | H11a, G05, T03, H26 | [ ] BLOCKED → G05 · T03+H26 Done (runtime side unlocked; FE docs still need G05) |
 | H07 | Deployment/runbook docs | H05a | [x] Done — runbook draft; finalize Live/smoke/rollback tại D4a/D4b |
 | H19 | MVP persistence schema versioned + legacy mapping | H10 | [x] Done — Alembic 7 bảng `dwh` + 4 migrate tests; schema doc |
 | H20 | Transactional approved-fixture import vào `dwh` | H19, M06 | [x] **Done** — `app/dwh` import_gate/importer/cli; attendance + semester paths; tests `test_h20_*` |
@@ -115,18 +115,24 @@ Deploy:   (H07 ∥ D3) → D4a (shell) → D4b (product smoke) → V07 + A05 →
 | H18 | Quarantine legacy ML synthetic khỏi API/MVP path | M01 | [x] **Done** — API/MVP quarantine tests; leftover `early_warning` gỡ; mở khóa blocker H18 trên H02 |
 | H14 | Decision/contract research forecast/fusion từ M07 | M07 | [ ] BLOCKED → M07 · **FREEZE** tới sau submission |
 | H02 | API list/detail ReviewCase public | H06a, M02, H18 | [x] **Done** - GET /review-cases list/detail; review_projection + review_router; tests/test_h02_review_case_api.py |
-| H13 | Nội dung + nộp Checkpoint 1 | H05a, H10 | [ ] TODO — paste-ready sẵn ([11-h13-cp1-btc-draft.md](11-h13-cp1-btc-draft.md)); Hoàng nộp form BTC + receipt trước 11:00 |
+| H13 | Nội dung + nộp Checkpoint 1 | H05a, H10 | [x] **Done** — form BTC nộp 18/7; draft [11-h13…](11-h13-cp1-btc-draft.md); evidence §1 |
 | H03 | Care workflow API + advisor_ref gate | H05a, H06b, H08 | [x] **Done** — assign resolves via H08; client `advisor_ref` ignored; unlocks G03 |
 | H04 | Threshold/config API (public semantics) | M03 | [x] **Done** - /config/thresholds(+impact) + /fairness/report; threshold_public; tests/test_h04_threshold_fairness_api.py |
 | H12a | Runtime privacy/care copy (UI/agent) | H05a, H10 | [x] Done — 4 copy keys Data-ML §6; bỏ “Điểm rủi ro” trên FE |
 | H12b | Post-MVP banner + asset copy | H12a | [x] Done — banner + skeleton [13-h12b-asset-copy-skeleton.md](13-h12b-asset-copy-skeleton.md) |
+| H21 | Research advisor-batch mail draft tool/contract | H13 | [x] **Done** — [11-advisor…](../04-engineering/11-advisor-batch-mail-draft.md) + decision #20; Option A = core |
+| H22 | API bundle draft theo `advisor_ref` (no send) | H21, H03, H02 | [ ] **TODO** — unblocked (H21/H03/H02 Done); stretch sau critical path |
+| H23 | Server-derived AgentContext + contract reconciliation | H11a, H02, M02, T02, H12a | [x] **Done** — `context_service` + `AgentCommand` + `provider_call_allowed`; `test_h23_agent_context.py` |
+| H24 | `POST /review-cases/{case_id}/explanation` + runtime wiring | H23 | [x] **Done** — router/runtime DI; OpenAPI min body; mocked HTTP; demo identity ≠ production RBAC; `test_h24_agent_api.py` |
+| H25 | Structured grounding + FPT/provider hardening | H24, T02 | [x] **Done** — structured plan + VI renderer + FPT transport harden; `test_h25_grounding.py` + `test_h25_fpt_transport.py` |
+| H26 | Agent HTTP E2E + runtime/release evidence | H24, H25 | [x] **Done** — `test_h26_agent_e2e.py` mocked M02→HTTP; full verify 410 pass / 1 skip (live FPT SKIP); [evidence §5c](07-release-evidence.md); unlock H11b runtime side |
 | D3 | GitHub public + PII/secret scan | — | [x] Done — tree sạch; **residual history accept CP2**; trước final: clean submission repo hoặc purge có phê duyệt |
 | D4a | Deploy infrastructure / Live shell (health + rollback sẵn) | H07, D3 | [x] **Done** — Live shell: API http://52.74.255.88:8000/health · FE http://52.74.255.88:3000 · EC2 i-0b0576945d080cb3f (**NOT** D4b) |
-| D4b | Product smoke list→case trên Live URL | D4a, H02, G02 | [ ] BLOCKED → H02, G02 |
+| D4b | Product smoke list→case trên Live URL | D4a, H02, G02 | [ ] BLOCKED → G02 · H02 Done |
 | D4r | Fix từ QA → redeploy → re-smoke | D4b, V07, A05 | [ ] BLOCKED → D4b, V07, **A05** |
 | H16 | Acceptance matrix + release evidence | A05, V07, V05 | [ ] BLOCKED → A05, V07, V05 |
-| H09 | README + verify/known-limit note cuối | H02, D4r, H16 | [ ] BLOCKED → H02, D4r, H16 |
-| D5 | AI collaboration log từ V08 | V08 | [ ] BLOCKED → V08 · V08 chạy ngay |
+| H09 | README + verify/known-limit note cuối | H02, D4r, H16 | [ ] BLOCKED → D4r, H16 · H02 Done |
+| D5 | AI collaboration log từ V08 | V08 | [ ] BLOCKED → V08 · V08 **defer** gần CP2/D5 |
 | H15 | Attendance source approval + amendment (**MVP**) | H10 + approval artifact | [x] **Done** — decision #18; fixture `mvp-attendance-over-time`; [12-h15…](12-h15-attendance-approval-prep.md) |
 | H17 | Post-MVP hybrid public API/envelope (forecast/fusion) | H14, M08 | [ ] BLOCKED → H14, M08 · **FREEZE** |
 
@@ -151,9 +157,10 @@ Deploy:   (H07 ∥ D3) → D4a (shell) → D4b (product smoke) → V07 + A05 →
 |:--|:--|:--|:--|
 | G01 | FE shell + list mock | — | [x] (mock tạm; G05 phải thay) |
 | G05 | Thay mock bằng public DTO/fixture đã validate | H11a | [ ] TODO — unblocked sau H11a-r; chưa Done |
-| G02 | Dashboard → cohort → case dùng API | G05, H02 | [ ] BLOCKED → G05, H02 |
+| G02 | Dashboard → cohort → case dùng API | G05, H02 | [ ] BLOCKED → G05 · H02 Done |
 | G03 | Care UI review/handoff | H03, H12a | [ ] TODO — unblocked (H03 + H12a Done) |
-| G04 | Fairness/privacy/threshold panel | H04, H12a | [ ] BLOCKED → H04 · H12a Done |
+| G04 | Fairness/privacy/threshold panel | H04, H12a | [ ] TODO — unblocked (H04 + H12a Done) |
+| G06 | FE filter theo advisor + Copy/`mailto:` draft lô | H22, G05 | [ ] BLOCKED → H22 · stretch FR-12; không block D4b |
 
 ### Thu Trang
 
@@ -161,14 +168,14 @@ Deploy:   (H07 ∥ D3) → D4a (shell) → D4b (product smoke) → V07 + A05 →
 |:--|:--|:--|:--|
 | T03 | Agent interface + fixture + refusal/adversarial | H11a | [x] **Done** — output contract `backend/app/agent/schemas.py` consume `AgentContextResponse` (H11a); 6 fixtures + 12 ca adversarial (phủ 7 refusal + ok/insufficient/unavailable); 26 tests xanh `backend/tests/agent/`; forbidden-field scan `assert_no_forbidden_keys`; không vỡ contract tests của H06a/H11a/H06c |
 | T01 | Agent stub từ fixture, refusal tests xanh | T03, H06a | [x] **Done** — stub deterministic `backend/app/agent/stub.py` + guardrail classifier `guardrails.py` (mock model, không LLM); 12/12 ca adversarial pass + determinism + grounding-only-case-codes; 16 tests mới (`tests/agent/test_agent_stub.py`), tổng agent 42 xanh; output quét `assert_no_forbidden_keys` |
-| T02 | Agent grounded explanation từ API/ML | T01, H02, H12a | [x] **Done** — FPT chat adapter + guardrail/context fail-closed; LLM chỉ viết copy từ band/factors/coverage/limits; 59 agent tests + full verify xanh |
+| T02 | Agent grounded explanation core/library | T01, H02, H12a | [x] **Done — core/library only**: FPT text adapter + mocked grounding tests; context service/HTTP/provider runtime và FR-08 E2E theo `H23`–`H26` |
 | T04 | Agent adapter hybrid (Post-MVP) | H17 | [ ] **FREEZE** tới sau submission |
 
 ### Hạ Giang (`giang`)
 
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
-| A05 | UAT / claim-copy review → gap cho Hoàng | H02, G02, H03, G03, M03, H04, G04, T02, D4b, H12a | [ ] BLOCKED → H02… · skeleton checklist **chạy ngay**; full UAT sau D4b; **bắt buộc trước D4r** |
+| A05 | UAT / claim-copy review → gap cho Hoàng | H02, G02, H03, G03, M03, H04, G04, H26, D4b, H12a | [ ] BLOCKED → G02/G03/G04/H26/D4b… · skeleton checklist **chạy ngay**; full UAT sau D4b; **bắt buộc trước D4r** |
 | D1 | Asset slide + mô tả dự án nộp | V02, H12b, H16, D4r | [ ] BLOCKED → V02… · **skeleton slide/claim matrix chạy ngay** (chưa screenshot thiếu evidence) |
 
 ### Văn Hải
@@ -177,9 +184,9 @@ Deploy:   (H07 ∥ D3) → D4a (shell) → D4b (product smoke) → V07 + A05 →
 |:--|:--|:--|:--|
 | V07 | QA release + smoke độc lập (lần 1) | D3, D4b | [ ] BLOCKED → D4b · D3 Done |
 | V05 | Nộp Checkpoint 2 | D3, D4r, V07 | [ ] BLOCKED → D3, D4r, V07 |
-| V02 | Script demo 4′ + Q&A 2′, rehearsal | D4r, G02, T02, G03, G04, H12a | [ ] BLOCKED → D4r… · script skeleton sớm |
+| V02 | Script demo 4′ + Q&A 2′, rehearsal | D4r, G02, H26, G03, G04, H12a | [ ] BLOCKED → D4r… · chỉ claim Agent runtime sau H26; UI Agent cần consumer FE riêng |
 | D2 | Video ≤5 phút đúng Live URL | D1, D4r | [ ] BLOCKED → D1, D4r |
-| V08 | Rà AI log → gap cho Hoàng | H05b | [ ] **TODO ngay** — H05b Done; backfill AI log từng thành viên |
+| V08 | Rà AI log → gap cho Hoàng | H05b | [ ] **DEFER** gần CP2 / trước D5 — log một thể (decision #19); không làm ngay |
 | V06 | Nộp cuối + lưu xác nhận BTC | D1, D2, D3, D4r, D5, H09, H16 | [ ] BLOCKED → D1…H16 |
 
 ---
@@ -199,7 +206,7 @@ Deploy:   (H07 ∥ D3) → D4a (shell) → D4b (product smoke) → V07 + A05 →
 | H06a | P1 · **Done** (`H06a-r`) | Pydantic internal/public envelopes — semantic Data-ML §3 | **Done:** semantic reopen landed; coverage/band/factors/`dataset_version`; 42 contract tests |
 | H06b | P1 · sau H05a | Transition API đúng Process | **Done — transition core** (giữ lịch sử): `backend/app/cases/*`. **Deploy-blocker harden landed:** seed-only create, server actor, no public `advisor_ref` (21 tests) — public shell |
 | H11a | P1 · **Done REVALIDATE** | Integration contract tối thiểu | **Done (`H11a-r`):** 19 integration tests; unlocks G05/T03 |
-| H11b | P2 · sau G05+T03 | Docs agent/FE hoàn thiện | Guardrail đầy đủ khớp code đã build |
+| H11b | P2 · sau G05 · T03+H26 Done | Docs agent/FE hoàn thiện | Runtime evidence sẵn (H26); **BLOCKED → G05**; khớp guardrail/runtime docs; không claim UI nếu consumer FE chưa có |
 | H07 | P1 · sau H05a | Deployment/runbook: env, CORS, seed, health, smoke, rollback | Runbook không secret — **Done:** [06-deploy-runbook](../04-engineering/06-deploy-runbook.md) draft từ arch; linked docs index + arch; Live URL/smoke/rollback finalize tại `D4a`/`D4b` |
 | H19 | P1 · sau H10 | Thiết kế persistence MVP versioned: mapping metadata legacy DWH → schema `dwh` mới và migration DB rỗng | **Done:** [Schema persistence](../04-engineering/07-mvp-persistence-schema.md); Alembic 7 bảng `dwh` + `tests/test_dwh_migrate.py` (4); không copy schema/row legacy/PII; attendance table rỗng tới `H15` |
 | H20 | P1 · sau H19+M06 | Nạp transactional fixture M06 đã được duyệt vào `dwh` | **Done:** CLI `python -m app.dwh.cli`; gate fail → zero write; default `data/approved/` (attendance + semester domain package); optional raw via `SILENT_SHIELD_SEMESTER_SOURCE_PATH`; readiness không PII; `tests/test_h20_import_gates.py` + `tests/test_h20_import.py` |
@@ -207,7 +214,13 @@ Deploy:   (H07 ∥ D3) → D4a (shell) → D4b (product smoke) → V07 + A05 →
 | H18 | P1 · sau M01 | Quarantine legacy `EarlyWarning*` / synthetic attendance-week / synth group khỏi API/MVP path | **Done:** `tests/test_h18_api_mvp_quarantine.py` (6) + leftover `early_warning` gỡ; OpenAPI/ReviewCase không raw risk; **không** cấm chuỗi điểm danh đã duyệt qua `H15` |
 | H14 | Post-CP2 | Decision/contract research forecasting/fusion từ M07 | Tách `TermEvidence`/`AttendanceForecastEvidence`; ready/`insufficient_data` |
 | H02 | P1 · sau M02+H18 | API list/detail chỉ `ReviewCase` public | **Done:** app/cases/review_projection.py + review_router.py; GET /review-cases H11a envelopes; no model_score/PII; tests/test_h02_review_case_api.py |
-| H13 | P1 · 11:00 | Nộp Checkpoint 1 | Nội dung 4 trường sẵn ([draft](11-h13-cp1-btc-draft.md)); chưa Done — chờ human nộp form + receipt; không claim forecast/hybrid đã ship |
+| H13 | P1 · 11:00 | Nộp Checkpoint 1 | **Done** — form BTC nộp 18/7; [draft](11-h13-cp1-btc-draft.md) + evidence §1; không claim forecast/hybrid |
+| H21 | P2 · sau H13 | Research tool/contract soạn mail theo GV | **Done:** [11-advisor-batch-mail-draft](../04-engineering/11-advisor-batch-mail-draft.md) + decision #20; Option A = core; không SMTP |
+| H22 | P2 stretch · sau H21 | API `AdvisorHandoffDraftBundle` theo `advisor_ref` | **TODO** unblocked; group approved/assigned; mapping_repair bucket; draft-only; forbidden-field tests; **không** block G02/D4b |
+| H23 | P2 · **Done** | Server-derived AgentContext + contract reconciliation | **Done:** `build_agent_context` / `AgentCommand` / state-intent matrix; M02 codes+version; fail-closed for H24 zero-call rule; `test_h23_agent_context.py` |
+| H24 | P2 · **Done** | Agent command API + production wiring | **Done:** `POST /review-cases/{case_id}/explanation`; server context; OpenAPI min fields; mocked HTTP; demo identity only — not production RBAC; `test_h24_agent_api.py` |
+| H25 | P2 · **Done** | Context-bound output + provider hardening | **Done:** no raw question to FPT; structured plan + backend VI render; transport/host/size/secret guards; `test_h25_*` |
+| H26 | P2 · **Done** | Agent runtime E2E + release evidence | **Done:** mocked HTTP E2E `test_h26_agent_e2e.py`; `verify.ps1` 410 passed / 1 skipped; live FPT SKIP; FR-08 claimable at **backend HTTP** level; FE UI still separate; H11b runtime unlocked (still BLOCKED → G05) |
 | H03 | P2 · sau H08 | Care workflow API | **Done:** approve/dismiss/defer + assign-handoff; H08 `advisor_ref`/`mapping_repair` gate; client ref ignored; `tests/test_h03_care_workflow.py` — mở G03 |
 | H04 | P2 · sau M03 | Threshold/config API public semantics | **Done:** app/contracts/threshold_public.py + app/config_api/router.py; impact aggregates only; fairness MVP insufficient_data; tests/test_h04_threshold_fairness_api.py |
 | H12a | P2 · ~15:00 (trước T02/G03/G04) | Runtime privacy/care copy cho UI/agent | **Done:** `frontend/src/lib/copy.ts` 4 keys Data-ML §6; mock list không “Điểm rủi ro”; mở `H12b` / giảm blocker `G03`/`G04`/`T02` |
@@ -270,6 +283,7 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 | G02 | P1 · sau H02 | Dashboard → cohort → case dùng API | Lint/build/smoke; fail-closed nếu go/no-go nguồn fail |
 | G03 | P2 · sau H12a | Care UI theo Process states + defer = giữ Pending | Chỉ action được phép; lint/build/smoke |
 | G04 | P2 · sau H12a | Fairness/privacy/threshold panel | Metric hợp lệ hoặc `insufficient_data` |
+| G06 | P2 stretch · sau H22 | Filter theo advisor + Copy/`mailto:` bản nháp lô | FR-12; draft-only; không PII contact; **không** block D4b |
 
 **Verify:** lint, production build, behavior smoke. Chỉ public DTO.
 
@@ -285,7 +299,7 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 |:--|:--|:--|:--|
 | T03 | P1 · **Done** | Agent interface, fixture, refusal/adversarial | **Done:** `AgentExplanation` contract consume H11a envelope; 12 ca adversarial (7 refusal + ok/insufficient/unavailable, chống over-refusal); evidence `backend/tests/agent/` (26 tests) + `backend/tests/fixtures/agent/` + [doc 08](../04-engineering/08-agent-grounding-guardrails.md); mocked-only, không live call |
 | T01 | P1 · **Done** | Agent stub từ fixture | **Done:** stub deterministic (guardrails-first → context-status fail-closed → grounded assembly); 12/12 adversarial + determinism + grounding tests xanh; evidence `backend/app/agent/stub.py`, `guardrails.py`, `backend/tests/agent/test_agent_stub.py` |
-| T02 | P2 · sau H12a | Grounded explanation từ API/ML | Adversarial pass; chỉ band/factors/limits |
+| T02 | P2 · **Done core/library** | Grounded explanation adapter từ safe context | **Done:** FPT text adapter + mocked grounding; chỉ band/factors/coverage/limits. **Không** claim server context/HTTP/runtime E2E — theo `H23`–`H26` |
 | T04 | **FREEZE** | Agent adapter hybrid | Chỉ sau submission + H17 |
 
 **Verify:** grounding/refusal/adversarial mocked tests.
@@ -310,7 +324,7 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 
 ## 9. Văn Hải — chi tiết task
 
-**Bắt đầu từ P2; V08 chạy ngay.** Story: [09-stories-van-hai.md](09-stories-van-hai.md). Evidence: [07-release-evidence.md](07-release-evidence.md).
+**Bắt đầu từ P2; V08 defer gần CP2/D5 (decision #19).** Story: [09-stories-van-hai.md](09-stories-van-hai.md). Evidence: [07-release-evidence.md](07-release-evidence.md).
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
@@ -318,7 +332,7 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 | V05 | P2 · sau D4r | Nộp Checkpoint 2 | **Chỉ sau `D4r` xanh**; BTC nhận 2 URL + xác nhận |
 | V02 | P3 · 08:00 | Script 4′ + Q&A 2′, rehearsal | Script skeleton sớm; Live sau `D4r` |
 | D2 | P3 · 09:30 | Video ≤5 phút | Đúng Live URL sau `D4r` |
-| V08 | **ngay** | Rà AI log | Depends `H05b` — **unblocked**; yêu cầu từng thành viên backfill; gap cho Hoàng/`D5` |
+| V08 | **DEFER** · gần CP2 / trước D5 | Rà AI log một thể | Depends `H05b`; thu thập manifest + link **một lần**; gap → Hoàng/`D5`; CP2 không phụ thuộc V08 |
 | V06 | P3 · 10:30 | Nộp cuối | Sau evidence `H16` đã khóa CP2+final |
 
 ---
@@ -333,13 +347,15 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 | Critical path song song | Data còn `M06…`; `M05a`/`M05b`/`H15` **Done**; Profile **M01+H18 Done**; `H02` còn chờ `M02` |
 | Source gate ≠ approved data | `M05a`/`M05b`/`H15` Done (decision #18); fail gate → `insufficient_data` |
 | D3 residual history | Accept CP2; quyết định clean submission trước final |
-| Release dồn muộn | `V08` + AI log + slide/script skeleton **ngay** |
+| Release dồn muộn | Slide/script skeleton **ngay**; `V08` AI log **một thể** gần CP2/D5 (decision #19) |
+| Advisor mail draft | Stretch `H21`→`H22`→`G06` (FR-12); **không** block G02/D4b; draft-only |
+| Agent runtime overclaim | `H23`–`H26` Done = FR-08 **backend HTTP** E2E (mocked FPT); **không** claim FE Agent UI / production RBAC / live FPT; H11b vẫn BLOCKED → G05 |
 | Hybrid | FREEZE `M07`/`H14`/`M08`/`H17`/`T04` tới sau submission |
 | Giang vs Hạ Giang | Giang = FE; Hạ Giang = UAT/slide/claim |
 | QA defects | V07 **và** A05 → owner fix → `D4r` → mới V05 |
 
-1. **Ngay:** Hoàng — H13 BTC submit (human) + `H02`/`H04` (unblocked). Duy — **`M02`/`M03` Done**. Văn Hải — `V08`. **Hạ Giang** — UAT/slide/claim skeleton. Giang/`T03` — unblocked.
-2. **Sau H11a-r (Done):** mở `G05` (Giang) và `T03` (Thu Trang); không chờ H02 cho T03.
-3. Semester + attendance đã duyệt (decision #18); `H20`/`H08` Done. Legacy synthetic cấm vẫn fail-closed.
-4. `D4a` shell **Done**; `D4b` sau H02/G02; `D4r` chỉ sau V07 **và** A05.
+1. **Ngay:** Hoàng — Agent runtime Done; `H22` stretch nếu còn slot. Giang — `G05`→`G02` (mở H11b docs). Văn Hải — **không** V08 ngay. **Hạ Giang** — UAT/slide skeleton.
+2. Critical path CP2/UAT: `G05`→`G02`→`D4b`; Agent runtime đã xanh (`H26`); rồi `V07`+`A05`→`D4r`→`V05`. Stretch mail: `H22`→`G06` (FR-12).
+3. Semester + attendance đã duyệt (decision #18); `H20`/`H08`/`H02`/`H04`/`H13` Done. Legacy synthetic cấm vẫn fail-closed.
+4. `D4a` shell **Done**; `D4b` sau G02; `D4r` chỉ sau V07 **và** A05.
 5. Trước handoff: verify phù hợp; trước final: `scripts/verify.ps1`, `git diff --check`, `git status --short`.

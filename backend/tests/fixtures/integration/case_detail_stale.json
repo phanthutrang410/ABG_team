@@ -6,7 +6,7 @@
     "review_priority_band": "can_ra_soat",
     "contributing_factors": [
       {
-        "code": "grade_trend_negative",
+        "code": "grade_trend_declining",
         "evidence_refs": ["term_avg:20242", "term_avg:20251"]
       }
     ],
@@ -22,7 +22,7 @@
     "data_state": "partial",
     "limitations": ["attendance_source_unapproved", "copy.partial_term_only"],
     "dataset_version": "epu-v59-empty:deadbeef:schema-1",
-    "model_version": "ew-term-0.1-uncalibrated",
+    "model_version": "m02-baseline-0.1",
     "threshold_config_version": "thr-epu-0.1-uncalibrated",
     "calculated_at": "2026-07-17T04:00:00Z"
   },

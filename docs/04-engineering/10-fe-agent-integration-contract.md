@@ -13,7 +13,7 @@
 | G05 | Types/routes theo public DTO + fixture đã validate; loading/error/empty/`insufficient_data`/`stale` |
 | T03 | Agent context = cùng safe projection; refusal / insufficient / unavailable semantics |
 
-H02 (HTTP list/detail) và T01/T02 implement runtime sau; chúng phải tuân envelope này.
+H02 HTTP list/detail và T01/T02 core/library đã implement theo envelope này. Server-derived context, public Agent command route và runtime hardening thuộc [H23–H26](12-agent-runtime-integration-plan.md); browser không được gửi `AgentContextResponse`.
 
 ## 2. Allowed display fields (public + agent context)
 
@@ -74,6 +74,8 @@ FE **không** tự fallback band/priority khi API thiếu (RULES / AGENTS).
 | `unavailable` | null | Tool/upstream/timeout — UI care vẫn dùng được |
 
 Allowed intents (H11a khóa tên): `explain_case`, `neutral_draft`. Agent **không** được transition case (H06b đã cấm `actor_kind=agent|llm`).
+
+State/intent gate runtime theo [doc 12 §4](12-agent-runtime-integration-plan.md): `neutral_draft` chỉ sau approval với mapping nội bộ hợp lệ; stale/insufficient/refused bị chặn trước FPT. Envelope này khóa shape, không cấp quyền cho client tự chọn context hay nới state.
 
 ## 4. Problem object
 

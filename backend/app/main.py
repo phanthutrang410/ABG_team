@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.agent.router import router as agent_explanation_router
 from app.cases.router import router as cases_router
 from app.cases.review_router import router as review_cases_router
 from app.config_api.router import router as config_router
@@ -52,6 +53,7 @@ app.add_middleware(
 
 app.include_router(cases_router)
 app.include_router(review_cases_router)
+app.include_router(agent_explanation_router)
 app.include_router(config_router)
 
 

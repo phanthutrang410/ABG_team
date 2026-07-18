@@ -99,7 +99,7 @@ def test_reason_forbidden_when_not_refused() -> None:
         AgentExplanation(
             status="ok",
             answer_vi="x",
-            model_version="ew-term-0.1-uncalibrated",
+            model_version="m02-baseline-0.1",
             refusal_reason="diagnose_mental_health",
         )
 
@@ -119,7 +119,7 @@ def test_draft_approval_flag_cannot_be_false() -> None:
         AgentExplanation(
             status="ok",
             answer_vi="x",
-            model_version="ew-term-0.1-uncalibrated",
+            model_version="m02-baseline-0.1",
             draft_message={"body_vi": "y", "requires_human_approval": False},
         )
 

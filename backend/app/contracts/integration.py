@@ -168,13 +168,16 @@ class AgentContextResponse(BaseModel):
             if self.status == "unavailable" and self.problem is None:
                 raise ValueError("status=unavailable đòi hỏi problem")
         if self.status == "insufficient_data":
+            # Coverage insufficient/partial, or fresh-ok content blocked by
+            # freshness (stale_snapshot) — H23 maps detail stale → this status.
             if self.case is not None and self.case.data_state not in (
                 "insufficient_data",
                 "partial",
+                "ok",
             ):
                 raise ValueError(
                     "agent insufficient_data chỉ cho phép case data_state "
-                    "insufficient_data|partial"
+                    "insufficient_data|partial|ok"
                 )
             if self.case is None and self.problem is None:
                 raise ValueError(
