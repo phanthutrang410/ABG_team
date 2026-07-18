@@ -65,7 +65,7 @@ Baseline khóa sau review progress/direction. **Không đổi** product directio
 
 **Bổ sung board:** Critical path Data hoàn tất tới `M02` (sau `H20`+`H08` **Done**) — Profile `M01`+`H18` **Done**; `M05a`/`H06c`/`M05b`/`H15`/`M06`/`H20`/`H08`/`M02`/`M03`/`H02`/`H04`/`H13` **Done** (decision #18). `H06b` = **Done — transition core** + deploy-blocker harden. `T02` = core/library Done; runtime FR-08 theo `H23`–`H26`. Stretch FR-12: `H21` Done → `H22`/`G06`. `V08` defer (decision #19).
 
-**Owner ngay:** Hoàng — **`D4b`/`H11b`/`H22` Done**; `H27` deploy Vercel mở, đồng thời chờ `V07`+`A05` → `D4r`. Giang — **G05–G04 Done** (PR #23); stretch **`G06` unblocked** (sau H22). Thu Trang — T01–T03 + T02 core Done. Văn Hải — **`V07` mở** (sau D4b); `V08` defer gần CP2/D5. **Hạ Giang** — full **A05** UAT trên Live; slide skeleton. Khánh Duy — M07/M08 freeze.
+**Owner ngay:** Hoàng — **`D4b`/`H11b`/`H22`/`H27` Done** (Vercel candidate `https://abg-team.vercel.app`); chờ `V07`+`A05` → `D4r`. Giang — **G05–G04 Done** (PR #23); stretch **`G06` unblocked** (sau H22). Thu Trang — T01–T03 + T02 core Done. Văn Hải — **`V07` mở** (sau D4b); `V08` defer gần CP2/D5. **Hạ Giang** — full **A05** UAT trên Live; slide skeleton. Khánh Duy — M07/M08 freeze.
 
 ## 2. Boundary bắt buộc cho ML, agent và hybrid
 
@@ -126,7 +126,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | H24 | `POST /review-cases/{case_id}/explanation` + runtime wiring | H23 | [x] **Done** — router/runtime DI; OpenAPI min body; mocked HTTP; demo identity ≠ production RBAC; `test_h24_agent_api.py` |
 | H25 | Structured grounding + FPT/provider hardening | H24, T02 | [x] **Done** — structured plan + VI renderer + FPT transport harden; `test_h25_grounding.py` + `test_h25_fpt_transport.py` |
 | H26 | Agent HTTP E2E + runtime/release evidence | H24, H25 | [x] **Done** — `test_h26_agent_e2e.py` mocked M02→HTTP; full verify 410 pass / 1 skip (live FPT SKIP); [evidence §5c](07-release-evidence.md); unlock H11b runtime side |
-| H27 | Deploy frontend production lên Vercel | D3, D4b | [ ] **IN PROGRESS** — URL `https://abg-team.vercel.app`; same-origin rewrite → EC2 API; login OK; data path fix deploying; chưa thay Live URL nộp trước V07/A05 re-smoke |
+| H27 | Deploy frontend production lên Vercel | D3, D4b | [x] **Done** — `https://abg-team.vercel.app` · rewrite → EC2 API · smoke health+`/review-cases` state=ok n=50 · dpl `2JkMB2Lz…` · PR #26 · **chưa** flip Live URL nộp trước V07/A05 |
 | D3 | GitHub public + PII/secret scan | — | [x] Done — tree sạch; **residual history accept CP2**; trước final: clean submission repo hoặc purge có phê duyệt |
 | D4a | Deploy infrastructure / Live shell (health + rollback sẵn) | H07, D3 | [x] **Done** — Live shell: API http://52.74.255.88:8000/health · FE http://52.74.255.88:3000 · EC2 i-0b0576945d080cb3f (**NOT** D4b) |
 | D4b | Product smoke list→case trên Live URL | D4a, H02, G02 | [x] **Done** — 2026-07-18 ~13:05 +07: health `database:true`; `GET /review-cases` state=ok n=50; detail `rc-s-00518c9485a9` band=`can_ra_soat`; FE `/login` `/dashboard` 200; no forbidden fields; images `:d4b` + Postgres import |
@@ -222,7 +222,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | H24 | P2 · **Done** | Agent command API + production wiring | **Done:** `POST /review-cases/{case_id}/explanation`; server context; OpenAPI min fields; mocked HTTP; demo identity only — not production RBAC; `test_h24_agent_api.py` |
 | H25 | P2 · **Done** | Context-bound output + provider hardening | **Done:** no raw question to FPT; structured plan + backend VI render; transport/host/size/secret guards; `test_h25_*` |
 | H26 | P2 · **Done** | Agent runtime E2E + release evidence | **Done:** mocked HTTP E2E `test_h26_agent_e2e.py`; `verify.ps1` 410 passed / 1 skipped; live FPT SKIP; FR-08 claimable at **backend HTTP** level; FE UI still separate; `H11b` **Done** |
-| H27 | P2 · 2–4h · sau D3+D4b | Deploy frontend production lên Vercel | **IN PROGRESS:** `https://abg-team.vercel.app`; same-origin rewrite in `frontend/next.config.js` → Live API; login OK; data path fix; chưa flip submission URL trước V07+A05 |
+| H27 | P2 · 2–4h · sau D3+D4b | Deploy frontend production lên Vercel | **Done:** `https://abg-team.vercel.app`; same-origin rewrite → Live API; production smoke health + `/review-cases` ok n=50; PR #26; chưa flip submission URL trước V07+A05 |
 | H03 | P2 · sau H08 | Care workflow API | **Done:** approve/dismiss/defer + assign-handoff; H08 `advisor_ref`/`mapping_repair` gate; client ref ignored; `tests/test_h03_care_workflow.py` — mở G03 |
 | H04 | P2 · sau M03 | Threshold/config API public semantics | **Done:** app/contracts/threshold_public.py + app/config_api/router.py; impact aggregates only; fairness MVP insufficient_data; tests/test_h04_threshold_fairness_api.py |
 | H12a | P2 · ~15:00 (trước T02/G03/G04) | Runtime privacy/care copy cho UI/agent | **Done:** `frontend/src/lib/copy.ts` 4 keys Data-ML §6; mock list không “Điểm rủi ro”; mở `H12b` / giảm blocker `G03`/`G04`/`T02` |
@@ -358,7 +358,7 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 | QA defects | V07 **và** A05 → owner fix → `D4r` → mới V05 |
 | Vercel candidate (`H27`) | Hoàng deploy frontend; chỉ thay Live URL nộp sau HTTPS-safe API smoke và V07+A05 re-smoke trên đúng URL |
 
-1. **Ngay:** Văn Hải — **V07** smoke độc lập. **Hạ Giang** — **A05** UAT trên Live. Giang — stretch `G06` nếu còn slot. Hoàng — chạy `H27` và chờ V07+A05 → `D4r`.
+1. **Ngay:** Văn Hải — **V07** smoke độc lập. **Hạ Giang** — **A05** UAT trên Live. Giang — stretch `G06` nếu còn slot. Hoàng — chờ V07+A05 → `D4r` (H27 Vercel candidate sẵn sàng).
 2. Critical path CP2: `D4b` ✓ → `V07`+`A05`→`D4r`→`V05`. Stretch mail: `H22`✓ → `G06` (FR-12).
 3. Semester + attendance đã duyệt + **Live DB import**; `H20`/`H08`/`H02`/`H04`/`H13`/`G05`–`G04` Done. Legacy synthetic cấm vẫn fail-closed.
 4. `D4a`/`D4b` **Done**; `D4r` chỉ sau V07 **và** A05.
