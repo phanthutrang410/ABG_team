@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  ADVISOR_QUEUE_PAGE_SIZE,
   allowedAdvisorDemoActions,
   buildAdvisorFollowUps,
   generateAdvisorDemoCases,
   generateAdvisorDemoClasses,
+  paginateAdvisorQueue,
   transitionAdvisorDemoCase,
 } from "../src/lib/advisor-demo.ts";
 
@@ -72,6 +74,35 @@ test("class roster is deterministic, pseudonymous and links every handed-off cas
     cases.map((item) => item.case_id).sort(),
   );
   assert.doesNotMatch(JSON.stringify(first), /@|email|phone|risk_score|model_score|full_name/i);
+});
+
+test("queue pagination is 10 per page, clamps out-of-range pages and slices correctly", () => {
+  assert.equal(ADVISOR_QUEUE_PAGE_SIZE, 10);
+
+  const items = Array.from({ length: 23 }, (_, index) => index);
+
+  const first = paginateAdvisorQueue(items, 1);
+  assert.equal(first.totalPages, 3);
+  assert.equal(first.pageItems.length, 10);
+  assert.deepEqual([first.start, first.end], [0, 10]);
+
+  const last = paginateAdvisorQueue(items, 3);
+  assert.equal(last.pageItems.length, 3);
+  assert.deepEqual([last.start, last.end], [20, 23]);
+
+  // Out-of-range / invalid pages clamp into [1, totalPages] instead of stranding an empty view.
+  assert.equal(paginateAdvisorQueue(items, 99).page, 3);
+  assert.equal(paginateAdvisorQueue(items, 0).page, 1);
+
+  // A short list (the demo's 8 handed-off cases) stays on a single page.
+  const short = paginateAdvisorQueue([1, 2, 3, 4, 5, 6, 7, 8], 1);
+  assert.equal(short.totalPages, 1);
+  assert.equal(short.pageItems.length, 8);
+  assert.deepEqual([short.start, short.end], [0, 8]);
+
+  // Empty list never produces a negative slice or page-0.
+  const empty = paginateAdvisorQueue([], 1);
+  assert.deepEqual([empty.page, empty.totalPages, empty.pageItems.length, empty.start, empty.end], [1, 1, 0, 0, 0]);
 });
 
 test("follow-up list excludes resolved cases and is ordered by due time", () => {

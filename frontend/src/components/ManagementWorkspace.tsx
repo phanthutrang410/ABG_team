@@ -4,8 +4,6 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AppShell, useSetTopbarInfo } from "@/components/AppShell";
 import { BandBadge, CaseStateBadge } from "@/components/badges";
-import { FairnessPanel } from "@/components/FairnessPanel";
-import { LimitationsList } from "@/components/LimitationsList";
 import { ReportModal } from "@/components/ReportModal";
 import { ThresholdPanel } from "@/components/ThresholdPanel";
 import { fetchReviewCases } from "@/lib/api";
@@ -20,8 +18,9 @@ import {
 
 /**
  * Workspace Ban quản lý — dữ liệu live GET /review-cases.
- * /overview là Agent Home; /analysis chứa 5 tab nội bộ theo plan.md §2–3.
- * hero → KPI → charts → việc cần làm → tín hiệu gần đây.
+ * /overview là Agent Home; /analysis chỉ còn 3 mục vận hành: Dashboard,
+ * Danh sách rà soát và Ngưỡng. Dashboard ưu tiên tín hiệu cần rà soát sớm;
+ * danh sách hợp nhất hai view Tín hiệu/Sinh viên từng render cùng một DTO.
  * Tab Tổng quan = Agent Home (plan.md §3.2): robot + MỘT bản tin duy nhất về kỳ
  * dữ liệu + 3 tool (xuất báo cáo / phân tích SV / soạn mail GVCN — G06 chưa mở).
  * Fail-closed: nguồn lỗi → hiện lỗi, không bịa dữ liệu (mọi số trên trang đều
@@ -29,9 +28,14 @@ import {
  * hay sparkline vì chưa có API lịch sử).
  */
 
-type Tab = "overview" | "analytics" | "signals" | "students" | "fairness" | "threshold";
-type AnalysisTab = "dashboard" | "signals" | "students" | "fairness" | "threshold";
-const ANALYSIS_TAB_IDS: AnalysisTab[] = ["dashboard", "signals", "students", "fairness", "threshold"];
+type Tab = "overview" | "analytics" | "reviews" | "threshold";
+type AnalysisTab = "dashboard" | "reviews" | "threshold";
+
+function normalizeAnalysisTab(raw: string | null): AnalysisTab {
+  if (raw === "reviews" || raw === "signals" || raw === "students") return "reviews";
+  if (raw === "threshold") return "threshold";
+  return "dashboard";
+}
 
 export default function ManagementWorkspace() {
   // Không truyền title — hero chào thay cho breadcrumb + h1 (yêu cầu 18/7 v3).
@@ -49,9 +53,9 @@ function DashboardBody() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isAnalysisRoute = pathname === "/analysis";
-  // /analysis dùng đúng 5 tab của plan §3.3; /overview chỉ hiển thị Agent Home.
+  // Link cũ signals/students cùng về danh sách hợp nhất; fairness về Dashboard.
   const rawTab = searchParams.get("tab");
-  const analysisTab = ANALYSIS_TAB_IDS.includes(rawTab as AnalysisTab) ? (rawTab as AnalysisTab) : "dashboard";
+  const analysisTab = normalizeAnalysisTab(rawTab);
   const tab: Tab = isAnalysisRoute
     ? analysisTab === "dashboard" ? "analytics" : analysisTab
     : "overview";
@@ -103,7 +107,7 @@ function DashboardBody() {
       {isAnalysisRoute && <AnalysisTabs active={analysisTab} onChange={(next) => setTab(next === "dashboard" ? "analytics" : next)} />}
       {/* Khối "Phạm vi MVP" (ScopeBanner/H12b) đã bỏ theo yêu cầu owner 18/7 —
           copy giới hạn phạm vi còn lại ở disclaimer đầu trang + chip cam kết trong hero. */}
-      {(tab === "analytics" || tab === "signals" || tab === "students") && (
+      {(tab === "analytics" || tab === "reviews") && (
         <div className="flex justify-end">
           <button
             onClick={() => load()}
@@ -118,22 +122,18 @@ function DashboardBody() {
         <OverviewHeader loading={loading} response={response} setTab={setTab} onReload={load} onOpenCase={openCase} />
       )}
       {tab === "analytics" && (
-        <AnalyticsTab loading={loading} response={response} setTab={setTab} onOpenCase={openCase} onReload={load} />
+        <AnalyticsTab loading={loading} response={response} setTab={setTab} onReload={load} />
       )}
-      {tab === "signals" && (
-        loading ? <ListSkeleton /> : response ? <SignalsList response={response} onOpenCase={openCase} /> : null
+      {tab === "reviews" && (
+        loading ? <ListSkeleton compact /> : response ? <ReviewList response={response} onOpenCase={openCase} /> : null
       )}
-      {tab === "students" && (
-        loading ? <ListSkeleton /> : response ? <StudentsTab response={response} onOpenCase={openCase} /> : null
-      )}
-      {tab === "fairness" && <FairnessPanel />}
       {tab === "threshold" && <ThresholdPanel />}
 
       {/* Ẩn ở Tổng quan để khu AI phủ trọn màn hình */}
       {tab !== "overview" && (
         <p className="text-xs text-slate-400">
-          Dữ liệu và hành động được đồng bộ trực tiếp, không hiển thị điểm số nội bộ của mô hình.
-          Phạm vi theo khoa, lớp và danh sách toàn bộ sinh viên đang được hoàn thiện.
+          Dữ liệu và hành động đi thẳng API — không hiển thị điểm số nội bộ của model.
+          Scoping theo khoa/lớp và danh sách toàn bộ SV chờ API bổ sung (design spec §9).
         </p>
       )}
     </div>
@@ -143,9 +143,7 @@ function DashboardBody() {
 function AnalysisTabs({ active, onChange }: { active: AnalysisTab; onChange: (tab: AnalysisTab) => void }) {
   const tabs: { id: AnalysisTab; label: string }[] = [
     { id: "dashboard", label: "Dashboard" },
-    { id: "signals", label: "Tín hiệu" },
-    { id: "students", label: "Sinh viên" },
-    { id: "fairness", label: "Fairness" },
+    { id: "reviews", label: "Danh sách rà soát" },
     { id: "threshold", label: "Ngưỡng" },
   ];
 
@@ -261,7 +259,7 @@ function OverviewHeader({
   if (counts.newSignals > 0) segments.push({ strong: `${counts.newSignals} tín hiệu mới`, text: "được phát hiện" });
   if (counts.pending > 0) segments.push({ strong: `${counts.pending} case`, text: "đang chờ thầy/cô duyệt" });
   if (counts.active > 0) segments.push({ strong: `${counts.active} case`, text: "đang được theo dõi / hỗ trợ" });
-  if (counts.limitedData > 0) segments.push({ strong: `${counts.limitedData} case`, text: "có dữ liệu còn hạn chế; hệ thống chưa đưa ra kết luận" });
+  if (counts.limitedData > 0) segments.push({ strong: `${counts.limitedData} case`, text: "dữ liệu còn hạn chế — hệ thống không kết luận khi thiếu dữ liệu" });
 
   // 3 tool của EduSignal AI (plan.md §3.2). Các tool chỉ điều hướng tới route
   // đã có thật; trang Tổng quan không tự tính thêm band hay dữ liệu sinh viên.
@@ -272,17 +270,17 @@ function OverviewHeader({
       key: "report",
       icon: iconPaths.fileText,
       title: "Xuất báo cáo tổng thể",
-      desc: `${watchStudents} SV trong diện theo dõi · ${counts.newSignals} phát hiện mới · xem, in hoặc lưu PDF`,
+      desc: `${watchStudents} SV trong diện theo dõi · ${counts.newSignals} phát hiện mới — xem, in / lưu PDF`,
       accent: "bg-[#fee2e2] text-[#dc2626]",
       onClick: () => setReportOpen(true),
     },
     {
       key: "analyze",
       icon: iconPaths.search,
-      title: "Phân tích sinh viên",
-      desc: `${counts.students} sinh viên có tín hiệu · tra cứu mã SV và xem phân tích chi tiết`,
+      title: "Danh sách rà soát",
+      desc: `${counts.total} case trên ${counts.students} sinh viên — lọc và mở phân tích chi tiết`,
       accent: "bg-emerald-50 text-emerald-600",
-      onClick: () => router.push("/analysis?tab=students"),
+      onClick: () => router.push("/analysis?tab=reviews"),
     },
     {
       key: "notify",
@@ -333,7 +331,7 @@ function OverviewHeader({
             Chúc thầy/cô một ngày làm việc hiệu quả. EduSignal đã hoàn tất rà soát dữ liệu mới nhất.
           </p>
           <p className="mt-1 text-slate-400 text-sm">
-            Hệ thống <strong className="font-semibold text-slate-600">chỉ đưa ra gợi ý</strong>. Mọi quyết định do thầy/cô thực hiện.
+            Hệ thống <strong className="font-semibold text-slate-600">chỉ gợi ý</strong> — mọi quyết định do thầy/cô thực hiện.
           </p>
         </div>
         {analyzedAt && (
@@ -393,16 +391,16 @@ function OverviewHeader({
                 </p>
               ) : (
                 <p className="text-sm text-slate-500 mt-1.5">
-                  Chưa có tín hiệu mới cần chú ý trong kỳ dữ liệu này. Tôi sẽ tiếp tục theo dõi.
+                  Chưa có tín hiệu mới cần chú ý trong kỳ dữ liệu này — tôi sẽ tiếp tục theo dõi.
                 </p>
               )}
               {isStale && (
                 <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                  Dữ liệu có thể đã cũ. Các số liệu trên không được coi là mới nhất.
+                  Snapshot có thể đã cũ — số liệu trên không được coi là mới nhất.
                 </p>
               )}
               <button
-                onClick={() => setTab("signals")}
+                onClick={() => setTab("reviews")}
                 className="mt-5 inline-flex items-center gap-2 bg-[#dc2626] hover:bg-[#b91c1c] text-white font-semibold text-sm rounded-xl px-5 py-3 shadow-md shadow-red-600/25 transition-colors"
               >
                 Xem chi tiết gợi ý
@@ -411,7 +409,7 @@ function OverviewHeader({
               {/* Nguồn của bản tin — snapshot/version thật từ response, không suy đoán */}
               {latest && (
                 <p className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
-                  Cập nhật {formatAnalyzedAt(analyzedAt)} · bộ dữ liệu {latest.dataset_version} · mô hình {latest.model_version}. Bản tin được tổng hợp trực tiếp từ dữ liệu hiện có.
+                  Snapshot {formatAnalyzedAt(analyzedAt)} · dataset {latest.dataset_version} · model {latest.model_version} — bản tin tính trực tiếp từ dữ liệu, chưa gọi model AI.
                 </p>
               )}
             </div>
@@ -481,39 +479,36 @@ function routeIntent(q: string, c: ReturnType<typeof computeCounts>): QuickAnswe
   if (has(/ưu tiên|uu tien/)) {
     return {
       a: `Hiện có ${c.earlyPriority} trường hợp ở mức Ưu tiên sớm (trên tổng ${c.total} tín hiệu).`,
-      action: { label: "Mở danh sách tín hiệu", tab: "signals" },
+      action: { label: "Mở danh sách rà soát", tab: "reviews" },
     };
   }
   if (has(/tại sao|tai sao|vì sao|vi sao|giải thích|giai thich|ly do|lý do/)) {
     return {
-      a: "Lý do gợi ý của từng trường hợp, gồm yếu tố đóng góp và độ phủ dữ liệu, nằm trong trang chi tiết. Mở danh sách tín hiệu và chọn case cần xem.",
-      action: { label: "Mở danh sách tín hiệu", tab: "signals" },
+      a: "Lý do gợi ý của từng trường hợp (yếu tố đóng góp, độ phủ dữ liệu) nằm trong trang chi tiết case — mở danh sách tín hiệu rồi chọn case cần xem.",
+      action: { label: "Mở danh sách rà soát", tab: "reviews" },
     };
   }
   if (has(/mới|moi/)) {
     return {
       a: `Kỳ này có ${c.newSignals} tín hiệu mới${c.newEarly > 0 ? `, trong đó ${c.newEarly} ở mức Ưu tiên sớm` : ""}.`,
-      action: { label: "Mở danh sách tín hiệu", tab: "signals" },
+      action: { label: "Mở danh sách rà soát", tab: "reviews" },
     };
   }
   if (has(/duyệt|duyet/)) {
     return {
       a: `Có ${c.pending} case đang chờ duyệt.`,
-      action: { label: "Mở danh sách tín hiệu", tab: "signals" },
+      action: { label: "Mở danh sách rà soát", tab: "reviews" },
     };
   }
   if (has(/sinh viên|sinh vien|\bsv\b|lớp|lop/)) {
-    const note = has(/lớp|lop/) ? " Chức năng lọc theo lớp và khoa đang được hoàn thiện; hiện có thể tra cứu theo mã SV." : "";
+    const note = has(/lớp|lop/) ? " Lọc theo lớp/khoa chưa có API — hiện tra cứu được theo mã SV." : "";
     return {
       a: `Có ${c.students} sinh viên đang có tín hiệu trong kỳ này.${note}`,
-      action: { label: "Mở trang Sinh viên", tab: "students" },
+      action: { label: "Mở danh sách rà soát", tab: "reviews" },
     };
   }
   if (has(/dashboard|thống kê|thong ke|biểu đồ|bieu do|số liệu|so lieu|kpi/)) {
     return { a: "Toàn bộ KPI, biểu đồ và việc cần làm nằm ở trang Dashboard.", action: { label: "Mở Dashboard", tab: "analytics" } };
-  }
-  if (has(/fairness|công bằng|cong bang/)) {
-    return { a: "Chỉ số công bằng giữa các nhóm nằm ở trang Fairness.", action: { label: "Mở Fairness", tab: "fairness" } };
   }
   if (has(/ngưỡng|nguong|threshold/)) {
     return { a: "Cấu hình ngưỡng phân band hiện hành nằm ở trang Ngưỡng.", action: { label: "Mở trang Ngưỡng", tab: "threshold" } };
@@ -521,11 +516,11 @@ function routeIntent(q: string, c: ReturnType<typeof computeCounts>): QuickAnswe
   if (has(/tín hiệu|tin hieu|theo dõi|theo doi|hỗ trợ|ho tro/)) {
     return {
       a: `Tổng quan hiện tại: ${c.total} tín hiệu · ${c.newSignals} mới · ${c.pending} chờ duyệt · ${c.active} đang theo dõi/hỗ trợ.`,
-      action: { label: "Mở danh sách tín hiệu", tab: "signals" },
+      action: { label: "Mở danh sách rà soát", tab: "reviews" },
     };
   }
   return {
-    a: "Tôi chưa hỗ trợ câu hỏi này. Bạn có thể hỏi về trường hợp ưu tiên, tín hiệu mới, case chờ duyệt, sinh viên, dashboard, fairness hoặc ngưỡng.",
+    a: "Tôi chưa hỗ trợ câu này trong bản demo. Thử hỏi về: trường hợp ưu tiên, tín hiệu mới, case chờ duyệt, danh sách rà soát, dashboard hoặc ngưỡng.",
   };
 }
 
@@ -585,7 +580,7 @@ function AiQuickChat({ counts, setTab }: { counts: ReturnType<typeof computeCoun
         </button>
       </form>
       <p className="text-[11px] text-slate-400 pl-2">
-        Trợ lý điều hướng trả lời dựa trên dữ liệu đang hiển thị.
+        Trợ lý điều hướng (demo) — trả lời được tính từ dữ liệu đang hiển thị, chưa gọi model AI.
       </p>
     </div>
   );
@@ -597,13 +592,11 @@ function AnalyticsTab({
   loading,
   response,
   setTab,
-  onOpenCase,
   onReload,
 }: {
   loading: boolean;
   response: CaseListResponse | null;
   setTab: (t: Tab) => void;
-  onOpenCase: (caseId: string) => void;
   onReload: () => void;
 }) {
   const items = useMemo(() => (response && response.state !== "error" ? response.items : []), [response]);
@@ -615,14 +608,24 @@ function AnalyticsTab({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-        <p className="text-sm text-slate-500 mt-1">Tổng hợp số liệu rà soát từ dữ liệu hiện có.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
+          <p className="mt-1 text-sm text-slate-500">Tập trung vào tín hiệu cần rà soát sớm và khối lượng đang chờ xử lý.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setTab("reviews")}
+          className="inline-flex items-center gap-2 rounded-xl bg-[#dc2626] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-red-600/20 transition-colors hover:bg-[#b91c1c]"
+        >
+          Mở danh sách rà soát
+          <Icon path={iconPaths.arrowRight} className="h-4 w-4" />
+        </button>
       </div>
 
       {response.state === "stale" && (
         <div className="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-2xl text-sm">
-          Dữ liệu có thể đã cũ vì chưa được cập nhật gần đây.
+          Dữ liệu có thể đã cũ — snapshot chưa được cập nhật gần đây.
         </div>
       )}
 
@@ -632,94 +635,55 @@ function AnalyticsTab({
             <Icon path={iconPaths.heart} className="w-8 h-8 text-slate-300" />
           </div>
           <h3 className="text-lg font-semibold text-slate-700">Chưa có tín hiệu trong kỳ này</h3>
-          <p className="text-sm text-slate-400 mt-1">Không có tín hiệu không đồng nghĩa mọi sinh viên đều ổn định. Vui lòng xem thêm độ phủ nguồn.</p>
+          <p className="text-sm text-slate-400 mt-1">Không có tín hiệu không đồng nghĩa mọi sinh viên đều ổn định — xem thêm độ phủ nguồn.</p>
         </div>
       ) : (
         <>
-          {/* KPI — tất cả tính từ response, không hardcode; dòng phụ là breakdown thật, không phải trend giả */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <KpiCard
-              label="Tổng tín hiệu"
-              value={counts.total}
-              sub={`trên ${counts.students} sinh viên`}
-              icon={iconPaths.activity}
-              color="red"
-            />
-            <KpiCard
-              label="Tín hiệu mới"
-              value={counts.newSignals}
-              sub={counts.newEarly > 0 ? `${counts.newEarly} ở mức Ưu tiên sớm` : "chưa có mức Ưu tiên sớm"}
-              icon={iconPaths.sparkles}
-              color="amber"
-            />
-            <KpiCard
-              label="Chờ duyệt"
-              value={counts.pending}
-              sub="chờ quyết định phê duyệt"
-              icon={iconPaths.clock}
-              color="slate"
-            />
-            <KpiCard
-              label="Đang theo dõi / hỗ trợ"
-              value={counts.active}
-              sub={`${counts.assigned} bàn giao · ${counts.inProgress} hỗ trợ · ${counts.monitoring} theo dõi`}
-              icon={iconPaths.users}
-              color="emerald"
-            />
-          </div>
+          {/* Ba KPI duy nhất: một mục tiêu chính và hai tải công việc cần xử lý. */}
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
+            <section className="relative overflow-hidden rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 via-white to-white p-6 shadow-sm lg:col-span-3">
+              <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-red-100/60" aria-hidden />
+              <div className="relative">
+                <div className="flex items-center gap-2.5 text-sm font-semibold text-red-700">
+                  <span className="rounded-lg bg-red-100 p-2"><Icon path={iconPaths.sparkles} className="h-4 w-4" /></span>
+                  Tín hiệu cần rà soát sớm
+                </div>
+                <p className="mt-5 text-6xl font-bold tracking-tight text-slate-900 tabular-nums">{counts.earlyPriority}</p>
+                <p className="mt-2 text-sm text-slate-500">trên {counts.total} case của {counts.students} sinh viên trong lần tracking hiện tại</p>
+                <div className="mt-5 flex flex-wrap gap-x-4 gap-y-1 border-t border-red-100 pt-4 text-xs text-slate-400">
+                  <span>{counts.limitedData} case có dữ liệu hạn chế</span>
+                  <span>Chưa có API lịch sử để tính chênh lệch với lần trước</span>
+                </div>
+              </div>
+            </section>
 
-          {/* Charts — bar nominal một màu (nhãn + số hiển thị); donut 2 band có legend kèm số */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-              <ChartHeader title="Trạng thái xử lý" subtitle="Số case theo từng trạng thái hiện tại" icon={iconPaths.activity} />
-              <BarRows rows={stateRows(items)} color="#dc2626" />
-            </div>
-            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-              <ChartHeader title="Mức ưu tiên rà soát" subtitle="Phân bổ từ dữ liệu hiện có" icon={iconPaths.scale} />
-              <Donut segments={bandSegments(items)} centerValue={counts.total} centerLabel="tín hiệu" />
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-1">
+              <KpiCard
+                label="Tín hiệu mới"
+                value={counts.newSignals}
+                sub={counts.newEarly > 0 ? `${counts.newEarly} cần rà soát sớm` : "không có mức ưu tiên sớm"}
+                icon={iconPaths.activity}
+                color="amber"
+              />
+              <KpiCard
+                label="Đang chờ duyệt"
+                value={counts.pending}
+                sub="cần quyết định của Ban quản lý"
+                icon={iconPaths.clock}
+                color="slate"
+              />
             </div>
           </div>
 
-          {/* Việc cần làm + yếu tố phổ biến */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-              <ChartHeader title="Việc cần làm hôm nay" subtitle="Tổng hợp từ trạng thái case hiện tại" icon={iconPaths.check} />
-              <TaskList counts={counts} setTab={setTab} />
-            </div>
-            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-              <ChartHeader title="Yếu tố đóng góp phổ biến" subtitle="Tối đa 5 yếu tố" icon={iconPaths.sparkles} />
-              <BarRows rows={factorRows(items)} color="#dc2626" />
-            </div>
-          </div>
-
-          {/* Xu hướng — chưa có API lịch sử, nói thẳng là thiếu thay vì vẽ số liệu giả */}
-          <div className="flex items-center gap-4 bg-white border border-dashed border-slate-200 rounded-2xl px-6 py-4">
-            <div className="p-2.5 bg-slate-50 rounded-xl text-slate-300 shrink-0">
-              <Icon path={iconPaths.chart} className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-600">Xu hướng tín hiệu theo kỳ</p>
-              <p className="text-xs text-slate-400">Chưa đủ dữ liệu lịch sử để thể hiện xu hướng tín hiệu theo học kỳ.</p>
-            </div>
-          </div>
-
-          {/* Tín hiệu gần đây — top 5 theo calculated_at từ response */}
-          <RecentSignals items={items} onOpenCase={onOpenCase} onViewAll={() => setTab("signals")} />
+          {/* Một biểu đồ vận hành duy nhất; chi tiết priority/factor nằm ở danh sách. */}
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <ChartHeader title="Trạng thái xử lý" subtitle="Số case ở từng bước của quy trình hiện tại" icon={iconPaths.activity} />
+            <BarRows rows={stateRows(items)} color="#dc2626" />
+          </section>
         </>
       )}
     </div>
   );
-}
-
-/** Segments donut theo band — cặp đỏ HUST/amber đã validate CVD (ΔE 32.4); chưa phân band → xám trung tính. */
-function bandSegments(items: ReviewCase[]) {
-  const count = (fn: (c: ReviewCase) => boolean) => items.filter(fn).length;
-  const segments = [
-    { label: BAND_LABEL.can_ra_soat, value: count((c) => c.review_priority_band === "can_ra_soat"), color: "#dc2626" },
-    { label: BAND_LABEL.uu_tien_som, value: count((c) => c.review_priority_band === "uu_tien_som"), color: "#f59e0b" },
-    { label: "Chưa phân bổ", value: count((c) => c.review_priority_band === null), color: "#cbd5e1" },
-  ];
-  return segments.filter((s) => s.value > 0);
 }
 
 function stateRows(items: ReviewCase[]) {
@@ -729,92 +693,121 @@ function stateRows(items: ReviewCase[]) {
     .sort((a, b) => b.value - a.value);
 }
 
-function factorRows(items: ReviewCase[]) {
-  const counts = new Map<string, number>();
-  for (const c of items) for (const f of c.contributing_factors) counts.set(f.code, (counts.get(f.code) ?? 0) + 1);
-  return Array.from(counts.entries())
-    .map(([code, value]) => ({ label: FACTOR_LABEL[code] ?? code, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5);
-}
+/* ================= Danh sách rà soát hợp nhất ================= */
 
-/* ================= Tín hiệu & Sinh viên ================= */
+type SortKey = "band" | "newest" | "ref" | "state";
+type BandFilter = "all" | "uu_tien_som" | "can_ra_soat" | "unassigned";
 
-function SignalsList({ response, onOpenCase }: { response: CaseListResponse; onOpenCase: (caseId: string) => void }) {
-  if (response.state === "error") {
-    return <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl">Không tải được danh sách tín hiệu. Máy chủ tạm thời không phản hồi.</div>;
-  }
-  if (response.state === "empty") {
-    return <div className="bg-slate-50 border border-slate-200 text-slate-600 p-4 rounded-xl">Chưa có tín hiệu mới trong kỳ dữ liệu này.</div>;
-  }
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold text-slate-800">Danh sách tín hiệu</h2>
-      {response.state === "stale" && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-xl text-sm">
-          Dữ liệu có thể đã cũ. Danh sách vẫn hiển thị nhưng không được coi là mới nhất.
-        </div>
-      )}
-      <CaseRowsTable items={response.items} onOpenCase={onOpenCase} />
-    </div>
-  );
-}
-
-type SortKey = "band" | "ref" | "state";
-
-function StudentsTab({ response, onOpenCase }: { response: CaseListResponse; onOpenCase: (caseId: string) => void }) {
+function ReviewList({ response, onOpenCase }: { response: CaseListResponse; onOpenCase: (caseId: string) => void }) {
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<SortKey>("band");
+  const [stateFilter, setStateFilter] = useState("all");
+  const [bandFilter, setBandFilter] = useState<BandFilter>("all");
 
   const rows = useMemo(() => {
     if (response.state === "error") return [];
     const needle = q.trim().toLowerCase();
     let list = response.items;
-    if (needle) list = list.filter((c) => c.student_ref.toLowerCase().includes(needle) || c.case_id.toLowerCase().includes(needle));
+    if (needle) {
+      list = list.filter(
+        (c) =>
+          c.student_ref.toLowerCase().includes(needle) ||
+          c.case_id.toLowerCase().includes(needle) ||
+          c.contributing_factors.some(
+            (factor) =>
+              factor.code.toLowerCase().includes(needle) ||
+              (FACTOR_LABEL[factor.code] ?? "").toLowerCase().includes(needle),
+          ),
+      );
+    }
+    if (stateFilter !== "all") list = list.filter((c) => c.case_state === stateFilter);
+    if (bandFilter === "unassigned") list = list.filter((c) => c.review_priority_band === null);
+    else if (bandFilter !== "all") list = list.filter((c) => c.review_priority_band === bandFilter);
+
     const bandRank = (c: ReviewCase) => (c.review_priority_band === "uu_tien_som" ? 0 : c.review_priority_band === "can_ra_soat" ? 1 : 2);
     switch (sort) {
       case "ref": return [...list].sort((a, b) => a.student_ref.localeCompare(b.student_ref));
       case "state": return [...list].sort((a, b) => a.case_state.localeCompare(b.case_state));
-      default: return [...list].sort((a, b) => bandRank(a) - bandRank(b));
+      case "newest": return [...list].sort((a, b) => b.calculated_at.localeCompare(a.calculated_at));
+      default: return [...list].sort((a, b) => bandRank(a) - bandRank(b) || b.calculated_at.localeCompare(a.calculated_at));
     }
-  }, [response, q, sort]);
+  }, [bandFilter, q, response, sort, stateFilter]);
 
   if (response.state === "error") {
-    return <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl">Không tải được danh sách. Máy chủ tạm thời không phản hồi.</div>;
+    return <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">Không tải được danh sách rà soát — máy chủ tạm thời không phản hồi.</div>;
+  }
+  if (response.state === "empty") {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-600 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-800">Chưa có case cần rà soát</h2>
+        <p className="mt-1 text-sm text-slate-400">Không có case không đồng nghĩa mọi sinh viên đều ổn định — cần đọc cùng độ phủ dữ liệu.</p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold text-slate-800">Sinh viên có tín hiệu</h2>
-      <div className="flex flex-wrap gap-3 items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+      <div>
+        <h2 className="text-xl font-bold text-slate-800">Danh sách rà soát</h2>
+        <p className="mt-1 text-sm text-slate-500">Mỗi dòng là một case; dùng bộ lọc để tập trung vào việc cần xử lý.</p>
+      </div>
+
+      {response.state === "stale" && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
+          Dữ liệu có thể đã cũ — danh sách vẫn hiển thị nhưng không được coi là mới nhất.
+        </div>
+      )}
+
+      <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:grid-cols-[minmax(240px,1fr)_180px_180px_180px_auto] lg:items-center">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="🔍 Tìm theo mã SV…"
-          aria-label="Tìm kiếm sinh viên"
-          className="flex-1 min-w-[220px] px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-red-100 focus:border-red-300 transition-all"
+          placeholder="Tìm mã SV, case hoặc yếu tố…"
+          aria-label="Tìm trong danh sách rà soát"
+          className="h-11 min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all focus:border-red-300 focus:ring-2 focus:ring-red-100"
         />
+        <select
+          value={bandFilter}
+          onChange={(e) => setBandFilter(e.target.value as BandFilter)}
+          className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 outline-none focus:ring-2 focus:ring-red-100"
+          aria-label="Lọc theo mức ưu tiên"
+        >
+          <option value="all">Mọi mức ưu tiên</option>
+          <option value="uu_tien_som">{BAND_LABEL.uu_tien_som}</option>
+          <option value="can_ra_soat">{BAND_LABEL.can_ra_soat}</option>
+          <option value="unassigned">Chưa phân bổ</option>
+        </select>
+        <select
+          value={stateFilter}
+          onChange={(e) => setStateFilter(e.target.value)}
+          className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 outline-none focus:ring-2 focus:ring-red-100"
+          aria-label="Lọc theo trạng thái case"
+        >
+          <option value="all">Mọi trạng thái</option>
+          {Object.entries(CASE_STATE_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select>
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as SortKey)}
-          className="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 outline-none cursor-pointer focus:ring-2 focus:ring-red-100"
+          className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 outline-none focus:ring-2 focus:ring-red-100"
+          aria-label="Sắp xếp danh sách"
         >
-          <option value="band">Mức độ cần quan tâm</option>
+          <option value="band">Ưu tiên trước</option>
+          <option value="newest">Cập nhật mới nhất</option>
           <option value="ref">Mã SV (A → Z)</option>
           <option value="state">Trạng thái case</option>
         </select>
-        <span className="text-sm text-slate-400 ml-auto">{rows.length} sinh viên</span>
+        <span className="whitespace-nowrap text-right text-sm text-slate-400">{rows.length} case</span>
       </div>
 
       {rows.length === 0 ? (
-        <div className="bg-slate-50 border border-slate-200 text-slate-600 p-4 rounded-xl">Không có kết quả khớp tìm kiếm. Thử xóa từ khóa hoặc đổi bộ lọc.</div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-center text-sm text-slate-600">Không có case nào khớp bộ lọc.</div>
       ) : (
         <CaseRowsTable items={rows} onOpenCase={onOpenCase} />
       )}
 
       <p className="text-xs text-slate-400">
-        Danh sách hiện gồm sinh viên có tín hiệu cần rà soát. Thông tin tên, lớp và GPA đang được hoàn thiện;
-        mã sinh viên hiện được bảo vệ bằng mã định danh riêng.
+        Danh sách chỉ gồm case do API trả về, không phải toàn bộ sinh viên. Mã sinh viên là pseudonym; không hiển thị điểm số nội bộ.
       </p>
     </div>
   );
@@ -826,33 +819,47 @@ function CaseRowsTable({ items, onOpenCase }: { items: ReviewCase[]; onOpenCase:
   return (
     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[800px]">
+        <table className="w-full min-w-[940px] border-collapse text-left">
           <thead>
             <tr className="bg-slate-50/50 border-b border-slate-200">
               <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Mã SV</th>
-              <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái case</th>
               <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Mức ưu tiên rà soát</th>
-              <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Yếu tố đóng góp</th>
-              <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Giới hạn dữ liệu</th>
+              <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái</th>
+              <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Yếu tố chính</th>
+              <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Dữ liệu</th>
+              <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cập nhật</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((c) => (
-              <tr
-                key={c.case_id}
-                onClick={() => onOpenCase(c.case_id)}
-                title="Mở chi tiết"
-                className="border-b border-slate-100 last:border-0 cursor-pointer hover:bg-slate-50/70 transition-colors"
-              >
-                <td className="p-4 text-sm font-medium text-[#dc2626]">{c.student_ref}</td>
-                <td className="p-4"><CaseStateBadge state={c.case_state} /></td>
-                <td className="p-4"><BandBadge band={c.review_priority_band} /></td>
-                <td className="p-4 text-sm text-slate-500">
-                  {c.contributing_factors.map((f) => FACTOR_LABEL[f.code] ?? f.code).join(", ") || "—"}
-                </td>
-                <td className="p-4 max-w-[300px]"><LimitationsList limitations={c.limitations} /></td>
-              </tr>
-            ))}
+            {items.map((c) => {
+              const factorLabels = c.contributing_factors.map((factor) => FACTOR_LABEL[factor.code] ?? factor.code);
+              const limited = c.data_state !== "ok" || c.limitations.length > 0;
+              return (
+                <tr
+                  key={c.case_id}
+                  onClick={() => onOpenCase(c.case_id)}
+                  title="Mở chi tiết case"
+                  className="cursor-pointer border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50/70"
+                >
+                  <td className="p-4">
+                    <span className="block text-sm font-semibold text-[#dc2626]">{c.student_ref}</span>
+                    <span className="mt-0.5 block text-[11px] text-slate-400">{c.case_id}</span>
+                  </td>
+                  <td className="p-4"><BandBadge band={c.review_priority_band} /></td>
+                  <td className="p-4"><CaseStateBadge state={c.case_state} /></td>
+                  <td className="max-w-[280px] p-4 text-sm text-slate-600">
+                    <span>{factorLabels[0] ?? "—"}</span>
+                    {factorLabels.length > 1 && <span className="ml-1 text-xs text-slate-400">+{factorLabels.length - 1}</span>}
+                  </td>
+                  <td className="p-4">
+                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${limited ? "border-amber-200 bg-amber-50 text-amber-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
+                      {limited ? "Dữ liệu hạn chế" : "Đủ căn cứ"}
+                    </span>
+                  </td>
+                  <td className="p-4 text-sm tabular-nums text-slate-400">{new Date(c.calculated_at).toLocaleDateString("vi-VN")}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -922,194 +929,24 @@ function BarRows({ rows, color }: { rows: { label: string; value: number }[]; co
   );
 }
 
-/** Donut SVG — khe 2px giữa các cung; tổng ở tâm; legend chữ + số (màu không bao giờ là tín hiệu duy nhất). */
-function Donut({ segments, centerValue, centerLabel }: { segments: { label: string; value: number; color: string }[]; centerValue: number; centerLabel: string }) {
-  const total = segments.reduce((acc, s) => acc + s.value, 0);
-  if (total === 0) return <div className="text-sm text-slate-400 italic py-4 text-center">Chưa có dữ liệu.</div>;
-
-  const R = 42;
-  const C = 2 * Math.PI * R;
-  const gap = segments.length > 1 ? 2.5 : 0;
-  let offset = 0;
-  const arcs = segments.map((s) => {
-    const len = (s.value / total) * C;
-    const arc = { ...s, len, offset };
-    offset += len;
-    return arc;
-  });
-
-  return (
-    <div className="flex flex-col items-center gap-5">
-      <div className="relative w-44 h-44">
-        <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
-          {arcs.map((a) => (
-            <circle
-              key={a.label}
-              cx="60"
-              cy="60"
-              r={R}
-              fill="none"
-              stroke={a.color}
-              strokeWidth="14"
-              strokeDasharray={`${Math.max(a.len - gap, 0.5)} ${C - Math.max(a.len - gap, 0.5)}`}
-              strokeDashoffset={-a.offset}
-            >
-              <title>{`${a.label}: ${a.value}`}</title>
-            </circle>
-          ))}
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-bold text-slate-800">{centerValue}</span>
-          <span className="text-xs text-slate-400">{centerLabel}</span>
-        </div>
+function ListSkeleton({ compact = false }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <div className="space-y-4" aria-busy="true" aria-label="Đang tải danh sách rà soát">
+        <div className="h-20 animate-pulse rounded-2xl bg-slate-100" />
+        <div className="h-80 animate-pulse rounded-2xl bg-slate-100" />
       </div>
-      <div className="w-full space-y-2">
-        {segments.map((s) => (
-          <div key={s.label} className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-              <span className="text-slate-600 truncate">{s.label}</span>
-            </div>
-            <span className="font-semibold text-slate-800 tabular-nums">{s.value}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-type Counts = {
-  newSignals: number;
-  pending: number;
-  active: number;
-  earlyPriority: number;
-};
-
-/** Checklist việc cần làm — chỉ hiện dòng có số thật > 0; không có việc → nói rõ, không bịa. */
-function TaskList({ counts, setTab }: { counts: Counts; setTab: (t: Tab) => void }) {
-  const tasks: { key: string; icon: string; color: string; text: string; sub: string; tab: Tab }[] = [];
-  if (counts.earlyPriority > 0) {
-    tasks.push({
-      key: "early",
-      icon: iconPaths.sparkles,
-      color: "bg-amber-50 text-amber-600",
-      text: `Rà soát ${counts.earlyPriority} tín hiệu mức Ưu tiên sớm`,
-      sub: "Xem yếu tố đóng góp và độ phủ dữ liệu trước khi quyết định",
-      tab: "signals",
-    });
+    );
   }
-  if (counts.newSignals > 0) {
-    tasks.push({
-      key: "new",
-      icon: iconPaths.activity,
-      color: "bg-[#fee2e2] text-[#dc2626]",
-      text: `Xem ${counts.newSignals} tín hiệu mới`,
-      sub: "Đưa vào hàng chờ duyệt hoặc loại kèm lý do",
-      tab: "signals",
-    });
-  }
-  if (counts.pending > 0) {
-    tasks.push({
-      key: "pending",
-      icon: iconPaths.clock,
-      color: "bg-slate-100 text-slate-600",
-      text: `Duyệt ${counts.pending} case đang chờ`,
-      sub: "Phê duyệt, loại hoặc hoãn kèm lý do",
-      tab: "signals",
-    });
-  }
-  if (counts.active > 0) {
-    tasks.push({
-      key: "active",
-      icon: iconPaths.users,
-      color: "bg-emerald-50 text-emerald-600",
-      text: `Theo dõi ${counts.active} case đã bàn giao`,
-      sub: "Kiểm tra tiến độ hỗ trợ cùng GVCN",
-      tab: "students",
-    });
-  }
-
-  if (tasks.length === 0) {
-    return <div className="text-sm text-slate-400 italic py-4 text-center">Chưa có việc cần xử lý. Vui lòng quay lại khi có tín hiệu mới.</div>;
-  }
-
-  return (
-    <div className="divide-y divide-slate-100">
-      {tasks.map((t) => (
-        <button
-          key={t.key}
-          onClick={() => setTab(t.tab)}
-          className="w-full flex items-center gap-4 py-3.5 text-left group hover:bg-slate-50/70 rounded-lg px-2 -mx-2 transition-colors"
-        >
-          <div className={`p-2 rounded-lg shrink-0 ${t.color}`}>
-            <Icon path={t.icon} className="w-4 h-4" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-slate-700">{t.text}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{t.sub}</p>
-          </div>
-          <Icon path={iconPaths.arrowRight} className="w-4 h-4 text-slate-300 group-hover:text-[#dc2626] group-hover:translate-x-1 transition-all shrink-0" />
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/** Top 5 tín hiệu mới nhất theo calculated_at (từ response — không bịa thời gian). */
-function RecentSignals({ items, onOpenCase, onViewAll }: { items: ReviewCase[]; onOpenCase: (caseId: string) => void; onViewAll: () => void }) {
-  const recent = useMemo(
-    () => [...items].sort((a, b) => b.calculated_at.localeCompare(a.calculated_at)).slice(0, 5),
-    [items],
-  );
-  if (recent.length === 0) return null;
-
-  return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-6 pt-5 pb-1">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-800">Tín hiệu gần đây</h3>
-          <p className="text-xs text-slate-400">5 tín hiệu có thời điểm tính mới nhất</p>
-        </div>
-        <button onClick={onViewAll} className="text-sm font-semibold text-[#dc2626] hover:text-[#b91c1c] inline-flex items-center gap-1 group">
-          Xem tất cả
-          <Icon path={iconPaths.arrowRight} className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-        </button>
-      </div>
-      <div className="divide-y divide-slate-100 px-2 pb-2 mt-2">
-        {recent.map((c) => (
-          <button
-            key={c.case_id}
-            onClick={() => onOpenCase(c.case_id)}
-            title="Mở chi tiết"
-            className="w-full flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-3.5 text-left hover:bg-slate-50/70 rounded-lg transition-colors"
-          >
-            <span className="text-sm font-medium text-[#dc2626] w-24 shrink-0">{c.student_ref}</span>
-            <span className="text-xs text-slate-500 flex-1 min-w-[160px] truncate">
-              {c.contributing_factors.map((f) => FACTOR_LABEL[f.code] ?? f.code).join(", ") || "—"}
-            </span>
-            <span className="shrink-0"><BandBadge band={c.review_priority_band} /></span>
-            <span className="shrink-0"><CaseStateBadge state={c.case_state} /></span>
-            <span className="text-xs text-slate-400 tabular-nums shrink-0 w-20 text-right">
-              {new Date(c.calculated_at).toLocaleDateString("vi-VN")}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ListSkeleton() {
   return (
     <div className="space-y-6" aria-busy="true" aria-label="Đang tải">
-      <div className="h-52 bg-slate-100 rounded-2xl animate-pulse" />
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {[1, 2, 3, 4].map((i) => <div key={i} className="h-36 bg-slate-100 rounded-2xl animate-pulse" />)}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
+        <div className="h-64 animate-pulse rounded-2xl bg-slate-100 lg:col-span-3" />
+        <div className="grid gap-5 lg:col-span-2">
+          {[1, 2].map((i) => <div key={i} className="h-[118px] animate-pulse rounded-2xl bg-slate-100" />)}
+        </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3 h-64 bg-slate-100 rounded-2xl animate-pulse" />
-        <div className="lg:col-span-2 h-64 bg-slate-100 rounded-2xl animate-pulse" />
-      </div>
+      <div className="h-64 animate-pulse rounded-2xl bg-slate-100" />
     </div>
   );
 }
