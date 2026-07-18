@@ -38,7 +38,7 @@ const ACTION_LABEL: Record<CaseAction, string> = {
   approve: "Phê duyệt",
   dismiss: "Loại",
   defer: "Hoãn",
-  assign: "Bàn giao",
+  assign: "Bàn giao cho GVCN",
   accept: "Tiếp nhận",
   resolve: "Kết thúc hỗ trợ",
   monitor: "Theo dõi",
@@ -47,10 +47,10 @@ const ACTION_LABEL: Record<CaseAction, string> = {
 /** Dòng giải thích ngắn dưới mỗi nút (theo design 18/7) — trung lập, không phán xét. */
 const ACTION_HELP: Record<CaseAction, string> = {
   queue_for_review: "Chuyển tín hiệu vào hàng chờ để rà soát.",
-  approve: "Xác nhận đây là trường hợp cần hỗ trợ.",
+  approve: "Xác nhận đây là trường hợp cần hỗ trợ — bước trước khi gửi thông báo cho GVCN.",
   dismiss: "Xác nhận không cần hỗ trợ và lưu lý do chuẩn hóa.",
   defer: "Tạm hoãn rà soát; chọn thời điểm xem lại.",
-  assign: "Hệ thống tự tra cố vấn phụ trách từ nguồn đã duyệt.",
+  assign: "Bàn giao cho GVCN; hệ thống tự tra cố vấn phụ trách. Bước tiếp theo: soạn thông báo qua email kèm link đăng nhập.",
   accept: "Xác nhận đã tiếp nhận case được bàn giao.",
   resolve: "Kết thúc vòng hỗ trợ hiện tại.",
   monitor: "Chuyển sang theo dõi có thời hạn.",
@@ -133,8 +133,11 @@ export function CareActions({
   return (
     <aside style={panel}>
       <h2 style={h2}>THAO TÁC</h2>
-      <p style={{ margin: "0 0 0.85rem", fontSize: 12.5, color: "#94a3b8" }}>
+      <p style={{ margin: "0 0 0.6rem", fontSize: 12.5, color: "#94a3b8" }}>
         Trạng thái: <strong style={{ color: "#334155" }}>{CASE_STATE_LABEL[caseState]}</strong> · Ban quản lý
+      </p>
+      <p style={{ margin: "0 0 0.85rem", padding: "0.55rem 0.7rem", borderRadius: 8, background: "#f8fafc", border: "1px solid #eef2f7", fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>
+        Với Ban quản lý, một tín hiệu chỉ có hai kết cục: <strong style={{ color: "#b91c1c" }}>gửi thông báo cho GVCN</strong> (duyệt → bàn giao → soạn email) hoặc <strong style={{ color: "#334155" }}>loại</strong>. GVCN nhận email và tự quyết cách hỗ trợ.
       </p>
 
       {allowed.length === 0 && (

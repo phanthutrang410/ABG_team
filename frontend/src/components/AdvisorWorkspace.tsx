@@ -8,9 +8,14 @@ import { AdvisorUnavailable } from "@/components/AdvisorUnavailable";
 import {
   advisorDemoStorageKey,
   allowedAdvisorDemoActions,
+  countOverdueHandoffs,
   generateAdvisorDemoCases,
+  handoffElapsedDays,
+  isHandoffOverdue,
+  markAdvisorDemoViewed,
   paginateAdvisorQueue,
   transitionAdvisorDemoCase,
+  HANDOFF_ACK_OVERDUE_DAYS,
   type AdvisorDemoAction,
   type AdvisorDemoCase,
 } from "@/lib/advisor-demo";
@@ -71,6 +76,8 @@ function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [monitorDate, setMonitorDate] = useState(defaultMonitorDate());
   const [notice, setNotice] = useState<string | null>(null);
+  // Một mốc "bây giờ" ổn định cho một lần render để tính quá hạn không nhấp nháy.
+  const [now] = useState(() => new Date());
 
   useEffect(() => {
     try {
@@ -115,6 +122,7 @@ function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
     () => cases.reduce((latest, item) => item.updated_at > latest ? item.updated_at : latest, ""),
     [cases],
   );
+  const overdueCount = useMemo(() => countOverdueHandoffs(cases, now), [cases, now]);
   useSetTopbarInfo(latestUpdate || null, counts.needs_action);
 
   const visibleCases = useMemo(() => {
@@ -157,6 +165,25 @@ function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
 
   const selected = cases.find((item) => item.case_id === selectedId) ?? null;
 
+  // Mở 1 case = GVCN đã nhấp vào (từ danh sách hoặc từ link trong email) → ghi nhận "đã xem".
+  // Mở/đọc KHÁC với "đã tiếp nhận" — tiếp nhận vẫn là nút xác nhận riêng (accept).
+  function openCase(caseId: string) {
+    setSelectedId(caseId);
+    setCases((current) => current.map((item) => (item.case_id === caseId ? markAdvisorDemoViewed(item, new Date()) : item)));
+  }
+
+  // Link bàn giao từ email: /advisor?case=<id> — mở đúng sinh viên và ghi nhận đã xem.
+  // (Đăng nhập đã bị AppShell bắt buộc; đây là "login theo sự kiện", không phải mở dashboard hằng ngày.)
+  useEffect(() => {
+    if (!storageReady) return;
+    const target = new URLSearchParams(window.location.search).get("case");
+    if (target && cases.some((item) => item.case_id === target)) {
+      openCase(target);
+    }
+    // Chạy một lần sau khi store demo sẵn sàng; cố ý chỉ đọc case ở thời điểm tải.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageReady]);
+
   function regenerate(nextVariant: number) {
     const generated = generateAdvisorDemoCases(accountId, nextVariant, new Date());
     setVariant(nextVariant);
@@ -192,6 +219,16 @@ function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
         <div role="status" className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           <span>✓ {notice}</span>
           <button type="button" onClick={() => setNotice(null)} className="font-semibold text-emerald-700">Đóng</button>
+        </div>
+      )}
+
+      {overdueCount > 0 && (
+        <div role="status" className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span aria-hidden className="mt-0.5 flex-shrink-0 text-amber-500"><BellIcon /></span>
+          <p className="leading-5">
+            Khoa đề nghị Thầy/Cô xem và <strong>xác nhận tiếp nhận</strong> {overdueCount} case đang chờ quá {HANDOFF_ACK_OVERDUE_DAYS} ngày,
+            để kịp thời hỗ trợ sinh viên. Mở case để xem chi tiết bảo mật rồi bấm “Xác nhận tiếp nhận”.
+          </p>
         </div>
       )}
 
@@ -257,7 +294,8 @@ function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
                 key={item.case_id}
                 item={item}
                 selected={item.case_id === selectedId}
-                onSelect={() => setSelectedId(item.case_id)}
+                overdue={isHandoffOverdue(item, now)}
+                onSelect={() => openCase(item.case_id)}
               />
             ))}
           </div>
@@ -279,6 +317,7 @@ function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
           {selected ? (
             <CasePanel
               item={selected}
+              now={now}
               monitorDate={monitorDate}
               onMonitorDateChange={setMonitorDate}
               onAction={runAction}
@@ -361,6 +400,9 @@ function DemoBanner({ onReset, onRegenerate }: { onReset: () => void; onRegenera
           <br className="hidden sm:block" />
           Cách tiếp cận sinh viên do bạn quyết định theo bối cảnh thực tế.
         </p>
+        <p className="mt-1 text-[11px] leading-4 text-slate-500">
+          Bạn chỉ cần đăng nhập khi có sinh viên được gắn cờ (theo link trong email) — không phải mở dashboard mỗi ngày. Email là kênh chính.
+        </p>
         <p className="mt-1 text-[11px] leading-4 text-slate-400">
           Dữ liệu sinh cục bộ, thao tác chỉ lưu trên trình duyệt — không ghi database và không chứng minh RBAC backend.
         </p>
@@ -376,9 +418,10 @@ function DemoBanner({ onReset, onRegenerate }: { onReset: () => void; onRegenera
   );
 }
 
-function CaseRow({ item, selected, onSelect }: { item: AdvisorDemoCase; selected: boolean; onSelect: () => void }) {
+function CaseRow({ item, selected, overdue, onSelect }: { item: AdvisorDemoCase; selected: boolean; overdue: boolean; onSelect: () => void }) {
   const factor = item.contributing_factors[0];
   const factorLabel = factor ? FACTOR_LABEL[factor.code] ?? factor.code : "Xem chi tiết bàn giao";
+  const unseen = item.case_state === "assigned" && !item.viewed_at;
   return (
     <button
       type="button"
@@ -388,7 +431,10 @@ function CaseRow({ item, selected, onSelect }: { item: AdvisorDemoCase; selected
       }`}
     >
       <div>
-        <p className="font-mono text-sm font-bold text-slate-900">{item.student_ref}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-mono text-sm font-bold text-slate-900">{item.student_ref}</p>
+          {unseen && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">Chưa xem</span>}
+        </div>
         <p className="mt-1 text-xs text-slate-400">Giao {formatDate(item.assigned_at)}</p>
       </div>
       <div>
@@ -396,6 +442,7 @@ function CaseRow({ item, selected, onSelect }: { item: AdvisorDemoCase; selected
         <p className="mt-1 text-xs text-slate-400">{item.coverage.n_valid_terms} kỳ · {item.coverage.n_courses} học phần</p>
       </div>
       <div className="flex items-center justify-between gap-3 sm:justify-end">
+        {overdue && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">Quá hạn</span>}
         <CaseStateBadge state={item.case_state} />
         <span aria-hidden className="text-slate-300">›</span>
       </div>
@@ -405,11 +452,13 @@ function CaseRow({ item, selected, onSelect }: { item: AdvisorDemoCase; selected
 
 function CasePanel({
   item,
+  now,
   monitorDate,
   onMonitorDateChange,
   onAction,
 }: {
   item: AdvisorDemoCase;
+  now: Date;
   monitorDate: string;
   onMonitorDateChange: (value: string) => void;
   onAction: (action: AdvisorDemoAction) => void;
@@ -418,6 +467,9 @@ function CasePanel({
   const limitations = resolveLimitations(item.limitations);
   const factor = item.contributing_factors[0];
   const factorLabel = factor ? FACTOR_LABEL[factor.code] ?? factor.code : "Không có lý do bàn giao";
+  const awaitingAccept = item.case_state === "assigned";
+  const overdue = isHandoffOverdue(item, now);
+  const elapsedDays = handoffElapsedDays(item, now);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -435,6 +487,21 @@ function CasePanel({
       </div>
 
       <div className="space-y-5 p-5">
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs">
+          <span className="text-slate-500">Trạng thái xem</span>
+          {item.viewed_at
+            ? <span className="font-semibold text-emerald-700">Đã xem · {formatDateTime(item.viewed_at)}</span>
+            : <span className="font-semibold text-slate-500">Chưa ghi nhận lượt xem</span>}
+        </div>
+
+        {awaitingAccept && (
+          <div className={`rounded-xl border px-3 py-3 text-xs leading-5 ${overdue ? "border-amber-200 bg-amber-50 text-amber-900" : "border-sky-200 bg-sky-50 text-sky-800"}`}>
+            {overdue
+              ? <>Khoa đề nghị Thầy/Cô xác nhận tiếp nhận sớm — case đã chờ <strong>{elapsedDays} ngày</strong> (quá {HANDOFF_ACK_OVERDUE_DAYS} ngày) để kịp thời hỗ trợ sinh viên.</>
+              : <>Case vừa được bàn giao và <strong>chưa được tiếp nhận</strong>. Xem chi tiết rồi bấm “Xác nhận tiếp nhận” để đóng vòng bàn giao với khoa.</>}
+          </div>
+        )}
+
         <section>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Lý do trung lập</p>
           <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -471,7 +538,7 @@ function CasePanel({
           ) : (
             <div className="mt-3 space-y-3">
               {actions.includes("accept") && (
-                <ActionButton label="Xác nhận tiếp nhận" help="Chuyển case sang Đang hỗ trợ." onClick={() => onAction("accept")} primary />
+                <ActionButton label="Xác nhận tiếp nhận" help="Bước xác nhận rõ ràng — mở/đọc chưa tính là tiếp nhận. Chuyển case sang Đang hỗ trợ và báo khoa đã tiếp nhận." onClick={() => onAction("accept")} primary />
               )}
               {actions.includes("monitor") && (
                 <div className="rounded-xl border border-slate-200 p-3">
@@ -610,6 +677,15 @@ function ShieldIcon() {
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+function BellIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
     </svg>
   );
 }
