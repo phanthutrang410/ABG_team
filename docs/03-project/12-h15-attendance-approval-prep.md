@@ -20,7 +20,7 @@
 |:--|:--|:--|
 | 1 | **Owner** | Hoàng / Admin kỹ thuật · Silent Shield MVP demo |
 | 2 | **Rights** | Chỉ pipeline MVP; cấm tái phân phối; không PII trong git |
-| 3 | **Hash** | `f65573ad1ec0e11f4093a57d3cf6e947a78ca994aa8d2feeaeabb6a25e2a2106` (`data/approved/attendance/mvp_attendance_over_time.json`) |
+| 3 | **Hash** | `78d7153fe114537410a5179d36840a23af166cd2f86826bf09138ac02e5ad112` (`data/approved/attendance/mvp_attendance_over_time.json`) |
 | 4 | **Cadence** | Cửa sổ 90 ngày lịch; snapshot demo cố định tới CP2 |
 | 5 | **Privacy** | Chỉ `student_ref` pseudonymous; không MSSV/tên/email/SĐT; không map danh tính trong repo |
 

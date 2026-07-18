@@ -55,7 +55,7 @@ _DEFAULT_SEMESTER_DOMAIN_PATH = (
 # M05b / H15 approval constants (decision #18) — no PII.
 ATTENDANCE_APPROVAL = ApprovalArtifact(
     source_id=ATTENDANCE_SOURCE_ID,
-    snapshot_sha256="f65573ad1ec0e11f4093a57d3cf6e947a78ca994aa8d2feeaeabb6a25e2a2106",
+    snapshot_sha256="78d7153fe114537410a5179d36840a23af166cd2f86826bf09138ac02e5ad112",
     record_count=15,
     provenance_approved=True,
     schema_version="epu-1",
@@ -67,7 +67,7 @@ ATTENDANCE_APPROVAL = ApprovalArtifact(
 # Gate hash = committed domain_package.json bytes (not raw V59).
 SEMESTER_APPROVAL = ApprovalArtifact(
     source_id=SEMESTER_SOURCE_ID,
-    snapshot_sha256="a6bfdc959c83282e607e23dc115eb84980b8930338d94b7b72bc6c74a1fc1cae",
+    snapshot_sha256="73274079b30487f066cb2e1751c7ec70e2737ff794d6ae76e3e26ec4cf86df24",
     record_count=460,
     provenance_approved=True,
     schema_version="epu-1",

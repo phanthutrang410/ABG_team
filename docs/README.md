@@ -58,19 +58,17 @@ docs/
 | # | Tài liệu | Mục đích |
 |:-:|:---------|:---------|
 | 01 | [FPT AI API](04-engineering/01-fpt-ai-api.md) | Gọi FPT AI bằng API tương thích OpenAI |
-| 02 | [Harness Engineering](04-engineering/02-harness-engineering.html) | HTML snapshot tham khảo về harness engineering; không phải source of truth của sản phẩm |
 | 03 | [EPU reference — catalog trường](04-engineering/03-epu-reference-data-fields.md) | Các trường đang có trong EPU reference (V59, profile, transcript v5); cơ sở chọn/loại nguồn, không phải SIS production |
 | 04 | [Hợp đồng tích hợp EPU](04-engineering/04-epu-data-integration-contract.md) | H10: nguồn không synthetic, taxonomy, pseudonym custody, data gate, schema chuẩn hóa |
 | 05 | [Kiến trúc hệ thống tối thiểu](04-engineering/05-system-architecture.md) | Container, luồng dữ liệu, care/state boundary MVP; SoT mỏng cho H06b/H10/H07 |
 | 06 | [Deploy / ops runbook](04-engineering/06-deploy-runbook.md) | Env, CORS, seed, health, smoke, rollback — **draft from arch; finalize at D4**; no secrets |
 | 07 | [Persistence schema MVP](04-engineering/07-mvp-persistence-schema.md) | Thiết kế DB `dwh` versioned, mapping metadata legacy và gate import đã duyệt cho H19/H20 |
 | 08 | [Data/ML scoring & fairness](04-engineering/08-data-ml-scoring-fairness-contract.md) | H10: features hai nhánh, coverage/`insufficient_data`, threshold, evaluation, fairness fail-closed |
+| 08b | [Agent grounding & guardrails](04-engineering/08-agent-grounding-guardrails.md) | H11b canonical: I/O, 7 refusals, adversarial; runtime pointer `POST …/explanation` (khác số với Data-ML `08-`) |
 | 09 | [Synthetic Data/ML contract (superseded)](04-engineering/09-synthetic-data-ml-fairness-contract-superseded.md) | Lịch sử synthetic — không dùng cho MVP path |
-| 10 | [FE/Agent integration contract](04-engineering/10-fe-agent-integration-contract.md) | H11a: allowlist display fields + list/detail/agent envelopes (empty/stale/insufficient/error) cho G05/T03 |
-| 11 | [Advisor-batch mail draft](04-engineering/11-advisor-batch-mail-draft.md) | Research/contract FR-12: gom case theo `advisor_ref`, bản nháp mail draft-only (H21/H22/G06) |
-| 12 | [Agent runtime integration & hardening](04-engineering/12-agent-runtime-integration-plan.md) | Hoàng H23–H26: server-derived context, HTTP runtime, structured grounding/FPT hardening và E2E gate FR-08 |
-
-`02-harness-engineering.html` là trang được lưu từ nguồn bên ngoài và có thể cần network hoặc asset gốc để render đầy đủ. Không dùng nội dung trong đó như requirement nếu chưa được đưa vào PRD/decision.
+| 10 | [FE/Agent integration contract](04-engineering/10-fe-agent-integration-contract.md) | H11a schema + **H11b** after-build: G05–G04 Done; agent = backend HTTP; **no FE Agent UI** |
+| 11 | [Advisor-batch mail draft](04-engineering/11-advisor-batch-mail-draft.md) | FR-12: `GET /advisor-handoff-drafts` (H22 Done); G06 FE Copy/`mailto:` |
+| 12 | [Agent runtime integration & hardening](04-engineering/12-agent-runtime-integration-plan.md) | H23–H26 Done (backend HTTP; mocked FPT); H11b docs closed |
 
 ## Thứ tự ưu tiên khi có mâu thuẫn
 

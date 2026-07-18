@@ -18,7 +18,7 @@
 
 | Mục | Owner | Task nguồn | Evidence | Status |
 |:--|:--|:--|:--|:--|
-| Live URL hoạt động (smoke lần 1) | Hoàng | D4a (shell) | **D4a shell 2026-07-18 ~06:05 +07:** FE `http://52.74.255.88:3000` · API `http://52.74.255.88:8000/health` → `{"status":"ok","service":"silent-shield","database":false}` · CORS ACAO=`http://52.74.255.88:3000` · rollback: instance `i-0b0576945d080cb3f`, API digest `sha256:7a6ba16516bcc33beb58f4497f0583b220061e2f502f7ff913656319c523a23b`, FE digest `sha256:58ccf51321418291ba8ac44b9034328e56542963f3dadb3764ef8539554c5973` · runbook [06-deploy-runbook.md](../04-engineering/06-deploy-runbook.md) · **not D4b** product list→case | [x] shell / [ ] D4b |
+| Live URL hoạt động (smoke lần 1) | Hoàng | D4a → **D4b** | **D4b product 2026-07-18 ~13:05 +07:** FE `http://52.74.255.88:3000` · API `http://52.74.255.88:8000` · health `{"status":"ok","service":"silent-shield","database":true}` · `GET /review-cases` state=`ok` n=50 · detail `rc-s-00518c9485a9` band=`can_ra_soat` student_ref=`s-00518c9485a9` · FE `/login` `/dashboard` `/select-role` 200 · CORS ACAO=`http://52.74.255.88:3000` · no `model_score`/PII/`advisor_ref` · images `:d4b` API `sha256:bab21546…` FE `sha256:70eb44b5…` · Postgres + approved import (sem `73274079…` / att `78d7153f…`) · runbook [06-deploy-runbook.md](../04-engineering/06-deploy-runbook.md) | [x] shell / [x] **D4b** |
 | Smoke test ẩn danh độc lập lần 1 | Văn Hải | V07 |  | [ ] |
 | Fix → redeploy → re-smoke | Hoàng | D4r |  | [ ] |
 | GitHub public, PII/secret scan | Hoàng | D3 | [10-d3-github-pii-secret-scan.md](10-d3-github-pii-secret-scan.md) · https://github.com/phanthutrang410/ABG_team | [x] |
@@ -57,7 +57,7 @@
 | Mục | Owner | Task | Evidence | Status |
 |:--|:--|:--|:--|:--|
 | Semester approved (M05b) | Hoàng | M05b | [14-m05b…](14-m05b-semester-approval.md) · decision #18 · hash `34a53298…` / 460 · raw ngoài git | [x] |
-| Attendance approved (H15) | Hoàng | H15 | [12-h15…](12-h15-attendance-approval-prep.md) · fixture `data/approved/attendance/mvp_attendance_over_time.json` · hash `f65573ad…` / 15 events | [x] |
+| Attendance approved (H15) | Hoàng | H15 | [12-h15…](12-h15-attendance-approval-prep.md) · fixture `data/approved/attendance/mvp_attendance_over_time.json` · hash `78d7153f…` / 15 events | [x] |
 | Source gate allowlist | Hoàng | H15/M05a | `mvp-attendance-over-time` in `SOURCE_ALLOWLIST`; `tests/test_source_gate.py` 26 pass | [x] |
 
 ## 5c. Agent runtime FR-08 (H23–H26) — 18/7 ~11:30
@@ -73,7 +73,18 @@
 | Targeted agent suite | Hoàng | H26 | `python -m pytest -q tests/test_h26_agent_e2e.py tests/test_h23_agent_context.py tests/test_h24_agent_api.py tests/test_h25_grounding.py tests/test_h25_fpt_transport.py tests/agent/` → **130 passed, 1 skipped** | [x] |
 | Full verify | Hoàng | H26 | `.\scripts\verify.ps1` → **410 passed, 1 skipped** · Ruff clean · FE lint/build green · `git diff --check` clean | [x] |
 | Live FPT smoke | Hoàng | H26 | **SKIP** — no approved key/deploy window this session; documented skip in `test_h26_live_fpt_smoke_skipped_by_default` | [ ] SKIP |
-| FE Agent UI / production RBAC | — | — | Out of scope H23–H26; H11b still needs G05 consumer docs; UI is separate FE task | [ ] N/A |
+| FE Agent UI / production RBAC | — | — | Out of scope H23–H26; UI is separate FE task | [ ] N/A |
+| H11b docs agent/FE sync | Hoàng | H11b | Arch §6 + guardrails + FE integration after-build; no FE Agent UI overclaim; [doc 10](../04-engineering/10-fe-agent-integration-contract.md) | [x] |
+
+## 5d. Advisor handoff draft FR-12 (H22) — 18/7
+
+> Draft-only API. **Không** claim SMTP/auto-send hay FE Copy/`mailto:` (G06).
+
+| Item | Owner | Task | Evidence | Status |
+|:--|:--|:--|:--|:--|
+| `GET /advisor-handoff-drafts` | Hoàng | H22 | `backend/app/cases/advisor_draft_router.py` · contract [11](../04-engineering/11-advisor-batch-mail-draft.md) · `tests/test_h22_advisor_handoff_draft_api.py` (8) | [x] |
+| mapping_repair bucket + forbidden-field | Hoàng | H22 | No email/phone/mssv/model_score; `requires_human_approval=true`; no send route | [x] |
+| G06 FE Copy/`mailto:` | Giang | G06 | Unblocked after H22; not part of H22 DoD | [ ] |
 
 ## 6. Fill template (H05b)
 

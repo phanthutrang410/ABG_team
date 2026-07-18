@@ -4,8 +4,6 @@ __pycache__
 .pytest_cache
 .ruff_cache
 tests
-alembic
-alembic.ini
 *.egg-info
 .env
 .env.*

@@ -25,8 +25,8 @@ Private ref:    .ai-log-private/d3-pii-secret-scan.json ;
 What verified:  API visibility=public; anonymous HTML/API 200;
                 tracked-tree scan: 0 secret pattern, 0 SĐT sau remediation;
                 .env + reference-Learning-Analytics-AI/ vẫn gitignore
-Redactions:      SĐT trong docs/03-project/02-team.md và
-                docs/Khao_sat_ABG_tong_hop.md → cột Liên hệ "—"
+Redactions:      24 findings SĐT trên hai bản khảo sát trùng đã được redact;
+                bản canonical còn lại: docs/03-project/02-team.md
 BLOCKED →:
 Status:         [x] done
 ```

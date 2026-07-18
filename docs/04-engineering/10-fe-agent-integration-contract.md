@@ -1,19 +1,34 @@
-# FE / Agent integration contract — Silent Shield (H11a)
+# FE / Agent integration contract — Silent Shield (H11a + H11b)
 
-> **Owner:** Hoàng · **Task:** H11a · **Depends:** H06a Done (`ReviewCase` / `Coverage` / `ScoringFeatures`).
+> **Owner:** Hoàng · **Tasks:** H11a (schema lock) · **H11b** (docs after build).
+> **Depends:** H06a Done (`ReviewCase` / `Coverage` / `ScoringFeatures`).
 >
-> Contract tối thiểu để **G05** (FE thay mock) và **T03** (agent interface) bắt đầu. Schema Pydantic: `backend/app/contracts/integration.py`. Fixture JSON dưới `backend/tests/fixtures/integration/`. Khi lệch prose ↔ code, sửa schema hoặc mở decision — không âm thầm chọn một bản.
+> Contract tối thiểu cho FE và agent. Schema Pydantic: `backend/app/contracts/integration.py`. Fixture JSON dưới `backend/tests/fixtures/integration/`. Khi lệch prose ↔ code, sửa schema hoặc mở decision — không âm thầm chọn một bản.
 >
-> **Không** thay [Data-ML](08-data-ml-scoring-fairness-contract.md) hay [Process](../02-product/03-process.md). Copy VI runtime vẫn thuộc [H12a](../03-project/03-sprint.md) / Data-ML §6 — contract này chỉ khóa **field allowlist** và **trạng thái lỗi**.
+> **Không** thay [Data-ML](08-data-ml-scoring-fairness-contract.md) hay [Process](../02-product/03-process.md). Copy VI runtime thuộc [H12a](../03-project/03-sprint.md) / Data-ML §6 — contract này khóa **field allowlist** và **trạng thái lỗi**.
 
 ## 1. Mục tiêu
 
-| Consumer | Được bắt đầu khi H11a Done |
+| Consumer | Vai trò khi H11a Done |
 |:---|:---|
 | G05 | Types/routes theo public DTO + fixture đã validate; loading/error/empty/`insufficient_data`/`stale` |
 | T03 | Agent context = cùng safe projection; refusal / insufficient / unavailable semantics |
 
-H02 HTTP list/detail và T01/T02 core/library đã implement theo envelope này. Server-derived context, public Agent command route và runtime hardening thuộc [H23–H26](12-agent-runtime-integration-plan.md); browser không được gửi `AgentContextResponse`.
+H02 HTTP list/detail và T01/T02 core/library implement theo envelope này. Server-derived context + public Agent command route: [H23–H26](12-agent-runtime-integration-plan.md); browser không được gửi `AgentContextResponse`.
+
+## 1.1 After build (H11b) — consumer matrix
+
+| Surface | Status | Consumer |
+|:--|:--|:--|
+| `GET /review-cases` list/detail | **Done** | G05 + G02 |
+| Care `POST /cases/.../transitions` | **Done** | G03 |
+| Threshold / fairness config | **Done** | G04 |
+| Agent `POST /review-cases/{id}/explanation` | **Done — backend HTTP** | Swagger / mocked E2E / future FE |
+| FE Agent explain UI | **Chưa ship** | Không claim trong slide/demo như đã có UI chat |
+
+**Claim boundary:** FR-08 = backend HTTP (H26). Không claim FE Agent UI, live FPT default smoke, hay production RBAC.
+
+**`advisor_ref`:** vẫn **forbidden** trên ReviewCase / agent context (H11a §2.1). Exception chỉ trên FR-12 handoff-draft envelope ([doc 11](11-advisor-batch-mail-draft.md) / H22) — không mở rộng vào list/detail/agent.
 
 ## 2. Allowed display fields (public + agent context)
 
@@ -65,7 +80,7 @@ FE **không** tự fallback band/priority khi API thiếu (RULES / AGENTS).
 
 ### 3.3 Agent context — `AgentContextResponse`
 
-| `status` | `case` | Hành vi T03 |
+| `status` | `case` | Hành vi |
 |:---|:---|:---|
 | `ready` | safe `ReviewCase` | Grounded explain / neutral draft |
 | `empty` | null | Không có case trong scope |
@@ -105,7 +120,12 @@ IntegrationProblem:
 
 ## 6. Verify / Done when
 
+### H11a (schema lock — Done)
 - Pydantic envelopes + `extra=forbid`; test reject forbidden keys trên mọi envelope.
 - Mọi fixture trên validate được.
-- Doc này + index docs; Sprint `H11a` Done → mở `G05` / `T03`.
-- Không implement H02 routes hay agent runtime trong H11a (H11b hoàn thiện docs sau build).
+- Sprint `H11a` / `H11a-r` Done → mở `G05` / `T03`.
+
+### H11b (docs after build — Done when)
+- Docs khớp: G05–G04 consume list/detail/care/config; agent = backend HTTP; **no FE Agent UI**.
+- Architecture §6 + [guardrails](08-agent-grounding-guardrails.md) không còn “HTTP pending”.
+- Không overclaim live FPT / production RBAC / ReAct multi-loop.

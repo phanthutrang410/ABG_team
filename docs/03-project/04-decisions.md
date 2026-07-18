@@ -5,7 +5,7 @@
 3. **Care** — Handoff cho người; không workflow phạt tự động.
 4. **Fairness** — Metric nhóm là MVP, không phải nice-to-have.
 5. **Stack** — FastAPI + Next.js; lấy *ý tưởng* từ EduInsight local, không vendor cả repo cũ vào bài nộp.
-6. **LLM primary** — FPT AI Inference (mkp-api.fptcloud.com, OpenAI SDK + đổi base_url). Backup: OpenAI/Gemini. Agent tool-calling ưu tiên Qwen/Qwen3-32B. Deploy BE trên AWS (không dùng Render).
+6. **LLM primary** — FPT AI Inference (mkp-api.fptcloud.com, OpenAI SDK + đổi base_url). Backup: OpenAI/Gemini. Agent tool-calling ưu tiên Qwen/Qwen3-32B. Deploy BE trên AWS.
 7. **Primary system user** — Ban Lãnh đạo Khoa/Trường rà soát và phê duyệt chuyển tiếp; GVCN/cố vấn nhận case đã duyệt và thực hiện chăm sóc.
 8. **Product language** — Score chỉ là giá trị nội bộ; UI dùng “mức độ ưu tiên rà soát” và trạng thái case, không gắn nhãn sinh viên.
 9. **48h signal scope** — MVP dùng **điểm theo học kỳ** và **điểm danh theo thời gian** (sau source approval + privacy review + contract), kèm coverage và freshness. Không tạo chuỗi chuyên cần giả khi thiếu nguồn — trả `insufficient_data`. LMS/tín chỉ/CLB/thư viện/campus vẫn hậu MVP. Forecasting/gated fusion (M07/M08) là nghiên cứu riêng, không thay thế tín hiệu điểm danh trong MVP.

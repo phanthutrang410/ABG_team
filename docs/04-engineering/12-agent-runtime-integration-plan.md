@@ -2,7 +2,7 @@
 
 > **Owner:** Hoàng · **FR:** FR-08 · **Trạng thái:** Done (H23–H26 backend HTTP; mocked FPT)
 >
-> **Baseline (historical):** `T03`/`T01`/`T02` cung cấp schema/guardrail/stub/FPT adapter ở mức library. **Hiện tại:** H23 context service, H24 HTTP route, H25 structured grounding + transport harden, H26 mocked HTTP E2E + release evidence đã Done. FR-08 claimable ở **backend HTTP**; FE Agent UI và live FPT vẫn ngoài scope.
+> **Baseline (historical):** `T03`/`T01`/`T02` cung cấp schema/guardrail/stub/FPT adapter ở mức library. **Hiện tại:** H23 context service, H24 HTTP route, H25 structured grounding + transport harden, H26 mocked HTTP E2E + release evidence đã Done. FR-08 claimable ở **backend HTTP**; FE Agent UI và live FPT vẫn ngoài scope. **H11b closed** — docs FE/agent đồng bộ ([doc 10](10-fe-agent-integration-contract.md), [guardrails](08-agent-grounding-guardrails.md), arch §6).
 >
 > **Nguồn chuẩn:** [PRD §5.4 / FR-08](../02-product/04-prd.md), [Ethics §8](../02-product/05-ethics.md), [Process §3–4](../02-product/03-process.md), [system architecture §6](05-system-architecture.md), [H11a contract](10-fe-agent-integration-contract.md), [grounding/guardrails](08-agent-grounding-guardrails.md), [FPT API](01-fpt-ai-api.md).
 

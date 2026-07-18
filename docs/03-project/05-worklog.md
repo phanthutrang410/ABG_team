@@ -1,11 +1,24 @@
 # Nhật ký công việc
 
+## 2026-07-18 (H11b + H22 Done — docs agent/FE + advisor handoff draft API)
+
+- `H11b` **Done**: sync arch §6 (bounded DAG HTTP), [guardrails](../04-engineering/08-agent-grounding-guardrails.md) canonical, [doc 10](../04-engineering/10-fe-agent-integration-contract.md) after-build matrix; claim FR-08 = backend HTTP only; no FE Agent UI overclaim.
+- `H22` **Done**: `GET /advisor-handoff-drafts` · `AdvisorHandoffDraftBundle` · mapping_repair bucket · draft-only · `tests/test_h22_advisor_handoff_draft_api.py` (8); unlock `G06`.
+- Board: `H11b`/`H22` Done; `G06` TODO unblocked; `D4r` vẫn chờ V07+A05.
+
+## 2026-07-18 (D4b Done — Live product smoke list→case)
+
+- `D4b` **Done**: redeploy Live `:d4b` (API + FE), gắn Postgres, import approved semester (460 SV) + attendance (15 events), smoke list→case ẩn danh.
+- Evidence: health `database:true`; `GET /review-cases` state=`ok` n=50; detail `rc-s-00518c9485a9` / band=`can_ra_soat`; FE `/login` `/dashboard` 200; forbidden-field scan sạch; [07-release-evidence §2](07-release-evidence.md).
+- Board sync: `G05`/`G02`/`G03`/`G04` **Done** (PR #23 + AI-log); `H11b`/`V07`/`A05` **unblocked**; `D4r` còn chờ V07+A05.
+- Fixture gate: chuẩn hóa LF + hash approval `73274079…` / `78d7153f…` (CRLF working-tree hash cũ lệch GitHub tarball). Dockerfile/.dockerignore: giữ `alembic` trong image cho H20 migrate.
+
 ## 2026-07-18 (H23–H26 Done — Agent runtime FR-08 backend HTTP)
 
 - `H23`–`H26` **Done**: server-derived `AgentContext` → `POST /review-cases/{case_id}/explanation` → structured grounding + hardened FPT client → mocked HTTP E2E.
 - Evidence: `backend/tests/test_h23_agent_context.py`, `test_h24_agent_api.py`, `test_h25_grounding.py`, `test_h25_fpt_transport.py`, `test_h26_agent_e2e.py`; release [07-release-evidence §5c](07-release-evidence.md).
 - Checks: targeted H23–H26 + `tests/agent/` → **130 passed, 1 skipped** (live FPT SKIP — no approved key); `.\scripts\verify.ps1` → **410 passed, 1 skipped**; Ruff clean; `git diff --check` clean.
-- **Claim:** FR-08 E2E ở mức **backend HTTP** (FakeModel structured plan). **Không** claim FE Agent UI, production RBAC, hay live FPT. `H11b` unlock phía runtime; vẫn **BLOCKED → G05** cho docs/FE consumer.
+- **Claim:** FR-08 E2E ở mức **backend HTTP** (FakeModel structured plan). **Không** claim FE Agent UI, production RBAC, hay live FPT. `H11b` **Done** — docs sync sau G05–G04 + H26.
 
 ## 2026-07-18 (Agent runtime gap plan — H23–H26)
 
@@ -118,7 +131,7 @@
 ## 2026-07-18 (~04:00 D3 Done)
 
 - `D3` Done: repo đã `visibility=public` (`https://github.com/phanthutrang410/ABG_team`); anonymous API/HTML 200.
-- Scan tracked tree (`scripts/d3_pii_secret_scan.py` + gitleaks): không secret trong tree; 24 SĐT trong `02-team.md` / `Khao_sat_ABG_tong_hop.md` → redact cột Liên hệ `—`.
+- Scan tracked tree (`scripts/d3_pii_secret_scan.py` + gitleaks): không secret trong tree; 24 findings SĐT trên hai bản khảo sát trùng → redact; bản canonical còn lại là `02-team.md`.
 - Evidence: [10-d3-github-pii-secret-scan.md](10-d3-github-pii-secret-scan.md); private JSON dưới `.ai-log-private/` (gitignored). `.gitleaks.toml` allowlist false positive + ignored paths.
 - Residual: SĐT vẫn có trong git history cũ (không rewrite). `D4`/`V07` còn chờ `H02`/`G02`/`D4`.
 
@@ -189,7 +202,7 @@
 - P0 done: H01 backend `/health` + schemas `dwh`/`ml`, M01 synthetic CSV (40 hồ sơ), G01 Next.js dashboard mock
 - Đối chiếu [Problems Brief](../01-requirements/02-problems-brief.md): chốt Ban Lãnh đạo là primary user, viết lại PRD/ethics, tách danh mục tín hiệu và ghi [các độ lệch còn mở](../01-requirements/03-traceability.md)
 - Docker Postgres `vaic2026-db-1` up; `.env` created (cần điền `FPT_API_KEY`)
-- Chưa xong: AWS creds invalid, `GITHUB_TOKEN` user env, LangSmith khi T02
+- Chưa xong lúc ghi nhận: AWS creds invalid, `GITHUB_TOKEN` user env; optional tracing sau đó được bỏ khỏi MVP.
 
 ## 2026-07-17
 

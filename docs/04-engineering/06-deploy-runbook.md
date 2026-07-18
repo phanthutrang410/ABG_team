@@ -1,9 +1,7 @@
 # Deploy / ops runbook — Silent Shield MVP
 
-> **D4a Live shell (2026-07-18):** hostnames, health smoke, CORS, and rollback IDs below are real.
-> Product list→case smoke remains **`D4b`** (after H02/G02). Do not treat this runbook as D4b evidence.
->
-> Owner: Hoàng · Tasks: **H07** (draft) → **D4a** (Live shell) · Region: `ap-southeast-1` · Account deploy user: IAM `chungang` (no secrets in this doc).
+> **D4b Live product (2026-07-18):** list→case smoke Done (`database:true`, `/review-cases` ok). D4a shell digests kept for rollback.
+> Owner: Hoàng · Tasks: **H07** → **D4a** → **D4b** · Region: `ap-southeast-1` · Account deploy user: IAM `chungang` (no secrets in this doc).
 
 ## 0. Secrets policy
 
@@ -17,7 +15,7 @@
 |:--------|:--------------|
 | Containers, data flow, trust/care boundary | [05-system-architecture.md](05-system-architecture.md) |
 | Case transitions / forbidden actions | [Process §4](../02-product/03-process.md) |
-| Stack + BE host choice | [Decisions](../03-project/04-decisions.md) #5–6 (FastAPI + Next.js; BE on **AWS**, not Render) |
+| Stack + BE host choice | [Decisions](../03-project/04-decisions.md) #5–6 (FastAPI + Next.js; BE on **AWS**) |
 | LLM env / base URL | [01-fpt-ai-api.md](01-fpt-ai-api.md) |
 | Env *names* only | [`.env.example`](../../.env.example) |
 | Release evidence checklist | [07-release-evidence.md](../03-project/07-release-evidence.md) |
@@ -60,7 +58,6 @@ Copy `.env.example` → `.env` (or inject equivalent secrets on the host). Docum
 | `FPT_API_KEY` / `FPT_BASE_URL` / `FPT_MODEL` | Agent explain path | See FPT doc; empty key = agent features unavailable |
 | `OPENAI_API_KEY` | Optional backup LLM | Empty unless backup path enabled |
 | `MAX_CONCURRENT_AGENT_RUNS` / `AGENT_RUN_TIMEOUT_SECONDS` | Agent limits | Defaults in `.env.example` |
-| `LANGCHAIN_TRACING_V2` / `LANGCHAIN_API_KEY` / `LANGCHAIN_PROJECT` | Optional tracing | Keep off unless needed; no keys in git |
 | `NEXT_PUBLIC_API_BASE` / `BACKEND_URL` | Frontend → API | Live bake: `http://52.74.255.88:8000` |
 
 **Production:** set the same names via AWS / host env on the container. Do not paste secret values here. Secret injection path for D4a: EC2 user-data / `docker run -e` only (no Secrets Manager yet).
@@ -128,25 +125,27 @@ Expected: HTTP 200 (home `/` may 307 → `/dashboard`).
 
 | # | Check | Pass criteria | Status |
 |:-:|:------|:--------------|:-------|
-| 1 | Live UI loads | FE origin reachable; no PII in URL | **Pass D4a** — `http://52.74.255.88:3000` (dashboard 200) |
-| 2 | `GET /health` on Live API | `status` ok; document DB flag | **Pass D4a** — `database: false` |
-| 3 | List → case (anonymous) | Public `ReviewCase` fields only | **Deferred → D4b** (needs H02/G02); do not claim |
-| 4 | Care copy / `insufficient_data` | Matches Ethics/PRD | **Deferred → D4b** |
-| 5 | Agent (if enabled) | Explain-only | **Deferred → D4b** / agent tasks |
+| 1 | Live UI loads | FE origin reachable; no PII in URL | **Pass D4b** — `http://52.74.255.88:3000` (`/login` `/dashboard` 200) |
+| 2 | `GET /health` on Live API | `status` ok; document DB flag | **Pass D4b** — `database: true` |
+| 3 | List → case (anonymous) | Public `ReviewCase` fields only | **Pass D4b** — `/review-cases` state=ok n=50; detail band only |
+| 4 | Care copy / `insufficient_data` | Matches Ethics/PRD | FE fail-closed + Live happy path; UAT → A05 |
+| 5 | Agent (if enabled) | Explain-only via API/OpenAPI | Backend H26 Done; **not** FE Agent UI; Live FPT optional/SKIP |
 
 Independent smoke owner from P2: Văn Hải (`V07`). Hoàng owns first Live shell evidence on `D4a`.
 
 ## 8. Rollback / fallback
 
-**Known-good revision IDs (D4a shell):**
+**Known-good revision IDs (D4b product — keep D4a digests for rollback):**
 
 | Artifact | ID |
 |:---------|:---|
 | EC2 instance | `i-0b0576945d080cb3f` |
 | AMI | `ami-0b31875bb70b82eb2` |
 | Elastic IP allocation | `eipalloc-09066880c09305fbe` → `52.74.255.88` |
-| API image digest | `sha256:7a6ba16516bcc33beb58f4497f0583b220061e2f502f7ff913656319c523a23b` (`:d4a`) |
-| FE image digest | `sha256:58ccf51321418291ba8ac44b9034328e56542963f3dadb3764ef8539554c5973` (`:d4a`) |
+| API image digest (D4b) | `sha256:bab21546c5ce4fb24277bcb59e9276416a956dabf6168b6ce0a2330cd11ae58a` (`:d4b`) |
+| FE image digest (D4b) | `sha256:70eb44b5aab652626aa695631ed5ac4d8158316a29f369e34f61b4f0d43a35fe` (`:d4b`) |
+| API image digest (D4a rollback) | `sha256:7a6ba16516bcc33beb58f4497f0583b220061e2f502f7ff913656319c523a23b` (`:d4a`) |
+| FE image digest (D4a rollback) | `sha256:58ccf51321418291ba8ac44b9034328e56542963f3dadb3764ef8539554c5973` (`:d4a`) |
 | Security group | `sg-0c88406bc7b7fd0d6` |
 
 **Rollback procedure (no secrets):**
@@ -172,8 +171,8 @@ Independent smoke owner from P2: Văn Hải (`V07`). Hoàng owns first Live shel
 - [x] Live frontend URL and API base (no secrets) — D4a
 - [x] CORS allowlist matches Live origin(s) — D4a
 - [x] Secret injection path documented (where keys live — not the values) — container `-e` / local `.env`
-- [ ] Seed/import steps + fixture provenance hash — **D4b / H08**
+- [x] Seed/import steps + fixture provenance hash — **D4b** (sem `73274079…` / att `78d7153f…`)
 - [x] Exact health + shell smoke commands with expected output — D4a
-- [x] Rollback steps with revision IDs — D4a
-- [x] Cross-link evidence rows in `07-release-evidence.md` — D4a shell row
-- [ ] Product list→case smoke — **D4b**
+- [x] Rollback steps with revision IDs — D4a + D4b digests
+- [x] Cross-link evidence rows in `07-release-evidence.md` — D4a shell + **D4b**
+- [x] Product list→case smoke — **D4b Done**

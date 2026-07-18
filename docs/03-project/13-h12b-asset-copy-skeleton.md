@@ -18,7 +18,7 @@ Silent Shield hỗ trợ Ban Lãnh đạo ưu tiên tín hiệu cần rà soát 
 | human-review | Có | Con người phê duyệt / loại / hoãn trước khi bàn giao; không kỷ luật tự động. |
 | attendance-mvp-insufficient | Có | Điểm danh theo thời gian = **MVP**; thiếu nguồn `H15` → `insufficient_data` trên nhánh chuyên cần — **không** gọi là Post-MVP. |
 | fairness-fail-closed | Có | Fairness chỉ công bố metric khi có thuộc tính audit đã duyệt + cỡ mẫu đủ; nếu không → `insufficient_data`. |
-| agent-grounded | Có | Agent chỉ giải thích đầu ra model/API đã có; không tự tính điểm hay suy đoán nguyên nhân. |
+| agent-grounded | Có | Agent chỉ giải thích đầu ra model/API đã có (backend HTTP / Swagger); không tự tính điểm hay suy đoán nguyên nhân. **Không** claim FE Agent chat UI. |
 | forecast-hybrid-shipped | **Không** | Cấm claim forecasting / gated fusion / hybrid đã ship hoặc nằm trong demo MVP. |
 | attendance-post-mvp | **Không** | Cấm gọi điểm danh theo thời gian là Post-MVP / ngoài phạm vi khi thiếu nguồn. |
 | raw-risk-label | **Không** | Cấm “Điểm rủi ro”, *high-risk student*, chẩn đoán bỏ học / sức khỏe tâm thần. |
@@ -33,7 +33,7 @@ Canonical strings cũng export trong FE: `ASSET_CLAIMS` / `BANNER_COPY` tại [`
 | 2 | Phạm vi dữ liệu MVP | attendance-mvp-insufficient; nêu `H15` nếu nhánh chuyên cần fail-closed | Live evidence |
 | 3 | Care / human review | human-review; thuật ngữ “tín hiệu cần rà soát” / “mức độ ưu tiên rà soát” | — |
 | 4 | Fairness + privacy | fairness-fail-closed; không PII / không giám sát chat-camera | — |
-| 5 | Agent grounded | agent-grounded | T02 + Live |
+| 5 | Agent grounded | agent-grounded | H26 + API/Swagger (không cần FE Agent UI) |
 | 6 | Demo path + giới hạn | List→case→review; **ghi rõ** forecast/hybrid = research/blocked | `D4r` URL + `H16` |
 | 7 | Không claim | Ba hàng **Không** ở §2 | Luôn |
 
