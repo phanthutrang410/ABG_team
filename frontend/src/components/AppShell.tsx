@@ -34,13 +34,13 @@ export function useSetTopbarInfo(updatedAt: string | null, alertCount: number) {
   useEffect(() => {
     setInfo?.({ updatedAt, alertCount });
     return () => setInfo?.(null);
-  }, [setInfo, updatedAt, alertCount]);
+  }, [alertCount, setInfo, updatedAt]);
 }
 
 /* ---------- Nav ---------- */
 
-type NavKey = "home" | "dashboard" | "signal" | "students" | "fairness" | "threshold" | "myclass" | "notify";
-type NavItem = { label: string; icon: NavKey; href: string; tab?: string };
+type NavKey = "home" | "dashboard" | "signal" | "students" | "fairness" | "threshold" | "calendar" | "notify";
+type NavItem = { label: string; icon: NavKey; href: string; tab?: string; exact?: boolean };
 
 /** Chỉ trang/tab đã có thật — không vẽ mục chết (Báo cáo/Cấu hình… chờ API). */
 const NAV_BY_ROLE: Record<Role, NavItem[]> = {
@@ -49,7 +49,11 @@ const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: "Phân tích", icon: "dashboard", href: "/analysis" },
     { label: "Thông báo", icon: "notify", href: "/notify" },
   ],
-  gvcn: [{ label: "Case của tôi", icon: "myclass", href: "/analysis" }],
+  gvcn: [
+    { label: "Case của tôi", icon: "home", href: "/advisor", exact: true },
+    { label: "Lớp & sinh viên", icon: "students", href: "/advisor/classes" },
+    { label: "Lịch theo dõi", icon: "calendar", href: "/advisor/follow-ups" },
+  ],
 };
 
 export function AppShell({ role, title, subtitle, children }: { role: Role; title?: string; subtitle?: string; children: ReactNode }) {
@@ -113,7 +117,7 @@ export function AppShell({ role, title, subtitle, children }: { role: Role; titl
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5, flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 {topInfo && (
-                  <button style={bellButton} title="Cảnh báo ưu tiên" aria-label={`${topInfo.alertCount} tín hiệu ưu tiên sớm`}>
+                  <button style={bellButton} title="Việc cần chú ý" aria-label={`${topInfo.alertCount} việc cần chú ý`}>
                     <BellIcon />
                     {topInfo.alertCount > 0 && <span style={bellDot} aria-hidden />}
                   </button>
@@ -159,7 +163,7 @@ function SideNav({ items }: { items: NavItem[] }) {
     <nav style={{ display: "grid", gap: 4, padding: "0 12px" }} aria-label="Điều hướng chính">
       {items.map((item) => {
         const base = item.href.split("?")[0];
-        const routeActive = pathname === base || pathname.startsWith(`${base}/`);
+        const routeActive = pathname === base || (!item.exact && pathname.startsWith(`${base}/`));
         const active = routeActive && (item.tab === undefined || item.tab === currentTab);
         return (
           <Link key={item.href} href={item.href} style={{ ...navLink, ...(active ? navLinkActive : {}) }}>
@@ -421,7 +425,7 @@ const NAV_ICONS: Record<NavKey, ReactNode> = {
   students: (<svg {...svgProps}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>),
   fairness: (<svg {...svgProps}><path d="M12 3v18" /><path d="M7 21h10" /><path d="M5 7h14" /><path d="M5 7 2 14h6L5 7z" /><path d="M19 7l-3 7h6l-3-7z" /></svg>),
   threshold: (<svg {...svgProps}><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3" /><path d="M2 14h4M10 8h4M18 16h4" /></svg>),
-  myclass: (<svg {...svgProps}><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 9h6M9 13h6M9 17h4" /></svg>),
+  calendar: (<svg {...svgProps}><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /><path d="m8 15 2 2 5-5" /></svg>),
   notify: (<svg {...svgProps}><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M22 7l-10 6L2 7" /></svg>),
 };
 

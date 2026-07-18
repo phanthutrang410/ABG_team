@@ -2,6 +2,7 @@
 
 import { use, useCallback, useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BandBadge, CaseStateBadge } from "@/components/badges";
 import { AgentPanel } from "@/components/AgentPanel";
 import { AppShell } from "@/components/AppShell";
@@ -20,6 +21,7 @@ import type { CaseDetailResponse, CaseState } from "@/lib/types";
 export default function CaseDetailPage({ params }: { params: Promise<{ caseId: string }> }) {
   const { caseId } = use(params);
   const { activeRole } = useSession();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [response, setResponse] = useState<CaseDetailResponse | null>(null);
 
@@ -34,9 +36,13 @@ export default function CaseDetailPage({ params }: { params: Promise<{ caseId: s
   }, [caseId]);
 
   useEffect(() => {
+    if (activeRole === "gvcn") {
+      router.replace("/advisor#cases");
+      return;
+    }
     const controller = load();
     return () => controller.abort();
-  }, [load]);
+  }, [activeRole, load, router]);
 
   const handleStateChange = useCallback((next: CaseState) => {
     setResponse((prev) =>
@@ -44,9 +50,21 @@ export default function CaseDetailPage({ params }: { params: Promise<{ caseId: s
     );
   }, []);
 
+  if (activeRole === "gvcn") {
+    return (
+      <AppShell
+        role="gvcn"
+        title="Case được bàn giao cho tôi"
+        subtitle="Chi tiết case của cố vấn được mở trong workspace đã scope theo vai."
+      >
+        <div style={{ ...card, color: "#64748b" }}>Đang trở về danh sách case được giao…</div>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell
-      role={activeRole ?? "ban_quan_ly"}
+      role="ban_quan_ly"
       title="Chi tiết case"
       subtitle="Dữ liệu định danh giả và mức ưu tiên rà soát; con người phê duyệt trước mọi bàn giao."
     >

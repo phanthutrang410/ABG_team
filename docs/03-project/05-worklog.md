@@ -1,5 +1,12 @@
 # Nhật ký công việc
 
+## 2026-07-19 (PR #35 — conflict resolve + advisor fail-closed gate)
+
+- Merge `main` vào branch Duy; resolve `frontend/src/app/analysis/page.tsx` theo cấu trúc redirect GVCN → `/advisor#cases` (không ghép lại `AdvisorAnalysis` / client filter từ #34).
+- Quyết định A+B: mặc định fail-closed `unavailable` trên `/advisor*`; localStorage generator chỉ khi `NEXT_PUBLIC_ADVISOR_LOCAL_DEMO=1` và `NODE_ENV !== production`.
+- Tests: redirect/gate + role guard + demo flag (`frontend/tests/advisor-routing.test.mts`).
+- G07 vẫn TODO: chưa wire scoped API / auth shell thật — không coi demo localStorage là Done.
+
 ## 2026-07-18 (V05 Done — Thu Trang nộp CP2)
 
 - Thu Trang nộp Checkpoint 2: Live URL `https://abg-team.vercel.app` + GitHub `https://github.com/phanthutrang410/ABG_team`.
