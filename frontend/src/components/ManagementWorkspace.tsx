@@ -132,8 +132,8 @@ function DashboardBody() {
       {/* Ẩn ở Tổng quan để khu AI phủ trọn màn hình */}
       {tab !== "overview" && (
         <p className="text-xs text-slate-400">
-          Dữ liệu và hành động đi thẳng API — không hiển thị điểm số nội bộ của model.
-          Scoping theo khoa/lớp và danh sách toàn bộ SV chờ API bổ sung (design spec §9).
+          Dữ liệu và hành động được đồng bộ trực tiếp, không hiển thị điểm số nội bộ của mô hình.
+          Phạm vi theo khoa, lớp và danh sách toàn bộ sinh viên đang được hoàn thiện.
         </p>
       )}
     </div>
@@ -261,7 +261,7 @@ function OverviewHeader({
   if (counts.newSignals > 0) segments.push({ strong: `${counts.newSignals} tín hiệu mới`, text: "được phát hiện" });
   if (counts.pending > 0) segments.push({ strong: `${counts.pending} case`, text: "đang chờ thầy/cô duyệt" });
   if (counts.active > 0) segments.push({ strong: `${counts.active} case`, text: "đang được theo dõi / hỗ trợ" });
-  if (counts.limitedData > 0) segments.push({ strong: `${counts.limitedData} case`, text: "dữ liệu còn hạn chế — hệ thống không kết luận khi thiếu dữ liệu" });
+  if (counts.limitedData > 0) segments.push({ strong: `${counts.limitedData} case`, text: "có dữ liệu còn hạn chế; hệ thống chưa đưa ra kết luận" });
 
   // 3 tool của EduSignal AI (plan.md §3.2). Các tool chỉ điều hướng tới route
   // đã có thật; trang Tổng quan không tự tính thêm band hay dữ liệu sinh viên.
@@ -272,7 +272,7 @@ function OverviewHeader({
       key: "report",
       icon: iconPaths.fileText,
       title: "Xuất báo cáo tổng thể",
-      desc: `${watchStudents} SV trong diện theo dõi · ${counts.newSignals} phát hiện mới — xem, in / lưu PDF`,
+      desc: `${watchStudents} SV trong diện theo dõi · ${counts.newSignals} phát hiện mới · xem, in hoặc lưu PDF`,
       accent: "bg-[#fee2e2] text-[#dc2626]",
       onClick: () => setReportOpen(true),
     },
@@ -280,7 +280,7 @@ function OverviewHeader({
       key: "analyze",
       icon: iconPaths.search,
       title: "Phân tích sinh viên",
-      desc: `${counts.students} sinh viên có tín hiệu — tra cứu mã SV rồi mở phân tích chi tiết`,
+      desc: `${counts.students} sinh viên có tín hiệu · tra cứu mã SV và xem phân tích chi tiết`,
       accent: "bg-emerald-50 text-emerald-600",
       onClick: () => router.push("/analysis?tab=students"),
     },
@@ -333,7 +333,7 @@ function OverviewHeader({
             Chúc thầy/cô một ngày làm việc hiệu quả. EduSignal đã hoàn tất rà soát dữ liệu mới nhất.
           </p>
           <p className="mt-1 text-slate-400 text-sm">
-            Hệ thống <strong className="font-semibold text-slate-600">chỉ gợi ý</strong> — mọi quyết định do thầy/cô thực hiện.
+            Hệ thống <strong className="font-semibold text-slate-600">chỉ đưa ra gợi ý</strong>. Mọi quyết định do thầy/cô thực hiện.
           </p>
         </div>
         {analyzedAt && (
@@ -393,12 +393,12 @@ function OverviewHeader({
                 </p>
               ) : (
                 <p className="text-sm text-slate-500 mt-1.5">
-                  Chưa có tín hiệu mới cần chú ý trong kỳ dữ liệu này — tôi sẽ tiếp tục theo dõi.
+                  Chưa có tín hiệu mới cần chú ý trong kỳ dữ liệu này. Tôi sẽ tiếp tục theo dõi.
                 </p>
               )}
               {isStale && (
                 <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                  Snapshot có thể đã cũ — số liệu trên không được coi là mới nhất.
+                  Dữ liệu có thể đã cũ. Các số liệu trên không được coi là mới nhất.
                 </p>
               )}
               <button
@@ -411,7 +411,7 @@ function OverviewHeader({
               {/* Nguồn của bản tin — snapshot/version thật từ response, không suy đoán */}
               {latest && (
                 <p className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
-                  Snapshot {formatAnalyzedAt(analyzedAt)} · dataset {latest.dataset_version} · model {latest.model_version} — bản tin tính trực tiếp từ dữ liệu, chưa gọi model AI.
+                  Cập nhật {formatAnalyzedAt(analyzedAt)} · bộ dữ liệu {latest.dataset_version} · mô hình {latest.model_version}. Bản tin được tổng hợp trực tiếp từ dữ liệu hiện có.
                 </p>
               )}
             </div>
@@ -486,7 +486,7 @@ function routeIntent(q: string, c: ReturnType<typeof computeCounts>): QuickAnswe
   }
   if (has(/tại sao|tai sao|vì sao|vi sao|giải thích|giai thich|ly do|lý do/)) {
     return {
-      a: "Lý do gợi ý của từng trường hợp (yếu tố đóng góp, độ phủ dữ liệu) nằm trong trang chi tiết case — mở danh sách tín hiệu rồi chọn case cần xem.",
+      a: "Lý do gợi ý của từng trường hợp, gồm yếu tố đóng góp và độ phủ dữ liệu, nằm trong trang chi tiết. Mở danh sách tín hiệu và chọn case cần xem.",
       action: { label: "Mở danh sách tín hiệu", tab: "signals" },
     };
   }
@@ -503,7 +503,7 @@ function routeIntent(q: string, c: ReturnType<typeof computeCounts>): QuickAnswe
     };
   }
   if (has(/sinh viên|sinh vien|\bsv\b|lớp|lop/)) {
-    const note = has(/lớp|lop/) ? " Lọc theo lớp/khoa chưa có API — hiện tra cứu được theo mã SV." : "";
+    const note = has(/lớp|lop/) ? " Chức năng lọc theo lớp và khoa đang được hoàn thiện; hiện có thể tra cứu theo mã SV." : "";
     return {
       a: `Có ${c.students} sinh viên đang có tín hiệu trong kỳ này.${note}`,
       action: { label: "Mở trang Sinh viên", tab: "students" },
@@ -525,7 +525,7 @@ function routeIntent(q: string, c: ReturnType<typeof computeCounts>): QuickAnswe
     };
   }
   return {
-    a: "Tôi chưa hỗ trợ câu này trong bản demo. Thử hỏi về: trường hợp ưu tiên, tín hiệu mới, case chờ duyệt, sinh viên, dashboard, fairness hoặc ngưỡng.",
+    a: "Tôi chưa hỗ trợ câu hỏi này. Bạn có thể hỏi về trường hợp ưu tiên, tín hiệu mới, case chờ duyệt, sinh viên, dashboard, fairness hoặc ngưỡng.",
   };
 }
 
@@ -585,7 +585,7 @@ function AiQuickChat({ counts, setTab }: { counts: ReturnType<typeof computeCoun
         </button>
       </form>
       <p className="text-[11px] text-slate-400 pl-2">
-        Trợ lý điều hướng (demo) — trả lời được tính từ dữ liệu đang hiển thị, chưa gọi model AI.
+        Trợ lý điều hướng trả lời dựa trên dữ liệu đang hiển thị.
       </p>
     </div>
   );
@@ -617,12 +617,12 @@ function AnalyticsTab({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-        <p className="text-sm text-slate-500 mt-1">Tổng hợp số liệu rà soát — mọi con số tính trực tiếp từ dữ liệu live.</p>
+        <p className="text-sm text-slate-500 mt-1">Tổng hợp số liệu rà soát từ dữ liệu hiện có.</p>
       </div>
 
       {response.state === "stale" && (
         <div className="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-2xl text-sm">
-          Dữ liệu có thể đã cũ — snapshot chưa được cập nhật gần đây.
+          Dữ liệu có thể đã cũ vì chưa được cập nhật gần đây.
         </div>
       )}
 
@@ -632,7 +632,7 @@ function AnalyticsTab({
             <Icon path={iconPaths.heart} className="w-8 h-8 text-slate-300" />
           </div>
           <h3 className="text-lg font-semibold text-slate-700">Chưa có tín hiệu trong kỳ này</h3>
-          <p className="text-sm text-slate-400 mt-1">Không có tín hiệu không đồng nghĩa mọi sinh viên đều ổn định — xem thêm độ phủ nguồn.</p>
+          <p className="text-sm text-slate-400 mt-1">Không có tín hiệu không đồng nghĩa mọi sinh viên đều ổn định. Vui lòng xem thêm độ phủ nguồn.</p>
         </div>
       ) : (
         <>
@@ -671,11 +671,11 @@ function AnalyticsTab({
           {/* Charts — bar nominal một màu (nhãn + số hiển thị); donut 2 band có legend kèm số */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
             <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-              <ChartHeader title="Trạng thái xử lý" subtitle="Số case theo từng trạng thái — dữ liệu live" icon={iconPaths.activity} />
+              <ChartHeader title="Trạng thái xử lý" subtitle="Số case theo từng trạng thái hiện tại" icon={iconPaths.activity} />
               <BarRows rows={stateRows(items)} color="#dc2626" />
             </div>
             <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-              <ChartHeader title="Mức ưu tiên rà soát" subtitle="Phân bổ từ dữ liệu live" icon={iconPaths.scale} />
+              <ChartHeader title="Mức ưu tiên rà soát" subtitle="Phân bổ từ dữ liệu hiện có" icon={iconPaths.scale} />
               <Donut segments={bandSegments(items)} centerValue={counts.total} centerLabel="tín hiệu" />
             </div>
           </div>
@@ -687,7 +687,7 @@ function AnalyticsTab({
               <TaskList counts={counts} setTab={setTab} />
             </div>
             <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-              <ChartHeader title="Yếu tố đóng góp phổ biến" subtitle="Từ model, tối đa 5" icon={iconPaths.sparkles} />
+              <ChartHeader title="Yếu tố đóng góp phổ biến" subtitle="Tối đa 5 yếu tố" icon={iconPaths.sparkles} />
               <BarRows rows={factorRows(items)} color="#dc2626" />
             </div>
           </div>
@@ -699,7 +699,7 @@ function AnalyticsTab({
             </div>
             <div>
               <p className="text-sm font-medium text-slate-600">Xu hướng tín hiệu theo kỳ</p>
-              <p className="text-xs text-slate-400">Chưa có API lịch sử tín hiệu theo học kỳ — không vẽ số liệu giả (design spec §9, chờ backend).</p>
+              <p className="text-xs text-slate-400">Chưa đủ dữ liệu lịch sử để thể hiện xu hướng tín hiệu theo học kỳ.</p>
             </div>
           </div>
 
@@ -742,7 +742,7 @@ function factorRows(items: ReviewCase[]) {
 
 function SignalsList({ response, onOpenCase }: { response: CaseListResponse; onOpenCase: (caseId: string) => void }) {
   if (response.state === "error") {
-    return <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl">Không tải được danh sách tín hiệu — máy chủ tạm thời không phản hồi.</div>;
+    return <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl">Không tải được danh sách tín hiệu. Máy chủ tạm thời không phản hồi.</div>;
   }
   if (response.state === "empty") {
     return <div className="bg-slate-50 border border-slate-200 text-slate-600 p-4 rounded-xl">Chưa có tín hiệu mới trong kỳ dữ liệu này.</div>;
@@ -752,7 +752,7 @@ function SignalsList({ response, onOpenCase }: { response: CaseListResponse; onO
       <h2 className="text-xl font-bold text-slate-800">Danh sách tín hiệu</h2>
       {response.state === "stale" && (
         <div className="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-xl text-sm">
-          Dữ liệu có thể đã cũ — danh sách vẫn hiển thị nhưng không được coi là mới nhất.
+          Dữ liệu có thể đã cũ. Danh sách vẫn hiển thị nhưng không được coi là mới nhất.
         </div>
       )}
       <CaseRowsTable items={response.items} onOpenCase={onOpenCase} />
@@ -780,7 +780,7 @@ function StudentsTab({ response, onOpenCase }: { response: CaseListResponse; onO
   }, [response, q, sort]);
 
   if (response.state === "error") {
-    return <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl">Không tải được danh sách — máy chủ tạm thời không phản hồi.</div>;
+    return <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl">Không tải được danh sách. Máy chủ tạm thời không phản hồi.</div>;
   }
 
   return (
@@ -813,8 +813,8 @@ function StudentsTab({ response, onOpenCase }: { response: CaseListResponse; onO
       )}
 
       <p className="text-xs text-slate-400">
-        Danh sách hiện gồm SV có tín hiệu (từ API case). Danh sách toàn bộ SV + tên/lớp + GPA cần API
-        bổ sung — mã SV là pseudonym trong demo.
+        Danh sách hiện gồm sinh viên có tín hiệu cần rà soát. Thông tin tên, lớp và GPA đang được hoàn thiện;
+        mã sinh viên hiện được bảo vệ bằng mã định danh riêng.
       </p>
     </div>
   );
@@ -1030,7 +1030,7 @@ function TaskList({ counts, setTab }: { counts: Counts; setTab: (t: Tab) => void
   }
 
   if (tasks.length === 0) {
-    return <div className="text-sm text-slate-400 italic py-4 text-center">Chưa có việc cần xử lý — quay lại khi có tín hiệu mới.</div>;
+    return <div className="text-sm text-slate-400 italic py-4 text-center">Chưa có việc cần xử lý. Vui lòng quay lại khi có tín hiệu mới.</div>;
   }
 
   return (
