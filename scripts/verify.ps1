@@ -2,13 +2,19 @@
 # Usage:
 #   .\scripts\verify.ps1           # full verify
 #   .\scripts\verify.ps1 -Quick    # lint only
+#   .\scripts\verify.ps1 -System   # full verify + Playwright system test
 
 param(
-    [switch]$Quick
+    [switch]$Quick,
+    [switch]$System
 )
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+
+if ($Quick -and $System) {
+    throw "-Quick và -System không thể dùng cùng nhau"
+}
 
 function Invoke-Step {
     param([string]$Name, [scriptblock]$Action)
@@ -82,6 +88,11 @@ try {
             }
             Invoke-Step "Frontend production build" {
                 npm run build --prefix frontend
+            }
+            if ($System) {
+                Invoke-Step "Cross-system Playwright tests" {
+                    & .\tests\system\run.ps1
+                }
             }
         }
     } else {
