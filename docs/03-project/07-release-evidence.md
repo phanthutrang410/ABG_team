@@ -77,6 +77,20 @@
 | FE Agent UI / production RBAC | — | — | Out of scope H23–H26; UI is separate FE task | [ ] N/A |
 | H11b docs agent/FE sync | Hoàng | H11b | Arch §6 + guardrails + FE integration after-build; no FE Agent UI overclaim; [doc 10](../04-engineering/10-fe-agent-integration-contract.md) | [x] |
 
+## 5e. Weekly wave + OpenAI + Global Agent (H28a–D6) — 18/7 evening
+
+| Item | Owner | Task | Evidence / note | Status |
+|:--|:--|:--|:--|:--|
+| Decision lock | Hoàng | H28a | Decision #23; arch §16; runbook §12 | [x] |
+| OpenAI runtime | Hoàng | H29 | `OpenAIResponsesClient`; `test_h29_openai_transport.py`; FPT inactive in factory | [x] |
+| Snapshot ledger + CLI | Hoàng | H30/H31 | Alembic `20260718_h30_snapshot`; `WeeklyWorkflowService`; `test_h30_h31_*` | [x] |
+| Mode B weekly core | Hoàng | H32–H34b | `app/weekly/*`; `test_h32_h34_weekly_core.py` + H34 router tests | [x] |
+| RBAC foundation | Hoàng | H36 | `app/auth/*`; `test_h36_rbac.py` | [x] |
+| Advisor / turns / export / ops | Hoàng | H35/H37/H38/D6 | `test_h35_*`, `test_h37_*`, `test_h38_*`, `test_d6_*` | [x] |
+| Backend suite | Hoàng | wave | `pytest -m "not slow and not eval"` → **548 passed, 1 skipped** · Ruff clean | [x] |
+| Combined linked namespace | — | H32 | Still `approval:pending-linked-namespace` — Mode B only | [ ] pending |
+| FE G07–G09 / T05 / Live EventBridge | Giang/Trang/ops | — | Not claimed on submission Live URL | [ ] N/A |
+
 ## 5d. Advisor handoff draft FR-12 (H22) — 18/7
 
 > Draft-only API. **Không** claim SMTP/auto-send hay FE Copy/`mailto:` (G06).

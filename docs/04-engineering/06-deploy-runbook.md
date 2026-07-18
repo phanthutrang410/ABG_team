@@ -203,3 +203,25 @@ Invoke-RestMethod https://abg-team.vercel.app/health
 ```
 
 Pass: login UI loads; `/review-cases` returns `state=ok` with items; dashboard list→detail works; DevTools shows no mixed-content errors.
+
+## 12. Weekly worker / scheduler (H28a lock — Decision #23)
+
+> **Status:** target ops shape locked; `D6` implements deploy. Do **not** embed APScheduler in the FastAPI web process.
+
+```text
+EventBridge schedule (or approved cron host)
+  → SQS queue (or equivalent job queue)
+  → worker process
+  → WeeklyWorkflowService (same entry as CLI `weekly run`)
+```
+
+| Concern | Locked choice |
+|:--------|:--------------|
+| Trigger | External only (EventBridge preferred; approved cron host acceptable) |
+| Auth | Service credential / IAM role on worker — not browser JWT |
+| Idempotency | Manifest content hash + idempotency key; duplicate → no-op |
+| Kill switches | Separate flags: ingestion, case materialization, briefing publish, OpenAI calls |
+| OpenAI | **Not** on critical weekly DAG path; worker must succeed with provider off |
+| Secrets | `OPENAI_API_KEY` / DB URL only on API+worker hosts — never on Vercel FE |
+
+CLI local/demo replay uses the same service with approved pseudonymous bytes. Public upload endpoints remain forbidden.

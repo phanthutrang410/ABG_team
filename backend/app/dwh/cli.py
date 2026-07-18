@@ -21,6 +21,7 @@ from pathlib import Path
 
 from app.config import get_settings
 from app.dwh.importer import import_attendance, import_semester, readiness_report
+from app.dwh.weekly_workflow import run_weekly_from_bytes
 
 
 def _print_result(payload: object) -> None:
@@ -28,7 +29,7 @@ def _print_result(payload: object) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="python -m app.dwh.cli", description="H20 dwh importer")
+    parser = argparse.ArgumentParser(prog="python -m app.dwh.cli", description="H20/H31 dwh tools")
     parser.add_argument(
         "--database-url",
         default=None,
@@ -52,6 +53,14 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("readiness", help="Print non-PII readiness report")
 
+    p_weekly = sub.add_parser("weekly", help="H31 weekly workflow CLI")
+    weekly_sub = p_weekly.add_subparsers(dest="weekly_command", required=True)
+    p_run = weekly_sub.add_parser("run", help="Stage/promote approved artifact bytes")
+    p_run.add_argument("--dataset-key", required=True)
+    p_run.add_argument("--path", type=Path, required=True, help="Approved JSON artifact path")
+    p_run.add_argument("--approval-id", required=True)
+    p_run.add_argument("--idempotency-key", default=None)
+
     args = parser.parse_args(argv)
     database_url = args.database_url or get_settings().database_url
 
@@ -62,6 +71,28 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "readiness":
         _print_result(readiness_report(database_url))
         return 0
+    elif args.command == "weekly":
+        if args.weekly_command == "run":
+            content = args.path.read_bytes()
+            wf = run_weekly_from_bytes(
+                database_url,
+                dataset_key=args.dataset_key,
+                content_bytes=content,
+                approval_id=args.approval_id,
+                idempotency_key=args.idempotency_key,
+            )
+            _print_result(
+                {
+                    "status": wf.status,
+                    "run_id": wf.run_id,
+                    "snapshot_id": wf.snapshot_id,
+                    "reason_codes": wf.reason_codes,
+                    "detail": wf.detail,
+                }
+            )
+            return 0 if wf.status in ("succeeded", "duplicate") else 1
+        parser.error(f"unknown weekly command {args.weekly_command}")
+        return 2
     else:
         parser.error(f"unknown command {args.command}")
         return 2

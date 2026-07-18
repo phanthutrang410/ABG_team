@@ -96,6 +96,8 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 
 **Freeze tới sau submission:** `M07` → `H14` → `M08` → `H17` → `T04`. `H15` **Done** (team-provisioned allowlist).
 
+**Wave sau release — weekly snapshot + Global Agent:** `H28` **Done ở mức kiến trúc/decision only**; build chưa ship. Hoàng sở hữu backend/docs/security/deploy `H28a`, `H29–H38`, `D6`; full brief tại [Stories — Hoàng](17-stories-hoang-weekly-agent.md). Wave này **không block** critical path hiện tại `V07+A05→D4r→V05→H16/H09` và không được dùng để overclaim feature đã có.
+
 ### Hoàng
 
 | ID | Task | Depends | Status |
@@ -107,7 +109,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | H06a | Pydantic internal/public envelopes | H10 | [x] **Done** (`H06a-r`) — semantic reopen landed; 42 contract tests |
 | H06b | Transition API theo Process state machine | H05a | [x] **Done — transition core** (giữ lịch sử); deploy-blocker harden landed (seed-only create, server actor, no public `advisor_ref`; 21 tests) — public shell |
 | H11a | Integration contract tối thiểu cho G05/T03 | H06a | [x] **Done REVALIDATE** (`H11a-r`) — 19 integration tests; unlocks G05/T03 |
-| H11b | Docs agent/FE hoàn thiện sau build | H11a, G05, T03, H26 | [x] **Done** — arch §6 + guardrails + FE integration after-build; no FE Agent UI overclaim |
+| H11b | Docs agent/FE hoàn thiện sau build | H11a, G05, T03, H26 | [x] **Done — historical gate**; repo sau đó có case-local `AgentPanel`; Global Agent/weekly briefing vẫn chưa ship |
 | H07 | Deployment/runbook docs | H05a | [x] Done — runbook draft; finalize Live/smoke/rollback tại D4a/D4b |
 | H19 | MVP persistence schema versioned + legacy mapping | H10 | [x] Done — Alembic 7 bảng `dwh` + 4 migrate tests; schema doc |
 | H20 | Transactional approved-fixture import vào `dwh` | H19, M06 | [x] **Done** — `app/dwh` import_gate/importer/cli; attendance + semester paths; tests `test_h20_*` |
@@ -127,6 +129,21 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | H25 | Structured grounding + FPT/provider hardening | H24, T02 | [x] **Done** — structured plan + VI renderer + FPT transport harden; `test_h25_grounding.py` + `test_h25_fpt_transport.py` |
 | H26 | Agent HTTP E2E + runtime/release evidence | H24, H25 | [x] **Done** — `test_h26_agent_e2e.py` mocked M02→HTTP; full verify 410 pass / 1 skip (live FPT SKIP); [evidence §5c](07-release-evidence.md); unlock H11b runtime side |
 | H27 | Deploy frontend production lên Vercel | D3, D4b | [x] **Done** — `https://abg-team.vercel.app` · rewrite → EC2 API · smoke health+`/review-cases` state=ok n=50 · dpl `2JkMB2Lz…` · PR #26 · **chưa** flip Live URL nộp trước V07/A05 |
+| H28 | Target architecture: weekly snapshot + OpenAI + Global Agent | H27 | [x] **Done — docs/decision only** · feature chưa ship · [doc 13](../04-engineering/13-weekly-snapshot-global-agent-architecture.md) |
+| H28a | Readiness/decision lock cho delta, linked namespace, identity, retention, scheduler | H28 | [x] **Done** — Decision #23; Mode B namespace; EventBridge→worker; [brief](17-stories-hoang-weekly-agent.md#h28a) |
+| H29 | Provider-neutral runtime + OpenAI Responses adapter | H28 | [x] **Done** — `OpenAIResponsesClient` + `store=false`; no FPT in `get_text_model`; `test_h29_openai_transport.py` · [brief](17-stories-hoang-weekly-agent.md#h29) |
+| H30 | Snapshot v2 registry + workflow run/step ledger + active pointer | H28a, H19 | [x] **Done** — Alembic `20260718_h30_snapshot`; backfill from source_manifest · [brief](17-stories-hoang-weekly-agent.md#h30) |
+| H31 | Stage/promote workflow service + CLI approved replay | H30, H20 | [x] **Done** — `WeeklyWorkflowService` + `cli weekly run`; idempotent replay · [brief](17-stories-hoang-weekly-agent.md#h31) |
+| H32 | Canonical linked bundle + immutable signal observations | H31, H28a | [x] **Done — Mode B** — `weekly/observations.py`; combined → `linked_namespace_pending`; [brief](17-stories-hoang-weekly-agent.md#h32) |
+| H33a | Durable case/event persistence; GET read-only | H32, H06b | [x] **Done — in-memory MVP** — `CaseRepository` one-active-episode; GET no write · [brief](17-stories-hoang-weekly-agent.md#h33a) |
+| H33b | Deterministic delta + case reconcile | H33a, H28a | [x] **Done** — full delta matrix + reconcile no auto-close · [brief](17-stories-hoang-weekly-agent.md#h33b) |
+| H36 | Production identity/RBAC/scope + access-audit foundation | H28a, H06b | [x] **Done** — `app/auth` principal/scope + access audit; unlocks G07 · [brief](17-stories-hoang-weekly-agent.md#h36) |
+| H34a | Weekly report materializer + scoped APIs | H33b, H36 | [x] **Done** — materializer + `GET /weekly-reports/latest` · [brief](17-stories-hoang-weekly-agent.md#h34a) |
+| H34b | Deterministic briefing + one-time receipt APIs | H34a, H36 | [x] **Done** — briefing + shown/ack; unlocks G08 · [brief](17-stories-hoang-weekly-agent.md#h34b) |
+| H35 | Advisor draft v2 trên durable approved cases/report | H34a, H36, H22 | [x] **Done** — draft-only v2; unlocks G09 · [brief](17-stories-hoang-weekly-agent.md#h35) |
+| H37 | Global Agent backend turn + strict capability registry | H29, H34b, H35, H36 | [x] **Done** — `POST /agent/turns`; unlocks T05 · [brief](17-stories-hoang-weekly-agent.md#h37) |
+| H38 | Export report an toàn + watermark/access audit | H34a, H36 | [x] **Done** — aggregate/case export; no bulk ID · [brief](17-stories-hoang-weekly-agent.md#h38) |
+| D6 | Scheduler/worker deploy + observability/retention/rollback | H31, H34b, H35, H37, H38 | [x] **Done — ops foundation** — kill switches + `scheduler_tick` + rollback stub; EventBridge deploy still manual · [brief](17-stories-hoang-weekly-agent.md#d6) |
 | D3 | GitHub public + PII/secret scan | — | [x] Done — tree sạch; **residual history accept CP2**; trước final: clean submission repo hoặc purge có phê duyệt |
 | D4a | Deploy infrastructure / Live shell (health + rollback sẵn) | H07, D3 | [x] **Done** — Live shell: API http://52.74.255.88:8000/health · FE http://52.74.255.88:3000 · EC2 i-0b0576945d080cb3f (**NOT** D4b) |
 | D4b | Product smoke list→case trên Live URL | D4a, H02, G02 | [x] **Done** — 2026-07-18 ~13:05 +07: health `database:true`; `GET /review-cases` state=ok n=50; detail `rc-s-00518c9485a9` band=`can_ra_soat`; FE `/login` `/dashboard` 200; no forbidden fields; images `:d4b` + Postgres import |
@@ -162,6 +179,9 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | G03 | Care UI review/handoff | H03, H12a | [x] **Done** — `CareActions.tsx` Process §4; AI-log G03 |
 | G04 | Fairness/privacy/threshold panel | H04, H12a | [x] **Done** — login/role + Fairness/Threshold panels; AI-log G04; PR #23 |
 | G06 | FE filter theo advisor + Copy/`mailto:` draft lô | H22, G05 | [ ] **TODO** — unblocked (H22+G05 Done); stretch FR-12; không block D4b |
+| G07 | Authenticated layout + global Agent shell | H36 | [ ] **TODO — unblocked** (H36 Done) |
+| G08 | Weekly briefing/report UI | H34b, G07 | [ ] BLOCKED → G07 · (H34b Done) |
+| G09 | `/notify` advisor draft FE | H35, G07 | [ ] BLOCKED → G07 · (H35 Done) |
 
 ### Thu Trang
 
@@ -171,6 +191,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | T01 | Agent stub từ fixture, refusal tests xanh | T03, H06a | [x] **Done** — stub deterministic `backend/app/agent/stub.py` + guardrail classifier `guardrails.py` (mock model, không LLM); 12/12 ca adversarial pass + determinism + grounding-only-case-codes; 16 tests mới (`tests/agent/test_agent_stub.py`), tổng agent 42 xanh; output quét `assert_no_forbidden_keys` |
 | T02 | Agent grounded explanation core/library | T01, H02, H12a | [x] **Done — core/library only**: FPT text adapter + mocked grounding tests; context service/HTTP/provider runtime và FR-08 E2E theo `H23`–`H26` |
 | T04 | Agent adapter hybrid (Post-MVP) | H17 | [ ] **FREEZE** tới sau submission |
+| T05 | Agent tool/RBAC/adversarial e2e matrix | H29, H34b, H37, G07 | [ ] BLOCKED → G07 · (H29/H34b/H37 Done) |
 | V05 | Nộp Checkpoint 2 (Live URL + GitHub → BTC) | D3, D4r, V07 | [ ] BLOCKED → D4r, V07 · **owner chuyển từ Văn Hải → Thu Trang** (18/7); story [16](16-stories-thu-trang.md) |
 
 ### Hạ Giang (`giang`)
@@ -185,7 +206,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
 | V07 | QA release + smoke độc lập (lần 1) | D3, D4b | [ ] **TODO** — unblocked; **checklist + output template** [09](09-stories-van-hai.md); defect → D4r; **không** nộp CP2 |
-| V02 | Script demo 4′ + Q&A 2′, rehearsal | D4r, G02, H26, G03, G04, H12a | [ ] BLOCKED → D4r… · chỉ claim Agent runtime sau H26; UI Agent cần consumer FE riêng |
+| V02 | Script demo 4′ + Q&A 2′, rehearsal | D4r, G02, H26, G03, G04, H12a | [ ] BLOCKED → D4r… · case-local Agent chỉ claim theo Live evidence; Global Agent/weekly briefing cần G07+ và chưa ship |
 | D2 | Video ≤5 phút đúng Live URL | D1, D4r | [ ] BLOCKED → D1, D4r |
 | V08 | Rà AI log → gap cho Hoàng | H05b | [ ] **DEFER** gần CP2 / trước D5 — log một thể (decision #19); không làm ngay |
 | V06 | Nộp cuối + lưu xác nhận BTC | D1, D2, D3, D4r, D5, H09, H16 | [ ] BLOCKED → D1…H16 |
@@ -197,6 +218,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 **Lane:** docs/contract nguồn chuẩn, backend/API, deploy, release evidence.
 **Read first:** PRD §§4–8, Ethics, Process §4, decisions, [EPU contract](../04-engineering/04-epu-data-integration-contract.md), [Data-ML](../04-engineering/08-data-ml-scoring-fairness-contract.md).
 **Không làm:** tự viết model/fusion của Duy.
+**Next wave:** target architecture [doc 13](../04-engineering/13-weekly-snapshot-global-agent-architecture.md); full Task Brief `H28/H28a/H29–H38/D6` tại [Stories — Hoàng](17-stories-hoang-weekly-agent.md).
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
@@ -207,7 +229,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | H06a | P1 · **Done** (`H06a-r`) | Pydantic internal/public envelopes — semantic Data-ML §3 | **Done:** semantic reopen landed; coverage/band/factors/`dataset_version`; 42 contract tests |
 | H06b | P1 · sau H05a | Transition API đúng Process | **Done — transition core** (giữ lịch sử): `backend/app/cases/*`. **Deploy-blocker harden landed:** seed-only create, server actor, no public `advisor_ref` (21 tests) — public shell |
 | H11a | P1 · **Done REVALIDATE** | Integration contract tối thiểu | **Done (`H11a-r`):** 19 integration tests; unlocks G05/T03 |
-| H11b | P2 · sau G05 · T03+H26 Done | Docs agent/FE hoàn thiện | **Done** — arch §6 + [guardrails](../04-engineering/08-agent-grounding-guardrails.md) + [doc 10](../04-engineering/10-fe-agent-integration-contract.md); FR-08 = backend HTTP only |
+| H11b | P2 · sau G05 · T03+H26 Done | Docs agent/FE hoàn thiện | **Done — historical gate** — arch §6 + [guardrails](../04-engineering/08-agent-grounding-guardrails.md) + [doc 10](../04-engineering/10-fe-agent-integration-contract.md); case-local `AgentPanel` được thêm sau, Global Agent chưa ship |
 | H07 | P1 · sau H05a | Deployment/runbook: env, CORS, seed, health, smoke, rollback | Runbook không secret — **Done:** [06-deploy-runbook](../04-engineering/06-deploy-runbook.md) draft từ arch; linked docs index + arch; Live URL/smoke/rollback finalize tại `D4a`/`D4b` |
 | H19 | P1 · sau H10 | Thiết kế persistence MVP versioned: mapping metadata legacy DWH → schema `dwh` mới và migration DB rỗng | **Done:** [Schema persistence](../04-engineering/07-mvp-persistence-schema.md); Alembic 7 bảng `dwh` + `tests/test_dwh_migrate.py` (4); không copy schema/row legacy/PII; attendance table rỗng tới `H15` |
 | H20 | P1 · sau H19+M06 | Nạp transactional fixture M06 đã được duyệt vào `dwh` | **Done:** CLI `python -m app.dwh.cli`; gate fail → zero write; default `data/approved/` (attendance + semester domain package); optional raw via `SILENT_SHIELD_SEMESTER_SOURCE_PATH`; readiness không PII; `tests/test_h20_import_gates.py` + `tests/test_h20_import.py` |
@@ -221,8 +243,23 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | H23 | P2 · **Done** | Server-derived AgentContext + contract reconciliation | **Done:** `build_agent_context` / `AgentCommand` / state-intent matrix; M02 codes+version; fail-closed for H24 zero-call rule; `test_h23_agent_context.py` |
 | H24 | P2 · **Done** | Agent command API + production wiring | **Done:** `POST /review-cases/{case_id}/explanation`; server context; OpenAPI min fields; mocked HTTP; demo identity only — not production RBAC; `test_h24_agent_api.py` |
 | H25 | P2 · **Done** | Context-bound output + provider hardening | **Done:** no raw question to FPT; structured plan + backend VI render; transport/host/size/secret guards; `test_h25_*` |
-| H26 | P2 · **Done** | Agent runtime E2E + release evidence | **Done:** mocked HTTP E2E `test_h26_agent_e2e.py`; `verify.ps1` 410 passed / 1 skipped; live FPT SKIP; FR-08 claimable at **backend HTTP** level; FE UI still separate; `H11b` **Done** |
+| H26 | P2 · **Done** | Agent runtime E2E + release evidence | **Done:** mocked HTTP E2E `test_h26_agent_e2e.py`; `verify.ps1` 410 passed / 1 skipped; live FPT SKIP; FR-08 backend evidence lịch sử; case-local UI thêm sau; Global Agent/OpenAI migration tách sang H28+ |
 | H27 | P2 · 2–4h · sau D3+D4b | Deploy frontend production lên Vercel | **Done:** `https://abg-team.vercel.app`; same-origin rewrite → Live API; production smoke health + `/review-cases` ok n=50; PR #26; chưa flip submission URL trước V07+A05 |
+| H28 | Next wave · docs · **Done** | Target architecture + OpenAI provider decision | **Done — docs only:** Decision #22 + [doc 13](../04-engineering/13-weekly-snapshot-global-agent-architecture.md); không claim feature ship; [full brief](17-stories-hoang-weekly-agent.md#h28) |
+| H28a | Next wave · P0 · **Done** | Khóa readiness/decision cho build | **Done:** Decision #23 + arch §16 + runbook §12; Mode B linked pending; unlock H30/H36; [full brief](17-stories-hoang-weekly-agent.md#h28a) |
+| H29 | Next wave · P0 · **Done** | OpenAI Responses provider migration | **Done:** provider-neutral `model.py`; `OpenAIResponsesClient`; Settings `OPENAI_*`; FPT inactive in factory; `test_h29_*` · [full brief](17-stories-hoang-weekly-agent.md#h29) |
+| H30 | Next wave · P0 · **Done** | Snapshot v2 + workflow ledger DB | **Done:** Alembic `20260718_h30_snapshot`; multi-version + active pointer; [full brief](17-stories-hoang-weekly-agent.md#h30) |
+| H31 | Next wave · P0 · **Done** | Stage/promote + approved replay CLI | **Done:** `WeeklyWorkflowService` + `cli weekly run`; idempotent; [full brief](17-stories-hoang-weekly-agent.md#h31) |
+| H32 | Next wave · P0 · **Done Mode B** | Linked bundle → immutable observations | **Done Mode B:** `weekly/observations.py`; combined blocked; [full brief](17-stories-hoang-weekly-agent.md#h32) |
+| H33a | Next wave · P0 · **Done** | Durable case/event persistence | **Done in-memory MVP:** `CaseRepository`; GET read-only; [full brief](17-stories-hoang-weekly-agent.md#h33a) |
+| H33b | Next wave · P0 · **Done** | Delta/reconcile deterministic | **Done:** full matrix; no auto-close; [full brief](17-stories-hoang-weekly-agent.md#h33b) |
+| H36 | Next wave · P0 · **Done** | Production identity/RBAC/access audit | **Done:** `app/auth`; unlocks G07; [full brief](17-stories-hoang-weekly-agent.md#h36) |
+| H34a | Next wave · P1 · **Done** | Weekly report materializer/API | **Done:** materializer + scoped latest API; unlocks G08; [full brief](17-stories-hoang-weekly-agent.md#h34a) |
+| H34b | Next wave · P1 · **Done** | Briefing deterministic + receipt | **Done:** shown/ack APIs; OpenAI-off OK; [full brief](17-stories-hoang-weekly-agent.md#h34b) |
+| H35 | Next wave · P1 · **Done** | Advisor draft v2 | **Done:** durable approved/assigned; no send; unlocks G09; [full brief](17-stories-hoang-weekly-agent.md#h35) |
+| H37 | Next wave · P1 · **Done** | Global Agent backend turn/tools | **Done:** `POST /agent/turns`; capability registry; unlocks T05; [full brief](17-stories-hoang-weekly-agent.md#h37) |
+| H38 | Next wave · P1 · **Done** | Safe report export | **Done:** aggregate/case watermark; no bulk ID; [full brief](17-stories-hoang-weekly-agent.md#h38) |
+| D6 | Release wave · P1 · **Done ops foundation** | Scheduler/worker ops gate | **Done foundation:** kill switches + scheduler_tick + rollback stub; live EventBridge still manual; [full brief](17-stories-hoang-weekly-agent.md#d6) |
 | H03 | P2 · sau H08 | Care workflow API | **Done:** approve/dismiss/defer + assign-handoff; H08 `advisor_ref`/`mapping_repair` gate; client ref ignored; `tests/test_h03_care_workflow.py` — mở G03 |
 | H04 | P2 · sau M03 | Threshold/config API public semantics | **Done:** app/contracts/threshold_public.py + app/config_api/router.py; impact aggregates only; fairness MVP insufficient_data; tests/test_h04_threshold_fairness_api.py |
 | H12a | P2 · ~15:00 (trước T02/G03/G04) | Runtime privacy/care copy cho UI/agent | **Done:** `frontend/src/lib/copy.ts` 4 keys Data-ML §6; mock list không “Điểm rủi ro”; mở `H12b` / giảm blocker `G03`/`G04`/`T02` |
@@ -351,7 +388,7 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 | D3 residual history | Accept CP2; quyết định clean submission trước final |
 | Release dồn muộn | Slide/script skeleton **ngay**; `V08` AI log **một thể** gần CP2/D5 (decision #19) |
 | Advisor mail draft | Stretch `H21`→`H22`✓→`G06` (FR-12); **không** block G02/D4b; draft-only |
-| Agent runtime overclaim | `H23`–`H26` Done = FR-08 **backend HTTP** E2E (mocked FPT); **không** claim FE Agent UI / production RBAC / live FPT; `H11b` **Done** |
+| Agent runtime overclaim | `H23`–`H26` = backend HTTP mocked-FPT history; repo có case-local `AgentPanel`, nhưng **không** claim Global Agent / weekly briefing / production RBAC / live OpenAI; target theo `H28+` |
 | Hybrid | FREEZE `M07`/`H14`/`M08`/`H17`/`T04` tới sau submission |
 | FE scoping gap (G02) | `ReviewCase` public thiếu `cohort`/`department`/`class_code` — FE chưa scoping khoa/lớp; **decision cần Hoàng chốt** (mở rộng allowlist H11a hoặc chấp nhận giới hạn MVP); không tự thêm field |
 | Giang vs Hạ Giang | Giang = FE; Hạ Giang = UAT/slide/claim |
