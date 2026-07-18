@@ -1,16 +1,19 @@
-"""H02 — public ReviewCase list/detail HTTP (H11a envelopes).
+"""H02 — public ReviewCase list/detail HTTP (H11a envelopes) + H39b RBAC.
 
 Does not change GET /cases/{id} TransitionResponse shape.
+Browser must not choose ``source_id`` / org / advisor scope — server derives them.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.auth.principal import Principal, require_active_role
+from app.auth.rbac import audit, principal_can_view_care_case, server_source_id
 from app.cases.review_projection import (
     is_snapshot_stale,
     project_list_items,
@@ -23,8 +26,8 @@ from app.contracts.integration import (
     CaseListResponse,
     IntegrationProblem,
 )
+from app.contracts.review_case import ReviewCase
 from app.database import get_db
-from app.dwh.importer import SEMESTER_SOURCE_ID
 from app.dwh.read_adapter import ReadAdapterError, get_normalized_student, list_normalized_students
 from app.ml.scoring import DEFAULT_THRESHOLDS
 
@@ -54,17 +57,46 @@ def _detail_error(code: str = "upstream_unavailable", reason_codes: Optional[lis
     )
 
 
+def _filter_visible(principal: Principal, items: List[ReviewCase]) -> List[ReviewCase]:
+    visible: List[ReviewCase] = []
+    for item in items:
+        snap = store.get(item.case_id)
+        advisor_ref = snap.advisor_ref if snap else None
+        if principal_can_view_care_case(
+            principal,
+            case_advisor_ref=advisor_ref,
+            case_state=item.case_state,
+        ):
+            visible.append(item)
+    return visible
+
+
 @router.get("", response_model=CaseListResponse)
 def list_review_cases(
-    source_id: str = Query(default=SEMESTER_SOURCE_ID),
+    principal: Principal = Depends(require_active_role),
     db: Session = Depends(get_db),
 ) -> CaseListResponse:
-    """Public list envelope — CaseListResponse (ok|empty|stale|error)."""
+    """Scoped list envelope — CaseListResponse (ok|empty|stale|error)."""
+    source_id = server_source_id()
     try:
         records = list_normalized_students(db, source_id)
     except ReadAdapterError as err:
+        audit(
+            principal,
+            action="review_cases.list",
+            resource_handle="review-cases",
+            allowed=False,
+            db=db,
+        )
         return _list_error("upstream_unavailable", err.reason_codes)
     except Exception:
+        audit(
+            principal,
+            action="review_cases.list",
+            resource_handle="review-cases",
+            allowed=False,
+            db=db,
+        )
         return _list_error("upstream_unavailable")
 
     calculated_at = datetime.now(timezone.utc)
@@ -74,8 +106,16 @@ def list_review_cases(
         thresholds=DEFAULT_THRESHOLDS,
         calculated_at=calculated_at,
     )
+    items = _filter_visible(principal, items)
+    audit(
+        principal,
+        action="review_cases.list",
+        resource_handle="review-cases",
+        allowed=True,
+        db=db,
+    )
+
     stale = is_snapshot_stale(calculated_at)
-    # Allow tests to force stale via calculated_at injection on items
     if items and any(is_snapshot_stale(i.calculated_at) for i in items):
         stale = True
 
@@ -100,12 +140,20 @@ def list_review_cases(
 @router.get("/{case_id}", response_model=CaseDetailResponse)
 def get_review_case(
     case_id: str,
-    source_id: str = Query(default=SEMESTER_SOURCE_ID),
+    principal: Principal = Depends(require_active_role),
     db: Session = Depends(get_db),
 ) -> CaseDetailResponse:
-    """Public detail envelope — CaseDetailResponse states per H11a."""
+    """Scoped detail envelope — out-of-scope looks like not-found/empty."""
+    source_id = server_source_id()
     student_ref = student_ref_from_case_id(case_id)
     if student_ref is None:
+        audit(
+            principal,
+            action="review_cases.detail",
+            resource_handle=case_id,
+            allowed=False,
+            db=db,
+        )
         return CaseDetailResponse(
             case=None,
             state="empty",
@@ -116,11 +164,32 @@ def get_review_case(
     try:
         record = get_normalized_student(db, source_id, student_ref)
     except ReadAdapterError as err:
+        audit(
+            principal,
+            action="review_cases.detail",
+            resource_handle=case_id,
+            allowed=False,
+            db=db,
+        )
         return _detail_error("upstream_unavailable", err.reason_codes)
     except Exception:
+        audit(
+            principal,
+            action="review_cases.detail",
+            resource_handle=case_id,
+            allowed=False,
+            db=db,
+        )
         return _detail_error("upstream_unavailable")
 
     if record is None:
+        audit(
+            principal,
+            action="review_cases.detail",
+            resource_handle=case_id,
+            allowed=False,
+            db=db,
+        )
         return CaseDetailResponse(
             case=None,
             state="empty",
@@ -136,8 +205,34 @@ def get_review_case(
             thresholds=DEFAULT_THRESHOLDS,
             calculated_at=calculated_at,
         )
-        freshness = "stale" if (case and is_snapshot_stale(case.calculated_at)) else "fresh"
-        if freshness == "stale" and case is not None:
+        snap = store.get(case_id)
+        if case is None or not principal_can_view_care_case(
+            principal,
+            case_advisor_ref=snap.advisor_ref if snap else None,
+            case_state=case.case_state,
+        ):
+            audit(
+                principal,
+                action="review_cases.detail",
+                resource_handle=case_id,
+                allowed=False,
+                db=db,
+            )
+            return CaseDetailResponse(
+                case=None,
+                state="empty",
+                freshness="fresh",
+                problem=IntegrationProblem(code="not_found", reason_codes=["not_found"]),
+            )
+        audit(
+            principal,
+            action="review_cases.detail",
+            resource_handle=case_id,
+            allowed=True,
+            db=db,
+        )
+        freshness = "stale" if is_snapshot_stale(case.calculated_at) else "fresh"
+        if freshness == "stale":
             return CaseDetailResponse(
                 case=case,
                 state="stale",
@@ -164,14 +259,38 @@ def get_review_case(
         calculated_at=calculated_at,
         include_below_threshold=False,
     )
-    if case is None or case.review_priority_band is None:
+    snap = store.get(case_id)
+    if (
+        case is None
+        or case.review_priority_band is None
+        or not principal_can_view_care_case(
+            principal,
+            case_advisor_ref=snap.advisor_ref if snap else None,
+            case_state=case.case_state,
+        )
+    ):
+        audit(
+            principal,
+            action="review_cases.detail",
+            resource_handle=case_id,
+            allowed=False,
+            db=db,
+        )
+        # Same envelope as missing — do not leak existence outside scope.
         return CaseDetailResponse(
             case=None,
             state="empty",
             freshness="fresh",
-            problem=IntegrationProblem(code="empty", reason_codes=["below_threshold"]),
+            problem=IntegrationProblem(code="not_found", reason_codes=["not_found"]),
         )
 
+    audit(
+        principal,
+        action="review_cases.detail",
+        resource_handle=case_id,
+        allowed=True,
+        db=db,
+    )
     if is_snapshot_stale(case.calculated_at):
         return CaseDetailResponse(
             case=case,

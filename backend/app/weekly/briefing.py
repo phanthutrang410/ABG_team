@@ -16,7 +16,7 @@ from typing import Dict, List, Literal, Optional, Tuple
 
 from app.weekly.report import WeeklyReport
 
-Role = Literal["leader", "advisor"]
+Role = Literal["ban_quan_ly", "gvcn"]
 
 
 @dataclass(frozen=True)
@@ -81,7 +81,7 @@ def _advisor_cards(new_count: int) -> List[ActionCard]:
 
 def _message_vi(report: WeeklyReport, role: Role) -> str:
     a = report.aggregates
-    scope = "case được giao" if role == "advisor" else "case"
+    scope = "case được giao" if role == "gvcn" else "case"
     if report.status == "empty":
         return f"Chưa có tín hiệu nào trong báo cáo tuần này ({scope})."
     if report.status == "baseline_unavailable":
@@ -108,7 +108,7 @@ def _message_vi(report: WeeklyReport, role: Role) -> str:
 
 def _build_briefing(report: WeeklyReport, role: Role, briefing_id: str) -> Briefing:
     new_count = report.aggregates.get("new", 0)
-    cards = _leader_cards(new_count) if role == "leader" else _advisor_cards(new_count)
+    cards = _leader_cards(new_count) if role == "ban_quan_ly" else _advisor_cards(new_count)
     return Briefing(
         briefing_id=briefing_id,
         report_id=report.report_id,

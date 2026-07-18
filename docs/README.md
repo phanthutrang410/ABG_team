@@ -47,13 +47,16 @@ docs/
 | 04 | [Quyết định](03-project/04-decisions.md) | Các quyết định sản phẩm/kỹ thuật ngắn |
 | 05 | [Nhật ký](03-project/05-worklog.md) | Nhật ký điều phối theo thời gian |
 | 07 | [Release evidence](03-project/07-release-evidence.md) | Checklist bằng chứng CP1 / CP2 / nộp cuối / Demo Day |
-| 08 | [Stories — giang](03-project/08-stories-giang.md) | P2+ UAT/review và asset slide/mô tả, không sửa docs nguồn |
-| 09 | [Stories — Văn Hải](03-project/09-stories-van-hai.md) | P2+ QA `V07` (checklist+output), rehearsal/video/`V06`; **không** nộp CP2 |
+| 08 | [Stories — giang](03-project/08-stories-giang.md) | A05 Done; D1 slide self-owned với Hải (decision #25) |
+| 09 | [Stories — Văn Hải](03-project/09-stories-van-hai.md) | V07 Done; V02/D2 self-owned pitch/video; V06 nộp cuối |
 | 10 | [D3 GitHub / PII-secret scan](03-project/10-d3-github-pii-secret-scan.md) | Evidence CP2: repo public + scan; SĐT đã redact |
 | 12 | [H15 attendance approval prep](03-project/12-h15-attendance-approval-prep.md) | Prep only: chase checklist + amendment outline; H15 vẫn BLOCKED → data-owner |
-| 13 | [H12b asset / claim-copy skeleton](03-project/13-h12b-asset-copy-skeleton.md) | Banner + claim matrix cho Hạ Giang D1; attendance = MVP; forecast/fusion = research/blocked |
+| 13 | [H12b banner / asset copy](03-project/13-h12b-asset-copy-skeleton.md) | Runtime banner Done; slide skeleton = historical (decision #25) |
 | 16 | [Stories — Thu Trang](03-project/16-stories-thu-trang.md) | `V05` nộp Checkpoint 2 sau `D4r`; lane Agent xem Sprint §7 |
 | 17 | [Stories — Hoàng: weekly snapshot + Global Agent](03-project/17-stories-hoang-weekly-agent.md) | Task brief H28/H28a/H29–H38/D6: OpenAI, workflow tuần, durable delta/report, RBAC, tool runtime và deploy |
+| 18 | [V07+A05 smoke/UAT 2026-07-18](03-project/18-v07-a05-smoke-uat-2026-07-18.md) | QA độc lập + claim gaps feed D4r |
+| 19 | [D4r re-smoke 2026-07-18](03-project/19-d4r-resmoke-2026-07-18.md) | Vercel Live URL + API `:d4r` evidence |
+| 20 | [H16 CP2 acceptance matrix](03-project/20-h16-cp2-acceptance-matrix.md) | FR-01…12 Pass/Limit; README known-limit; slide pack không còn deliverable (#25) |
 
 ## 4. Engineering
 

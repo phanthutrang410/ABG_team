@@ -13,7 +13,7 @@ from app.config import get_settings
 _engine: Engine | None = None
 _SessionLocal: sessionmaker[Session] | None = None
 
-SCHEMAS = ("public", "dwh", "ml")
+SCHEMAS = ("public", "dwh", "ml", "app")
 
 
 def get_engine() -> Engine:

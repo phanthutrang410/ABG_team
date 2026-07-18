@@ -1,23 +1,67 @@
 # Database schema & ERD — Silent Shield MVP
 
-> **Trạng thái:** SoT vật lý cho PostgreSQL schema `dwh` tại thời điểm migrations `20260718_h19_dwh` → `20260718_h30_snapshot`.
+> **Trạng thái:** SoT vật lý cho PostgreSQL schemas `dwh` + `app` tại migrations `20260718_h19_dwh` → `20260718_h30_snapshot` → `20260719_h39a_auth_rbac`.
 >
-> **Nguồn code:** `backend/app/dwh/models.py` · **Migrations:** `backend/alembic/versions/` · **Thiết kế/import gate:** [07-mvp-persistence-schema](07-mvp-persistence-schema.md).
+> **Nguồn code:** `backend/app/dwh/models.py`, `backend/app/auth/models.py` · **Migrations:** `backend/alembic/versions/` · **Thiết kế/import gate:** [07-mvp-persistence-schema](07-mvp-persistence-schema.md).
 >
 > Khi prose và ORM lệch nhau, ưu tiên migration đã apply + models; cập nhật tài liệu này trong cùng handoff.
 
 ## 1. Phạm vi
 
-| Có trong Postgres `dwh` | Chưa có bảng Postgres (in-memory / process-local) |
+| Có trong Postgres | Chưa có bảng Postgres (in-memory / process-local) |
 |:--|:--|
-| Domain snapshot (điểm, điểm danh, advisor, quality) | Care `ReviewCase` / `CaseStore` (`app.cases.store`) |
-| Snapshot registry H30 (`dataset_*`, `active_dataset_snapshot`) | Weekly durable cases/events H33a (`app.weekly.cases_durable`) |
-| Workflow ledger H30 (`workflow_run`, `workflow_step_run`) | Weekly report / briefing / receipts (`app.weekly.state`) |
-| | Agent session / audit log demo |
+| **`dwh`** Domain snapshot (điểm, điểm danh, advisor, quality) | Care `ReviewCase` / `CaseStore` (`app.cases.store`) |
+| **`dwh`** Snapshot registry H30 (`dataset_*`, `active_dataset_snapshot`) | Weekly durable cases/events H33a (`app.weekly.cases_durable`) |
+| **`dwh`** Workflow ledger H30 (`workflow_run`, `workflow_step_run`) | Weekly report / briefing / receipts (`app.weekly.state`) |
+| **`app`** Auth RBAC H39 (`auth_account`, `auth_account_role`, `auth_session`, `access_audit_event`) | — |
 
-Engine: **PostgreSQL** qua `DATABASE_URL` (`postgresql+psycopg://…`). Alembic version table nằm trong schema `dwh`. Public API/UI/agent **không** query trực tiếp `dwh`; đọc qua H08 adapter và projection an toàn.
+**H39 không đổi dữ liệu học vụ `dwh`.** Engine: **PostgreSQL** qua `DATABASE_URL`. Alembic version table nằm trong schema `dwh`. Public API/UI/agent **không** query trực tiếp `dwh`; đọc qua H08 adapter và projection an toàn. Identity SoT = cookie `ss_session` → `app.auth_session`.
 
-## 2. ERD tổng quan
+## 1b. ERD schema `app` (H39)
+
+```mermaid
+erDiagram
+  auth_account ||--o{ auth_account_role : actor_id
+  auth_account ||--o{ auth_session : actor_id
+
+  auth_account {
+    string actor_id PK
+    string username UK
+    string display_name
+    string password_hash
+    string org_scope
+    string advisor_scope
+    bool is_active
+  }
+
+  auth_account_role {
+    string actor_id PK_FK
+    string role PK
+  }
+
+  auth_session {
+    string session_id PK
+    string actor_id FK
+    string token_hash UK
+    string active_role
+    timestamptz expires_at
+    timestamptz revoked_at
+  }
+
+  access_audit_event {
+    int id PK
+    string actor_id
+    string role
+    string action
+    string resource_handle
+    string decision
+    timestamptz at
+  }
+```
+
+Role CHECK: `ban_quan_ly|gvcn` only. Seed accounts via `python -m app.auth.cli seed` (not in migration).
+
+## 2. ERD tổng quan (`dwh`)
 
 ```mermaid
 erDiagram

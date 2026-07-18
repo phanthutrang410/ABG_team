@@ -1,4 +1,4 @@
-"""H04 — GET /config/thresholds(+impact) and GET /fairness/report."""
+"""H04 — GET /config/thresholds(+impact) and GET /fairness/report (H39b: ban_quan_ly)."""
 
 from __future__ import annotations
 
@@ -7,11 +7,12 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
+from app.auth.principal import Principal, require_roles
+from app.auth.rbac import audit, server_source_id
 from app.cases.review_projection import score_band_only
 from app.contracts.fairness import FairnessReport
 from app.contracts.threshold_public import PublicThresholdConfig, ThresholdImpactResponse
 from app.database import get_db
-from app.dwh.importer import SEMESTER_SOURCE_ID
 from app.dwh.read_adapter import ReadAdapterError, list_normalized_students
 from app.ml.fairness import build_fairness_report
 from app.ml.scoring import DEFAULT_THRESHOLDS, MODEL_VERSION, ThresholdConfig
@@ -32,7 +33,17 @@ def _public_from(thresholds: ThresholdConfig) -> PublicThresholdConfig:
 
 
 @router.get("/config/thresholds", response_model=PublicThresholdConfig)
-def get_thresholds() -> PublicThresholdConfig:
+def get_thresholds(
+    principal: Principal = Depends(require_roles("ban_quan_ly")),
+    db: Session = Depends(get_db),
+) -> PublicThresholdConfig:
+    audit(
+        principal,
+        action="config.thresholds",
+        resource_handle="config/thresholds",
+        allowed=True,
+        db=db,
+    )
     return _public_from(DEFAULT_THRESHOLDS)
 
 
@@ -40,10 +51,11 @@ def get_thresholds() -> PublicThresholdConfig:
 def get_threshold_impact(
     tau_case: float = Query(default=DEFAULT_THRESHOLDS.tau_case, ge=0.0, le=1.0),
     tau_high: float = Query(default=DEFAULT_THRESHOLDS.tau_high, ge=0.0, le=1.0),
-    source_id: str = Query(default=SEMESTER_SOURCE_ID),
+    principal: Principal = Depends(require_roles("ban_quan_ly")),
     db: Session = Depends(get_db),
 ) -> ThresholdImpactResponse:
     """Aggregate counts only — no per-student model_score in the response."""
+    source_id = server_source_id()
     if tau_high < tau_case:
         tau_high = tau_case
     thresholds = ThresholdConfig(
@@ -75,6 +87,13 @@ def get_threshold_impact(
         else:
             n_no += 1
 
+    audit(
+        principal,
+        action="config.thresholds.impact",
+        resource_handle="config/thresholds/impact",
+        allowed=True,
+        db=db,
+    )
     return ThresholdImpactResponse(
         threshold_config_version=thresholds.version,
         tau_case=thresholds.tau_case,
@@ -89,10 +108,11 @@ def get_threshold_impact(
 
 @router.get("/fairness/report", response_model=FairnessReport)
 def get_fairness_report(
-    source_id: str = Query(default=SEMESTER_SOURCE_ID),
+    principal: Principal = Depends(require_roles("ban_quan_ly")),
     db: Session = Depends(get_db),
 ) -> FairnessReport:
     """MVP always insufficient_data via empty APPROVED_AUDIT_ATTRIBUTES catalog."""
+    source_id = server_source_id()
     dataset_version = f"{source_id}:mvp:schema-1"
     try:
         records = list_normalized_students(db, source_id)
@@ -101,6 +121,13 @@ def get_fairness_report(
     except Exception:
         pass
 
+    audit(
+        principal,
+        action="fairness.report",
+        resource_handle="fairness/report",
+        allowed=True,
+        db=db,
+    )
     return build_fairness_report(
         dataset_version=dataset_version,
         model_version=MODEL_VERSION,

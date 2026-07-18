@@ -508,7 +508,7 @@ Các mục dưới đây đã chốt trong [Decision #23](../03-project/04-decis
 
 1. **Significant-change / resurfaced:** đổi `review_priority_band` hoặc set `contributing_factor` codes sau terminal → được mở episode mới; `no_longer_detected` không auto-close; version/namespace không comparable → `comparison_unavailable`.
 2. **Linked namespace:** chưa có canonical linked bundle → **Mode B** (tách nhánh điểm / chuyên cần). Handle hiện tại: `approval:pending-linked-namespace`. Combined feed chỉ sau approval handle không-PII từ data owner.
-3. **Identity/RBAC/retention:** server principal `actor_id` / `active_role` / `org_scope` / `advisor_scope`; client role không SoT; receipt/audit metadata 90 ngày, không raw prompt/PII.
+3. **Identity/RBAC/retention:** server principal from cookie session — `actor_id` / `active_role` ∈ {`ban_quan_ly`,`gvcn`} / `org_scope` / `advisor_scope`; client role không SoT; receipt/audit metadata 90 ngày (`app.access_audit_event`), không raw prompt/PII. Worker/CLI ≠ human role.
 4. **Scheduler:** EventBridge → SQS (hoặc approved cron host) → worker gọi cùng `WeeklyWorkflowService`; cấm APScheduler trong FastAPI process.
 5. **OpenAI model pin:** `OPENAI_MODEL` env (pin sau mocked `H29`); `store=false`; không “latest”.
 6. **Email:** Decision #20 draft-only; delivery = out of scope.

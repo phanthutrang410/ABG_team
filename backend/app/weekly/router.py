@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.auth.principal import Principal, get_principal
+from app.auth.principal import Principal, require_active_role
 from app.weekly import state as weekly_state
 from app.weekly.briefing import Briefing, BriefingReceipt, get_or_create_briefing, mark_ack, mark_shown
 from app.weekly.report import WeeklyReport, materialize_report
@@ -43,13 +43,21 @@ def _seed_report_if_missing(branch: str) -> WeeklyReport:
 
 
 def _role_for_principal(principal: Principal) -> str:
-    return "advisor" if principal.active_role == "advisor" else "leader"
+    if not principal.active_role:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "active_role_required",
+                "message": "select an active role before continuing",
+            },
+        )
+    return "gvcn" if principal.active_role == "gvcn" else "ban_quan_ly"
 
 
 @router.get("/weekly-reports/latest", response_model=WeeklyReport)
 def get_latest_weekly_report(
     branch: str = "semester",
-    principal: Principal = Depends(get_principal),
+    principal: Principal = Depends(require_active_role),
 ) -> WeeklyReport:
     _reject_unknown_branch(branch)
     _ = principal  # authenticated read; no per-role filtering at aggregate level
@@ -59,7 +67,7 @@ def get_latest_weekly_report(
 @router.get("/weekly-briefings/latest", response_model=Briefing)
 def get_latest_weekly_briefing(
     branch: str = "semester",
-    principal: Principal = Depends(get_principal),
+    principal: Principal = Depends(require_active_role),
 ) -> Briefing:
     _reject_unknown_branch(branch)
     report = _seed_report_if_missing(branch)
@@ -70,7 +78,7 @@ def get_latest_weekly_briefing(
 @router.post("/weekly-briefings/{briefing_id}/shown", response_model=BriefingReceipt)
 def mark_weekly_briefing_shown(
     briefing_id: str,
-    principal: Principal = Depends(get_principal),
+    principal: Principal = Depends(require_active_role),
 ) -> BriefingReceipt:
     role = _role_for_principal(principal)
     return mark_shown(weekly_state.briefing_store, principal.actor_id, role, briefing_id)
@@ -79,7 +87,7 @@ def mark_weekly_briefing_shown(
 @router.post("/weekly-briefings/{briefing_id}/ack", response_model=BriefingReceipt)
 def ack_weekly_briefing(
     briefing_id: str,
-    principal: Principal = Depends(get_principal),
+    principal: Principal = Depends(require_active_role),
 ) -> BriefingReceipt:
     role = _role_for_principal(principal)
     return mark_ack(weekly_state.briefing_store, principal.actor_id, role, briefing_id)

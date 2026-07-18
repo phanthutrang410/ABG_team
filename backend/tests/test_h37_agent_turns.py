@@ -17,10 +17,16 @@ from app.agent.turns import (
     run_turn,
 )
 from app.agent.turns_router import get_turn_model
-from app.auth.principal import Principal, clear_access_audit_log, get_access_audit_log
+from app.auth.principal import Principal, clear_access_audit_log, get_access_audit_log, get_principal
 from app.main import app
+from tests.auth_helpers import DEFAULT_BAN_QUAN_LY
 
-_LEADER = Principal(actor_id="leader:1", active_role="leader", org_scope="org-a", advisor_scope=None)
+_LEADER = Principal(
+    actor_id="acct:quanly",
+    active_role="ban_quan_ly",
+    org_scope="org-a",
+    roles=("ban_quan_ly",),
+)
 
 
 class FakeModel:
@@ -193,6 +199,7 @@ def test_turn_records_redacted_access_audit_event() -> None:
 
 
 def test_http_post_agent_turns_with_missing_key_returns_ok_with_cards(client: TestClient) -> None:
+    app.dependency_overrides[get_principal] = lambda: DEFAULT_BAN_QUAN_LY
     app.dependency_overrides[get_turn_model] = lambda: None
     response = client.post("/agent/turns", json={"surface": "weekly_report"})
     assert response.status_code == 200
@@ -202,6 +209,7 @@ def test_http_post_agent_turns_with_missing_key_returns_ok_with_cards(client: Te
 
 
 def test_http_post_agent_turns_forbidden_extra_field_rejected(client: TestClient) -> None:
+    app.dependency_overrides[get_principal] = lambda: DEFAULT_BAN_QUAN_LY
     app.dependency_overrides[get_turn_model] = lambda: None
     response = client.post(
         "/agent/turns",
@@ -211,6 +219,7 @@ def test_http_post_agent_turns_forbidden_extra_field_rejected(client: TestClient
 
 
 def test_http_post_agent_turns_injection_refused(client: TestClient) -> None:
+    app.dependency_overrides[get_principal] = lambda: DEFAULT_BAN_QUAN_LY
     app.dependency_overrides[get_turn_model] = lambda: None
     response = client.post(
         "/agent/turns",

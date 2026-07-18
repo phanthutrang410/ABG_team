@@ -1,6 +1,6 @@
 # Release Evidence Checklist
 
-> **Owner tài liệu/evidence:** Hoàng. **Owner QA (`V07`) / video / nộp cuối (`V06`):** Văn Hải. **Owner nộp Checkpoint 2 (`V05`):** Thu Trang. giang chuẩn bị asset slide/mô tả sau khi copy/evidence đã khóa.
+> **Owner tài liệu/evidence:** Hoàng. **Owner QA (`V07`) / video / nộp cuối (`V06`):** Văn Hải. **Owner nộp Checkpoint 2 (`V05`):** Thu Trang. **Slide/pitch:** Hạ Giang + Văn Hải **tự làm** (decision #25) — Hoàng **không** cung cấp thêm doc slide/script.
 >
 > Chỉ tick khi có evidence thật. Nếu dependency chưa Done, ghi BLOCKED → ID trong cột Evidence.
 
@@ -24,13 +24,13 @@
 | Fix → redeploy → re-smoke | Hoàng | D4r | **Done 2026-07-18 ~22:24 +07:** Live URL nộp = `https://abg-team.vercel.app` · API `:d4r` digest `sha256:2b01b24a233e374b655fab55bf8bf9be2ff886437c202a7a9b51e9d957f256a1` · health ok · `/review-cases` n=50 · `/advisor-handoff-drafts` 200 `empty` · explanation POST 200 `unavailable` (no OpenAI key — fail-closed) · fairness `insufficient_data` · FE routes `/login|/overview|/analysis|/notify` 200 · dpl `dpl_7EFasiFPqP4HUCwoqKUSaBkoaRGi` · bulk export ẩn · attendance known-limit · report [19](19-d4r-resmoke-2026-07-18.md) · V07 [18](18-v07-a05-smoke-uat-2026-07-18.md) | [x] |
 | GitHub public, PII/secret scan | Hoàng | D3 | [10-d3-github-pii-secret-scan.md](10-d3-github-pii-secret-scan.md) · https://github.com/phanthutrang410/ABG_team | [x] |
 | BTC nhận 2 URL | **Thu Trang** | V05 | **Done 2026-07-18 tối +07:** Live `https://abg-team.vercel.app` · GitHub `https://github.com/phanthutrang410/ABG_team` · form BTC đã nộp · receipt ngoài repo (owner custody) · story [16](16-stories-thu-trang.md) | [x] |
-| Hoàng hoàn thiện evidence CP2 | Hoàng | H16 (sau V07, V05) |  | [ ] |
+| Hoàng hoàn thiện evidence CP2 | Hoàng | H16 (sau V07, V05) | **Done 2026-07-18 ~22:50 +07:** FR-01…FR-12 matrix + claim lock · [20-h16-cp2-acceptance-matrix.md](20-h16-cp2-acceptance-matrix.md) · sources V07/A05 [18](18-v07-a05-smoke-uat-2026-07-18.md) · D4r [19](19-d4r-resmoke-2026-07-18.md) · V05 [16](16-stories-thu-trang.md) · Live=`https://abg-team.vercel.app` · known-limits: attendance_source_unapproved; agent Live=`unavailable`; no Global Agent/hybrid/G06 FE | [x] |
 
 ## 3. Đóng cổng nộp cuối: 19/7 11:00
 
 | Mục | Owner | Task nguồn | Evidence | Status |
 |:--|:--|:--|:--|:--|
-| Slide + asset mô tả | giang | D1 |  | [ ] |
+| Slide + asset mô tả | giang (+ Hải) | D1 | Self-owned · decision #25 · **không** chờ Hoàng doc | [ ] |
 | Video ≤5 phút, đúng URL | Văn Hải | D2 |  | [ ] |
 | GitHub public + README | Hoàng | D3, H09 |  | [ ] |
 | Live URL smoke cuối | Hoàng | D4r, H16 |  | [ ] |
@@ -42,15 +42,14 @@
 
 | Mục | Owner | Task nguồn | Evidence | Status |
 |:--|:--|:--|:--|:--|
-| Script pitch 4 phút + Q&A 2 phút | Văn Hải | V02 |  | [ ] |
+| Script pitch 4 phút + Q&A 2 phút | Văn Hải (+ Hạ Giang) | V02 | Self-owned · decision #25 · không chờ Hoàng pitch doc | [ ] |
 | Rehearsal live | Văn Hải | V02, D4r |  | [ ] |
 | Live URL sẵn sàng | Hoàng | D4r |  | [ ] |
 
 ## 5. Quy ước
 
-- Hoàng cập nhật Markdown/evidence chuẩn sau handoff QA; Văn Hải / Thu Trang không tự sửa checklist.
-- CP2: **Thu Trang** nộp `V05` chỉ sau `D4r` xanh. `H16` phải khóa evidence CP2 sau `V07` + `V05` (và gap `A05` nếu có).
-- Asset slide/mô tả không được thay đổi scope/copy canonical do Hoàng khóa (`H12a` runtime; `H12b` banner/asset).
+- Asset slide/pitch: Hạ Giang + Hải tự làm (decision #25); **không** bắt buộc khóa từ `H12b`/`H16` claim-lock của Hoàng.
+- CP2: **Thu Trang** nộp `V05` chỉ sau `D4r` xanh. `H16` khóa evidence CP2 sau `V07` + `V05` (và gap `A05` nếu có).
 - Nếu một mục bị block, ghi dependency cụ thể và báo owner, không dùng screenshot/mock thay thế.
 
 ## 5b. Source unlock (M05b + H15) — 18/7 ~07:05
@@ -90,6 +89,15 @@
 | Backend suite | Hoàng | wave | `pytest -m "not slow and not eval"` → **548 passed, 1 skipped** · Ruff clean | [x] |
 | Combined linked namespace | — | H32 | Still `approval:pending-linked-namespace` — Mode B only | [ ] pending |
 | FE G07–G09 / T05 / Live EventBridge | **Khánh Duy**/Trang/ops | — | Not claimed on submission Live URL · owner FE sau #24 = Duy | [ ] N/A |
+
+## 5f. H39 DB-backed RBAC (19/7)
+
+| Item | Owner | Task | Evidence / note | Status |
+|:--|:--|:--|:--|:--|
+| Auth schema + `/auth/*` | Hoàng | H39a | Alembic `20260719_h39a_auth_rbac`; `app/auth/*`; seed CLI; Decision #23 amend; `test_h39_auth.py` | [x] |
+| Enforce API matrix | Hoàng | H39b | review-cases/config/drafts/transitions/explanation; `test_h39_rbac_api.py` + updated H36/H34–H38 fixtures | [x] |
+| Backend suite | Hoàng | H39 | `pytest -m "not slow and not eval"` → **555 passed, 1 skipped** · Ruff clean | [x] |
+| FE cookie login | **Khánh Duy** | G07 | Consume `/auth/*` + `credentials: include`; out of Hoàng H39 scope | [ ] N/A |
 
 ## 5d. Advisor handoff draft FR-12 (H22) — 18/7
 

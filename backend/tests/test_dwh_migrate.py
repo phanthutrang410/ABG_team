@@ -91,6 +91,13 @@ def test_upgrade_head_creates_empty_tables(migrate_database_url: str) -> None:
             lowered = name.lower()
             assert not any(bad in lowered for bad in FORBIDDEN_TABLE_SUBSTRINGS)
         _assert_empty_domain_tables(engine)
+        app_tables = set(inspect(engine).get_table_names(schema="app"))
+        assert {
+            "auth_account",
+            "auth_account_role",
+            "auth_session",
+            "access_audit_event",
+        } <= app_tables
         assert current_revision(migrate_database_url) == HEAD_REVISION
     finally:
         engine.dispose()
