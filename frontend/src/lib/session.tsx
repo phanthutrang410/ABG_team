@@ -35,7 +35,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setState(JSON.parse(raw) as SessionState);
+      if (raw) {
+        const stored = JSON.parse(raw) as SessionState;
+        const storedAccount = DEMO_ACCOUNTS.find((item) => item.id === stored.accountId) ?? null;
+        const validRole = stored.activeRole && storedAccount?.roles.includes(stored.activeRole)
+          ? stored.activeRole
+          : null;
+        setState({ accountId: storedAccount?.id ?? null, activeRole: validRole });
+      }
     } catch {
       /* ignore */
     }
@@ -63,7 +70,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       persist({ accountId: acc?.id ?? null, activeRole: acc && acc.roles.length === 1 ? acc.roles[0] : null });
       return acc;
     },
-    chooseRole: (role) => persist({ ...state, activeRole: role }),
+    chooseRole: (role) => {
+      const selectedAccount = DEMO_ACCOUNTS.find((item) => item.id === state.accountId) ?? null;
+      persist({ ...state, activeRole: selectedAccount?.roles.includes(role) ? role : null });
+    },
     logout: () => persist({ accountId: null, activeRole: null }),
   };
 
@@ -77,7 +87,7 @@ export function useSession(): SessionCtx {
 }
 
 export function roleHome(role: Role): string {
-  return role === "gvcn" ? "/analysis" : "/overview";
+  return role === "gvcn" ? "/advisor" : "/overview";
 }
 
 /**

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint --dir src",
-    "test": "echo \"No frontend tests yet\" && exit 0"
+    "test": "node --experimental-strip-types --test tests/*.test.mts"
   },
   "dependencies": {
     "next": "^15.1.0",
