@@ -1,0 +1,16 @@
+﻿student_ref,observed_at,presence_status,course_ref,excused
+s-1001,2026-05-15,present,c-MATH101,
+s-1001,2026-05-29,present,c-MATH101,
+s-1001,2026-06-12,absent,c-MATH101,False
+s-1001,2026-06-26,present,c-MATH101,
+s-1001,2026-07-10,present,c-MATH101,
+s-1002,2026-05-15,present,c-PHYS101,
+s-1002,2026-05-29,absent,c-PHYS101,
+s-1002,2026-06-12,absent,c-PHYS101,False
+s-1002,2026-06-26,present,c-PHYS101,
+s-1002,2026-07-10,absent,c-PHYS101,False
+s-1003,2026-05-15,present,c-ENG101,
+s-1003,2026-05-29,present,c-ENG101,
+s-1003,2026-06-12,present,c-ENG101,
+s-1003,2026-06-26,present,c-ENG101,
+s-1003,2026-07-10,absent,c-ENG101,False

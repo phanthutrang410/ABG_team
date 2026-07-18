@@ -1,6 +1,6 @@
 # Release Evidence Checklist
 
-> **Owner tài liệu/evidence:** Hoàng. **Owner QA/submission từ P2:** Văn Hải. giang chuẩn bị asset slide/mô tả sau khi copy/evidence đã khóa.
+> **Owner tài liệu/evidence:** Hoàng. **Owner QA (`V07`) / video / nộp cuối (`V06`):** Văn Hải. **Owner nộp Checkpoint 2 (`V05`):** Thu Trang. giang chuẩn bị asset slide/mô tả sau khi copy/evidence đã khóa.
 >
 > Chỉ tick khi có evidence thật. Nếu dependency chưa Done, ghi BLOCKED → ID trong cột Evidence.
 
@@ -20,10 +20,10 @@
 |:--|:--|:--|:--|:--|
 | Live URL hoạt động (smoke lần 1) | Hoàng | D4a → **D4b** | **D4b product 2026-07-18 ~13:05 +07:** FE `http://52.74.255.88:3000` · API `http://52.74.255.88:8000` · health `{"status":"ok","service":"silent-shield","database":true}` · `GET /review-cases` state=`ok` n=50 · detail `rc-s-00518c9485a9` band=`can_ra_soat` student_ref=`s-00518c9485a9` · FE `/login` `/dashboard` `/select-role` 200 · CORS ACAO=`http://52.74.255.88:3000` · no `model_score`/PII/`advisor_ref` · images `:d4b` API `sha256:bab21546…` FE `sha256:70eb44b5…` · Postgres + approved import (sem `73274079…` / att `78d7153f…`) · runbook [06-deploy-runbook.md](../04-engineering/06-deploy-runbook.md) | [x] shell / [x] **D4b** |
 | Vercel FE candidate (H27) | Hoàng | H27 | **Done 2026-07-18 ~16:40 +07:** `https://abg-team.vercel.app` · Root `frontend` · same-origin rewrite → API `http://52.74.255.88:8000` · `GET /health` ok database=true · `GET /review-cases` state=ok n=50 · detail `rc-s-00518c9485a9` ok · prod dpl `dpl_2JkMB2LzgiSjJrSPYmYNBRcg6e32` · PR [#26](https://github.com/phanthutrang410/ABG_team/pull/26) · **not** submission Live URL until V07+A05 re-smoke · runbook §11 | [x] |
-| Smoke test ẩn danh độc lập lần 1 | Văn Hải | V07 |  | [ ] |
+| Smoke test ẩn danh độc lập lần 1 | Văn Hải | V07 | Checklist + output: [09-stories-van-hai.md](09-stories-van-hai.md) | [ ] |
 | Fix → redeploy → re-smoke | Hoàng | D4r |  | [ ] |
 | GitHub public, PII/secret scan | Hoàng | D3 | [10-d3-github-pii-secret-scan.md](10-d3-github-pii-secret-scan.md) · https://github.com/phanthutrang410/ABG_team | [x] |
-| BTC nhận 2 URL | Văn Hải | V05 |  | [ ] |
+| BTC nhận 2 URL | **Thu Trang** | V05 | Story [16-stories-thu-trang.md](16-stories-thu-trang.md) · chỉ sau D4r | [ ] |
 | Hoàng hoàn thiện evidence CP2 | Hoàng | H16 (sau V07, V05) |  | [ ] |
 
 ## 3. Đóng cổng nộp cuối: 19/7 11:00
@@ -48,8 +48,8 @@
 
 ## 5. Quy ước
 
-- Hoàng cập nhật Markdown/evidence chuẩn sau handoff QA; Văn Hải không tự sửa checklist.
-- CP2: không nộp `V05` trước `D4r` xanh. `H16` phải khóa evidence CP2 sau `V07` + `V05` (và gap `A05` nếu có).
+- Hoàng cập nhật Markdown/evidence chuẩn sau handoff QA; Văn Hải / Thu Trang không tự sửa checklist.
+- CP2: **Thu Trang** nộp `V05` chỉ sau `D4r` xanh. `H16` phải khóa evidence CP2 sau `V07` + `V05` (và gap `A05` nếu có).
 - Asset slide/mô tả không được thay đổi scope/copy canonical do Hoàng khóa (`H12a` runtime; `H12b` banner/asset).
 - Nếu một mục bị block, ghi dependency cụ thể và báo owner, không dùng screenshot/mock thay thế.
 

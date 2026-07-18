@@ -1,0 +1,2 @@
+﻿source_id,report_version,generated_at,row_count,reject_count,reject_reasons,missingness.presence_status_null,missingness.excused_null,freshness.last_attendance_at,freshness.n_students
+mvp-attendance-over-time,m06-attendance-1,2026-07-18T00:00:00Z,15,0,{},0,11,2026-07-10T00:00:00,3

@@ -2,7 +2,7 @@
 
 > Nguồn chuẩn: [Quy chế VAIC](../01-requirements/01-vaic-rules.md) · [PRD MVP](../02-product/04-prd.md) · [Process](../02-product/03-process.md) · [RULES.md](../../RULES.md).
 >
-> **Điều chỉnh phân công 18/7:** Hoàng là owner duy nhất hoàn thiện tài liệu/contract nguồn chuẩn. Build tập trung vào Hoàng, Khánh Duy, **Giang** (FE) và Thu Trang. **Hạ Giang** (board ID `giang`) và Văn Hải nhận task từ P2: QA/UAT/claim/slide skeleton và release smoke/submission — không sửa canonical docs/code.
+> **Điều chỉnh phân công 18/7:** Hoàng là owner duy nhất hoàn thiện tài liệu/contract nguồn chuẩn. Build tập trung vào Hoàng, Khánh Duy, **Giang** (FE) và Thu Trang. **Hạ Giang** (board ID `giang`) và Văn Hải nhận task từ P2: QA/UAT/claim/slide skeleton và release smoke — không sửa canonical docs/code. **18/7 chiều:** `V05` nộp CP2 chuyển **Thu Trang**; Hải giữ `V07` (checklist chi tiết).
 >
 > **Chặn phạm vi hybrid (forecasting):** Freeze hoàn toàn `M07`/`H14`/`M08`/`H17`/`T04` tới sau submission. Điểm danh theo thời gian **thuộc MVP** (sau `H15`); thiếu nguồn → `insufficient_data`; **không** thay bằng synthetic để claim E2E.
 >
@@ -15,9 +15,9 @@
 | Hoàng | Tất cả tài liệu/contract nguồn chuẩn; backend/API; deploy; tài liệu release | Không tự viết model/fusion của Duy |
 | Khánh Duy | Data/ML, source validation, baseline semester model | Không hoàn thiện Markdown contract/PRD; không làm hybrid tới sau submission |
 | Giang | Frontend integration và UI | Không tự chốt copy/contract |
-| Thu Trang | Agent adapter, grounding/refusal tests | Không tự tính/sửa mức ưu tiên |
+| Thu Trang | Agent adapter, grounding/refusal tests; **nộp Checkpoint 2 (`V05`)** | Không tự tính/sửa mức ưu tiên; không nộp CP2 trước `D4r` |
 | Hạ Giang (`giang`) | UAT, claim-copy review, slide + asset skeleton/mô tả | Không sửa canonical docs hoặc code; không nhầm với Giang (FE) |
-| Văn Hải | QA release, smoke độc lập, script/video/submission, AI-log rà | Không sửa canonical docs, deploy hoặc code |
+| Văn Hải | QA release (`V07`), script/video, nộp cổng cuối (`V06`), AI-log rà | Không sửa canonical docs, deploy hoặc code; **không** nộp CP2 (`V05` → Thu Trang) |
 
 ## 1. Cổng BTC và gate nội bộ
 
@@ -65,7 +65,7 @@ Baseline khóa sau review progress/direction. **Không đổi** product directio
 
 **Bổ sung board:** Critical path Data hoàn tất tới `M02` (sau `H20`+`H08` **Done**) — Profile `M01`+`H18` **Done**; `M05a`/`H06c`/`M05b`/`H15`/`M06`/`H20`/`H08`/`M02`/`M03`/`H02`/`H04`/`H13` **Done** (decision #18). `H06b` = **Done — transition core** + deploy-blocker harden. `T02` = core/library Done; runtime FR-08 theo `H23`–`H26`. Stretch FR-12: `H21` Done → `H22`/`G06`. `V08` defer (decision #19).
 
-**Owner ngay:** Hoàng — **`D4b`/`H11b`/`H22`/`H27` Done** (Vercel candidate `https://abg-team.vercel.app`); chờ `V07`+`A05` → `D4r`. Giang — **G05–G04 Done** (PR #23); stretch **`G06` unblocked** (sau H22). Thu Trang — T01–T03 + T02 core Done. Văn Hải — **`V07` mở** (sau D4b); `V08` defer gần CP2/D5. **Hạ Giang** — full **A05** UAT trên Live; slide skeleton. Khánh Duy — M07/M08 freeze.
+**Owner ngay:** Hoàng — **`D4b`/`H11b`/`H22`/`H27` Done** (Vercel candidate `https://abg-team.vercel.app`); chờ `V07`+`A05` → `D4r`. Giang — **G05–G04 Done** (PR #23); stretch **`G06` unblocked** (sau H22). Thu Trang — T01–T03 + T02 core Done; **`V05` nộp CP2** sau D4r (story [16](16-stories-thu-trang.md)). Văn Hải — **`V07` mở** — checklist từng bước + output [09](09-stories-van-hai.md); `V08` defer. **Hạ Giang** — full **A05** UAT trên Live; slide skeleton. Khánh Duy — M07/M08 freeze.
 
 ## 2. Boundary bắt buộc cho ML, agent và hybrid
 
@@ -171,6 +171,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | T01 | Agent stub từ fixture, refusal tests xanh | T03, H06a | [x] **Done** — stub deterministic `backend/app/agent/stub.py` + guardrail classifier `guardrails.py` (mock model, không LLM); 12/12 ca adversarial pass + determinism + grounding-only-case-codes; 16 tests mới (`tests/agent/test_agent_stub.py`), tổng agent 42 xanh; output quét `assert_no_forbidden_keys` |
 | T02 | Agent grounded explanation core/library | T01, H02, H12a | [x] **Done — core/library only**: FPT text adapter + mocked grounding tests; context service/HTTP/provider runtime và FR-08 E2E theo `H23`–`H26` |
 | T04 | Agent adapter hybrid (Post-MVP) | H17 | [ ] **FREEZE** tới sau submission |
+| V05 | Nộp Checkpoint 2 (Live URL + GitHub → BTC) | D3, D4r, V07 | [ ] BLOCKED → D4r, V07 · **owner chuyển từ Văn Hải → Thu Trang** (18/7); story [16](16-stories-thu-trang.md) |
 
 ### Hạ Giang (`giang`)
 
@@ -183,8 +184,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
-| V07 | QA release + smoke độc lập (lần 1) | D3, D4b | [ ] **TODO** — unblocked (D4b Done); incognito smoke; defect → D4r |
-| V05 | Nộp Checkpoint 2 | D3, D4r, V07 | [ ] BLOCKED → D3, D4r, V07 |
+| V07 | QA release + smoke độc lập (lần 1) | D3, D4b | [ ] **TODO** — unblocked; **checklist + output template** [09](09-stories-van-hai.md); defect → D4r; **không** nộp CP2 |
 | V02 | Script demo 4′ + Q&A 2′, rehearsal | D4r, G02, H26, G03, G04, H12a | [ ] BLOCKED → D4r… · chỉ claim Agent runtime sau H26; UI Agent cần consumer FE riêng |
 | D2 | Video ≤5 phút đúng Live URL | D1, D4r | [ ] BLOCKED → D1, D4r |
 | V08 | Rà AI log → gap cho Hoàng | H05b | [ ] **DEFER** gần CP2 / trước D5 — log một thể (decision #19); không làm ngay |
@@ -293,9 +293,9 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 
 ## 7. Thu Trang — chi tiết task
 
-**Lane:** Agent adapter, grounding/refusal tests.
-**Read first:** PRD §5.4/FR-08; Ethics §8; H11a-r / H12a.
-**Không làm:** tự tính/sửa mức ưu tiên; score/dropout conclusion; hybrid T04 tới sau submission.
+**Lane:** Agent adapter, grounding/refusal tests; **nộp CP2 (`V05`)**.
+**Read first:** PRD §5.4/FR-08; Ethics §8; H11a-r / H12a; [16-stories-thu-trang.md](16-stories-thu-trang.md) cho V05.
+**Không làm:** tự tính/sửa mức ưu tiên; score/dropout conclusion; hybrid T04 tới sau submission; nộp CP2 trước `D4r`.
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
@@ -303,8 +303,9 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 | T01 | P1 · **Done** | Agent stub từ fixture | **Done:** stub deterministic (guardrails-first → context-status fail-closed → grounded assembly); 12/12 adversarial + determinism + grounding tests xanh; evidence `backend/app/agent/stub.py`, `guardrails.py`, `backend/tests/agent/test_agent_stub.py` |
 | T02 | P2 · **Done core/library** | Grounded explanation adapter từ safe context | **Done:** FPT text adapter + mocked grounding; chỉ band/factors/coverage/limits. **Không** claim server context/HTTP/runtime E2E — theo `H23`–`H26` |
 | T04 | **FREEZE** | Agent adapter hybrid | Chỉ sau submission + H17 |
+| V05 | P2 · ~22:45 · sau D4r | Nộp Checkpoint 2 | **Owner Thu Trang** (18/7): chỉ sau `D4r` xanh; BTC nhận Live URL + GitHub; xác nhận → Hoàng/`H16`; [16-stories-thu-trang.md](16-stories-thu-trang.md) |
 
-**Verify:** grounding/refusal/adversarial mocked tests.
+**Verify:** grounding/refusal/adversarial mocked tests. V05: form BTC + receipt ngoài repo.
 
 ---
 
@@ -326,16 +327,15 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 
 ## 9. Văn Hải — chi tiết task
 
-**Bắt đầu từ P2; V08 defer gần CP2/D5 (decision #19).** Story: [09-stories-van-hai.md](09-stories-van-hai.md). Evidence: [07-release-evidence.md](07-release-evidence.md).
+**Bắt đầu từ P2; V08 defer gần CP2/D5 (decision #19).** Story: [09-stories-van-hai.md](09-stories-van-hai.md). Evidence: [07-release-evidence.md](07-release-evidence.md). **`V05` không còn thuộc Hải** → Thu Trang ([16](16-stories-thu-trang.md)).
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
-| V07 | P2 · sau D4b | QA release + smoke độc lập lần 1 | **Unblocked**; incognito; ghi defect cho owner/`D4r`; không tự sửa |
-| V05 | P2 · sau D4r | Nộp Checkpoint 2 | **Chỉ sau `D4r` xanh**; BTC nhận 2 URL + xác nhận |
+| V07 | P2 · sau D4b | QA release + smoke độc lập lần 1 | **Unblocked**; làm theo checklist từng bước + gửi **output template** trong [09](09-stories-van-hai.md); incognito; defect → `D4r`; không tự sửa; không nộp CP2 |
 | V02 | P3 · 08:00 | Script 4′ + Q&A 2′, rehearsal | Script skeleton sớm; Live sau `D4r` |
 | D2 | P3 · 09:30 | Video ≤5 phút | Đúng Live URL sau `D4r` |
 | V08 | **DEFER** · gần CP2 / trước D5 | Rà AI log một thể | Depends `H05b`; thu thập manifest + link **một lần**; gap → Hoàng/`D5`; CP2 không phụ thuộc V08 |
-| V06 | P3 · 10:30 | Nộp cuối | Sau evidence `H16` đã khóa CP2+final |
+| V06 | P3 · 10:30 | Nộp cuối | Sau evidence `H16` đã khóa CP2+final; CP2 đã do Thu Trang nộp ở `V05` |
 
 ---
 
@@ -355,11 +355,12 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 | Hybrid | FREEZE `M07`/`H14`/`M08`/`H17`/`T04` tới sau submission |
 | FE scoping gap (G02) | `ReviewCase` public thiếu `cohort`/`department`/`class_code` — FE chưa scoping khoa/lớp; **decision cần Hoàng chốt** (mở rộng allowlist H11a hoặc chấp nhận giới hạn MVP); không tự thêm field |
 | Giang vs Hạ Giang | Giang = FE; Hạ Giang = UAT/slide/claim |
-| QA defects | V07 **và** A05 → owner fix → `D4r` → mới V05 |
+| QA defects | V07 **và** A05 → owner fix → `D4r` → **`V05` (Thu Trang)** |
+| V05 owner | **Thu Trang** nộp CP2; Hải giữ V07 / V02 / D2 / V08 / V06 |
 | Vercel candidate (`H27`) | Hoàng deploy frontend; chỉ thay Live URL nộp sau HTTPS-safe API smoke và V07+A05 re-smoke trên đúng URL |
 
-1. **Ngay:** Văn Hải — **V07** smoke độc lập. **Hạ Giang** — **A05** UAT trên Live. Giang — stretch `G06` nếu còn slot. Hoàng — chờ V07+A05 → `D4r` (H27 Vercel candidate sẵn sàng).
-2. Critical path CP2: `D4b` ✓ → `V07`+`A05`→`D4r`→`V05`. Stretch mail: `H22`✓ → `G06` (FR-12).
+1. **Ngay:** Văn Hải — **V07** theo checklist + output [09](09-stories-van-hai.md). **Hạ Giang** — **A05** UAT trên Live. Giang — stretch `G06` nếu còn slot. Hoàng — chờ V07+A05 → `D4r`. **Thu Trang** — chờ D4r rồi **V05** nộp CP2 ([16](16-stories-thu-trang.md)).
+2. Critical path CP2: `D4b` ✓ → `V07`+`A05`→`D4r`→**`V05` (Thu Trang)**. Stretch mail: `H22`✓ → `G06` (FR-12).
 3. Semester + attendance đã duyệt + **Live DB import**; `H20`/`H08`/`H02`/`H04`/`H13`/`G05`–`G04` Done. Legacy synthetic cấm vẫn fail-closed.
 4. `D4a`/`D4b` **Done**; `D4r` chỉ sau V07 **và** A05.
 5. Trước handoff: verify phù hợp; trước final: `scripts/verify.ps1`, `git diff --check`, `git status --short`.

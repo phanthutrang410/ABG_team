@@ -48,16 +48,17 @@ docs/
 | 05 | [Nhật ký](03-project/05-worklog.md) | Nhật ký điều phối theo thời gian |
 | 07 | [Release evidence](03-project/07-release-evidence.md) | Checklist bằng chứng CP1 / CP2 / nộp cuối / Demo Day |
 | 08 | [Stories — giang](03-project/08-stories-giang.md) | P2+ UAT/review và asset slide/mô tả, không sửa docs nguồn |
-| 09 | [Stories — Văn Hải](03-project/09-stories-van-hai.md) | P2+ QA release, rehearsal/video và submission, không sửa docs nguồn |
+| 09 | [Stories — Văn Hải](03-project/09-stories-van-hai.md) | P2+ QA `V07` (checklist+output), rehearsal/video/`V06`; **không** nộp CP2 |
 | 10 | [D3 GitHub / PII-secret scan](03-project/10-d3-github-pii-secret-scan.md) | Evidence CP2: repo public + scan; SĐT đã redact |
 | 12 | [H15 attendance approval prep](03-project/12-h15-attendance-approval-prep.md) | Prep only: chase checklist + amendment outline; H15 vẫn BLOCKED → data-owner |
 | 13 | [H12b asset / claim-copy skeleton](03-project/13-h12b-asset-copy-skeleton.md) | Banner + claim matrix cho Hạ Giang D1; attendance = MVP; forecast/fusion = research/blocked |
+| 16 | [Stories — Thu Trang](03-project/16-stories-thu-trang.md) | `V05` nộp Checkpoint 2 sau `D4r`; lane Agent xem Sprint §7 |
 
 ## 4. Engineering
 
 | # | Tài liệu | Mục đích |
 |:-:|:---------|:---------|
-| 01 | [FPT AI API](04-engineering/01-fpt-ai-api.md) | Gọi FPT AI bằng API tương thích OpenAI |
+| 01 | [FPT AI API — lịch sử](04-engineering/01-fpt-ai-api.md) | Provider guide của H23–H26; build mới theo Decision #22 |
 | 03 | [EPU reference — catalog trường](04-engineering/03-epu-reference-data-fields.md) | Các trường đang có trong EPU reference (V59, profile, transcript v5); cơ sở chọn/loại nguồn, không phải SIS production |
 | 04 | [Hợp đồng tích hợp EPU](04-engineering/04-epu-data-integration-contract.md) | H10: nguồn không synthetic, taxonomy, pseudonym custody, data gate, schema chuẩn hóa |
 | 05 | [Kiến trúc hệ thống tối thiểu](04-engineering/05-system-architecture.md) | Container, luồng dữ liệu, care/state boundary MVP; SoT mỏng cho H06b/H10/H07 |
@@ -66,9 +67,10 @@ docs/
 | 08 | [Data/ML scoring & fairness](04-engineering/08-data-ml-scoring-fairness-contract.md) | H10: features hai nhánh, coverage/`insufficient_data`, threshold, evaluation, fairness fail-closed |
 | 08b | [Agent grounding & guardrails](04-engineering/08-agent-grounding-guardrails.md) | H11b canonical: I/O, 7 refusals, adversarial; runtime pointer `POST …/explanation` (khác số với Data-ML `08-`) |
 | 09 | [Synthetic Data/ML contract (superseded)](04-engineering/09-synthetic-data-ml-fairness-contract-superseded.md) | Lịch sử synthetic — không dùng cho MVP path |
-| 10 | [FE/Agent integration contract](04-engineering/10-fe-agent-integration-contract.md) | H11a schema + **H11b** after-build: G05–G04 Done; agent = backend HTTP; **no FE Agent UI** |
+| 10 | [FE/Agent integration contract](04-engineering/10-fe-agent-integration-contract.md) | H11a/H11b schema + current delta: case-local `AgentPanel` có; Global Agent chưa ship |
 | 11 | [Advisor-batch mail draft](04-engineering/11-advisor-batch-mail-draft.md) | FR-12: `GET /advisor-handoff-drafts` (H22 Done); G06 FE Copy/`mailto:` |
-| 12 | [Agent runtime integration & hardening](04-engineering/12-agent-runtime-integration-plan.md) | H23–H26 Done (backend HTTP; mocked FPT); H11b docs closed |
+| 12 | [Agent runtime integration & hardening — lịch sử](04-engineering/12-agent-runtime-integration-plan.md) | H23–H26 Done (backend HTTP; mocked FPT); không phải provider/Global Agent target |
+| 13 | [Weekly snapshot + Global Agent target architecture](04-engineering/13-weekly-snapshot-global-agent-architecture.md) | OpenAI target, mock feed tuần, durable delta/report, global shell, tool/RBAC và backlog H29–D6 |
 
 ## Thứ tự ưu tiên khi có mâu thuẫn
 

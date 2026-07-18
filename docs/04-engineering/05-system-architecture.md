@@ -2,7 +2,7 @@
 
 > **Owner:** Hoàng · **Task:** H05a · **Vai trò:** SoT kiến trúc tối thiểu cho `H06b` / `H10` / `H07`.
 >
-> Tài liệu này làm rõ ranh giới kỹ thuật và luồng vận hành; không thay [PRD](../02-product/04-prd.md), [Ethics](../02-product/05-ethics.md) hay [Process](../02-product/03-process.md). Status/delta triển khai Agent sau T02 được khóa tại [plan H23–H26](12-agent-runtime-integration-plan.md).
+> Tài liệu này làm rõ baseline MVP H05a/H23–H26; không thay [PRD](../02-product/04-prd.md), [Ethics](../02-product/05-ethics.md) hay [Process](../02-product/03-process.md). History runtime nằm tại [plan H23–H26](12-agent-runtime-integration-plan.md); kiến trúc đích sau Decision #22 (OpenAI, snapshot tuần, báo cáo/delta bền vững và Global Agent) nằm tại [doc 13](13-weekly-snapshot-global-agent-architecture.md).
 
 ## 1. Cách đọc tài liệu và trạng thái hiện tại
 
@@ -26,16 +26,16 @@ Các ô trong sơ đồ dưới đây là **kiến trúc mục tiêu**; không p
 | H10 / M05b / H15 | **Done** — EPU + Data-ML + approved semester + attendance-over-time | Contract + nguồn duyệt (decision #18); Live import qua H20 |
 | H19 / H20 / H08 / M02 | Done | Schema + import CLI + read adapter + baseline scoring |
 | H06a / H11a / H02 / H03 / H04 | Done | Public `ReviewCase`, care transitions, threshold/fairness APIs |
-| G05–G04 | **Done** | FE consumes list/detail/care/config; **không** có FE Agent explain UI |
+| G05–G04 | **Done** | FE consumes list/detail/care/config; repo hiện đã có `AgentPanel` cục bộ trên case detail, nhưng chưa có Global Agent/weekly briefing |
 | T03 / T01 / T02 | **Done — core/library** | Guardrail/stub/FPT text adapter + mocked tests |
-| H23–H26 Agent HTTP | **Done — backend HTTP** | Server `AgentContext`; `POST /review-cases/{case_id}/explanation` mounted; mocked FPT E2E. **Không** claim FE Agent UI, live FPT smoke, hay production RBAC |
-| FPT settings/client | Wired trong runtime H25 (transport harden) | Live FPT = optional/SKIP trong verify; demo identity ≠ production RBAC |
+| H23–H26 Agent HTTP | **Done — backend HTTP lịch sử** | Server `AgentContext`; `POST /review-cases/{case_id}/explanation` mounted; mocked FPT E2E. Không claim live provider hay production RBAC |
+| Provider settings/client | Runtime hiện vẫn wired FPT; Decision #22 đã đổi provider đích sang OpenAI | `OPENAI_API_KEY` chưa được runtime sử dụng; migration H29 chưa Done; demo identity ≠ production RBAC |
 
-FR-08 claimable ở **backend HTTP** (H26). FE Agent UI là consumer task riêng — chưa ship. Chi tiết: [plan H23–H26](12-agent-runtime-integration-plan.md) · [H11b FE/agent docs](10-fe-agent-integration-contract.md).
+FR-08 backend HTTP H26 và `AgentPanel` case-local không đồng nghĩa Global Agent đã ship. Chi tiết history: [plan H23–H26](12-agent-runtime-integration-plan.md) · target: [doc 13](13-weekly-snapshot-global-agent-architecture.md).
 
 ## 2. System context, trust zones và containers
 
-Stack đã chốt là FastAPI + Next.js; FPT AI Inference là LLM primary và backend dự kiến deploy AWS theo [Decisions](../03-project/04-decisions.md). Provider backup chỉ được dùng theo quyết định/cấu hình được duyệt và cùng data boundary.
+Stack đã chốt là FastAPI + Next.js. H23–H26 đang chạy adapter FPT, nhưng [Decision #22](../03-project/04-decisions.md) chọn OpenAI làm provider đích, không có fallback provider ẩn. Sơ đồ dưới đây mô tả baseline container; việc thêm weekly workflow/reporting/Global Agent theo [doc 13](13-weekly-snapshot-global-agent-architecture.md).
 
 ```mermaid
 flowchart LR
@@ -53,13 +53,13 @@ flowchart LR
     UI --> API
   end
 
-  subgraph Z3[External LLM zone — H23–H26 Done]
+  subgraph Z3[External LLM zone — baseline H23–H26]
     API --> Agent["Backend Agent adapter\n(scope + policy + output guard)"]
-    Agent --> FPT["FPT AI Inference"]
+    Agent --> LLM["FPT hiện tại → OpenAI target"]
   end
 ```
 
-Không có đường `browser → FPT`: frontend không giữ API key và chỉ gọi backend. FPT chỉ nhận context đã được backend lọc. FE **không** gọi explanation endpoint trong G05–G04.
+Không có đường `browser → provider`: frontend không giữ API key và chỉ gọi backend. Provider chỉ nhận context đã được backend lọc. Case-local `AgentPanel` có thể gọi explanation endpoint, nhưng Global Agent và weekly briefing chưa tồn tại.
 
 | Container | Input / trigger | Output cho consumer | Ranh giới bắt buộc |
 |:--|:--|:--|:--|
@@ -69,9 +69,9 @@ Không có đường `browser → FPT`: frontend không giữ API key và chỉ 
 | H08 read adapter | Snapshot `dwh` hợp lệ | `NormalizedStudentRecord` / `ScoringFeatures` | Không cross-source join; thiếu nguồn phải mang `insufficient_data` |
 | ML baseline nội bộ | Feature + coverage/freshness | Priority nội bộ, factors/evidence, `model_version`, `calculated_at` | Không public raw score/trọng số; audit attribute và outcome không vào scoring |
 | FastAPI | Internal result + care command từ người | Public/agent-safe projection, workflow response | Không để Agent đổi case; không lộ PII, raw score, `is_dropout_outcome`, audit-group field |
-| Next.js | API projection | Dashboard review cho **Ban Lãnh đạo**; hành động của người | Không tự tính/fallback priority khi API thiếu; không giữ FPT key |
-| Backend Agent adapter | Request trong scope + safe projection | Câu trả lời grounded, refusal hoặc neutral draft | Read-only; chỉ backend gọi FPT; H23–H26 Done (mocked E2E); không claim FE UI |
-| FPT AI Inference | Prompt/context đã lọc bởi backend | Text/structured response | External recipient: không nhận raw data, PII, score, outcome, group audit hoặc CoT; live SKIP in default verify |
+| Next.js | API projection | Dashboard review cho **Ban Lãnh đạo**; hành động của người | Không tự tính/fallback priority khi API thiếu; không giữ provider key |
+| Backend Agent adapter | Request trong scope + safe projection | Câu trả lời grounded, refusal hoặc neutral draft | Read-only; H23–H26 mocked E2E; provider migration/global tool registry theo doc 13 |
+| External LLM provider | Prompt/context đã lọc bởi backend | Text/structured response | Runtime hiện FPT, target OpenAI; không nhận raw data, PII, score, outcome, group audit hoặc CoT; live smoke không thuộc default verify |
 
 ## 3. Vòng đời dữ liệu, evidence và case
 
@@ -168,13 +168,14 @@ Không dùng `new`, `in_review`, `deferred`, `handed_off`, `Low/Medium/High Risk
 
 | Đã ship | Chưa ship / không claim |
 |:--|:--|
-| T03/T01/T02 core/library + guardrail/refusal | FE Agent explain/chat UI |
-| H23 server-derived `AgentContext` | Live FPT smoke trong default verify (SKIP) |
+| T03/T01/T02 core/library + guardrail/refusal | Global Agent + weekly briefing/report tool workspace |
+| Case-local `AgentPanel` (sau DoD H26) | Live provider smoke trong default verify |
+| H23 server-derived `AgentContext` | OpenAI provider migration H29 |
 | H24 `POST /review-cases/{case_id}/explanation` mounted trên `main.py` | Production RBAC (demo identity only) |
 | H25 structured grounding + FPT transport harden | ReAct multi-tool / multi-loop tự do |
-| H26 mocked HTTP E2E (M02→context→fake FPT→POST) | Browser → FPT |
+| H26 mocked HTTP E2E (M02→context→fake FPT→POST) | Browser → external provider |
 
-FR-08 claimable ở **backend HTTP**. Docs FE/agent sau build: [H11a + H11b](10-fe-agent-integration-contract.md) · [guardrails](08-agent-grounding-guardrails.md) · [runtime plan](12-agent-runtime-integration-plan.md).
+FR-08 có backend HTTP và consumer case-local; chưa có Global Agent. Docs: [H11a + H11b](10-fe-agent-integration-contract.md) · [guardrails](08-agent-grounding-guardrails.md) · [runtime history](12-agent-runtime-integration-plan.md) · [target](13-weekly-snapshot-global-agent-architecture.md).
 
 Tài liệu flow LangGraph của EduInsight chỉ là **tham khảo**; Silent Shield ship **bounded DAG** (một FPT call), không ReAct loop thu thập dữ liệu tùy ý.
 
@@ -223,7 +224,7 @@ Schema: [H11a](10-fe-agent-integration-contract.md) (`AgentContextResponse`, pro
 | Gửi email/notification | Không phải Agent tool | H22/G06 draft-only riêng (FR-12) | Tự gửi / tự chọn người nhận |
 | Workflow / score / data write | Không trong allowlist | Deny | Transition, assign, recompute, SQL, RAG |
 
-Frontend không gọi FPT và không giữ API key. FE hiện **không** gọi `POST …/explanation` — demo Agent qua API/Swagger hoặc mocked tests.
+Frontend không gọi provider trực tiếp và không giữ API key. `AgentPanel` case-local gọi `POST …/explanation`; backend vẫn tự dựng context và áp gate.
 
 ### 6.5 Output, lỗi và audit an toàn
 
@@ -231,16 +232,16 @@ Response dùng status `ok` / `refused` / `insufficient_data` / `unavailable` (ag
 
 | Tình huống | Hành vi | Cấm fallback |
 |:--|:--|:--|
-| Hỏi score, nguyên nhân đời tư, chẩn đoán, kỷ luật, handoff hay gửi email | Refusal | Không gọi FPT để suy đoán hoặc thực thi |
+| Hỏi score, nguyên nhân đời tư, chẩn đoán, kỷ luật, handoff hay gửi email | Refusal | Không gọi provider để suy đoán hoặc thực thi |
 | Context ngoài scope / thiếu coverage | `insufficient_data` | Không bịa lý do từ outcome/group |
-| FPT timeout/429/invalid | `unavailable`; care UI vẫn dùng được | Không tự đổi provider/dataset hay tự tính priority |
+| Provider timeout/429/invalid | `unavailable`; care UI vẫn dùng được | Không tự đổi provider/dataset hay tự tính priority |
 | Claim không bám evidence | Output guard từ chối | Không trả claim không grounding |
 
 Audit chỉ metadata tối thiểu; không log raw context / CoT.
 
 ### 6.6 Nghiệm thu Agent (đã đạt ở backend HTTP)
 
-H23–H26: mocked HTTP E2E grounded; insufficient/stale; score/dropout/cause refusal; no transition/send; provider harden; forbidden-field scan; neutral draft không tự gửi. Live FPT và FE Agent UI **không** thuộc DoD H26. H06b vẫn cấm Agent/LLM đổi case state.
+H23–H26: mocked HTTP E2E grounded; insufficient/stale; score/dropout/cause refusal; no transition/send; provider harden; forbidden-field scan; neutral draft không tự gửi. Live FPT và FE Agent UI **không** thuộc DoD H26; case-local UI được thêm sau đó. Global Agent, weekly briefing, OpenAI migration và production RBAC vẫn chưa ship. H06b vẫn cấm Agent/LLM đổi case state.
 
 ## 7. Trust, privacy và care boundary
 
@@ -252,7 +253,7 @@ H23–H26: mocked HTTP E2E grounded; insufficient/stale; score/dropout/cause ref
 | Fairness | Audit attribute chỉ dùng cho metric khi đủ approval/ground truth/mẫu số; tách khỏi scoring, case cá nhân và Agent |
 | Identity/scope | Khi có Agent/public API, backend phải suy ra role/scope server-side; không coi `actor_kind` do client tự khai là RBAC production |
 | Care | Con người review trước handoff và quyết định cách tiếp cận; Agent có thể draft, không thể approve/assign/send/discipline |
-| External LLM | Browser không gọi FPT; backend chỉ gửi safe projection đã lọc; không có SQL/RAG/web hoặc external-data fallback |
+| External LLM | Browser không gọi provider; backend chỉ gửi safe projection đã lọc; không có SQL/RAG/web hoặc external-data fallback |
 
 ## 8. Ngoài phạm vi kiến trúc MVP
 
@@ -273,8 +274,9 @@ H23–H26: mocked HTTP E2E grounded; insufficient/stale; score/dropout/cause ref
 | EPU schema, fail-closed và agent-safe fields | [Contract EPU](04-epu-data-integration-contract.md) |
 | Scoring / fairness semantics | [Data-ML contract](08-data-ml-scoring-fairness-contract.md) |
 | Versioned DWH/import | [Persistence schema](07-mvp-persistence-schema.md) |
-| FPT provider setup only | [FPT AI API](01-fpt-ai-api.md) |
-| Agent runtime integration/hardening | [Plan H23–H26](12-agent-runtime-integration-plan.md) |
+| FPT provider setup lịch sử | [FPT AI API](01-fpt-ai-api.md) |
+| Agent runtime integration/hardening lịch sử | [Plan H23–H26](12-agent-runtime-integration-plan.md) |
+| OpenAI + weekly snapshot + Global Agent target | [Target architecture](13-weekly-snapshot-global-agent-architecture.md) |
 | Current task gates | [Sprint](../03-project/03-sprint.md) |
 | H06b evidence that Agent cannot transition | [`domain.py`](../../backend/app/cases/domain.py) · [`test_case_transitions.py`](../../backend/tests/test_case_transitions.py) |
 | Deploy/ops (draft) | [06-deploy-runbook.md](06-deploy-runbook.md) |
