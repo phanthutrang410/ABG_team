@@ -2,11 +2,14 @@
 
 import { use, useCallback, useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BandBadge, CaseStateBadge } from "@/components/badges";
 import { AgentPanel } from "@/components/AgentPanel";
+import { AppShell } from "@/components/AppShell";
 import { CareActions } from "@/components/CareActions";
 import { LimitationsList } from "@/components/LimitationsList";
 import { fetchReviewCase } from "@/lib/api";
+import { useSession } from "@/lib/session";
 import type { CaseDetailResponse, CaseState } from "@/lib/types";
 
 /**
@@ -17,6 +20,8 @@ import type { CaseDetailResponse, CaseState } from "@/lib/types";
  */
 export default function CaseDetailPage({ params }: { params: Promise<{ caseId: string }> }) {
   const { caseId } = use(params);
+  const { activeRole } = useSession();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [response, setResponse] = useState<CaseDetailResponse | null>(null);
 
@@ -31,9 +36,13 @@ export default function CaseDetailPage({ params }: { params: Promise<{ caseId: s
   }, [caseId]);
 
   useEffect(() => {
+    if (activeRole === "gvcn") {
+      router.replace("/advisor#cases");
+      return;
+    }
     const controller = load();
     return () => controller.abort();
-  }, [load]);
+  }, [activeRole, load, router]);
 
   const handleStateChange = useCallback((next: CaseState) => {
     setResponse((prev) =>
@@ -41,11 +50,27 @@ export default function CaseDetailPage({ params }: { params: Promise<{ caseId: s
     );
   }, []);
 
+  if (activeRole === "gvcn") {
+    return (
+      <AppShell
+        role="gvcn"
+        title="Case được bàn giao cho tôi"
+        subtitle="Chi tiết case của cố vấn được mở trong workspace đã scope theo vai."
+      >
+        <div style={{ ...card, color: "#64748b" }}>Đang trở về danh sách case được giao…</div>
+      </AppShell>
+    );
+  }
+
   return (
-    <div style={pageBg}>
-      <main style={{ maxWidth: 1080, margin: "0 auto", padding: "1.5rem 1.5rem 2.5rem" }}>
+    <AppShell
+      role="ban_quan_ly"
+      title="Chi tiết case"
+      subtitle="Dữ liệu định danh giả và mức ưu tiên rà soát; con người phê duyệt trước mọi bàn giao."
+    >
+      <div style={{ maxWidth: 1080, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Link href="/dashboard" style={{ fontSize: 14, color: "#2a78d6" }}>← Danh sách tín hiệu</Link>
+          <Link href="/analysis?tab=signals" style={{ fontSize: 14, color: "#2a78d6" }}>← Danh sách tín hiệu</Link>
           <button onClick={() => load()} style={retryBtn}>↻ Tải lại</button>
         </div>
 
@@ -54,14 +79,14 @@ export default function CaseDetailPage({ params }: { params: Promise<{ caseId: s
         ) : response ? (
           <Body response={response} onStateChange={handleStateChange} />
         ) : null}
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
 
 function Body({ response, onStateChange }: { response: CaseDetailResponse; onStateChange: (next: CaseState) => void }) {
   if (response.state === "error") {
-    return <Notice tone="error">Không tải được case này — máy chủ tạm thời không phản hồi. Bấm “Tải lại” để thử lại.</Notice>;
+    return <Notice tone="error">Không tải được case này. Máy chủ tạm thời không phản hồi, vui lòng bấm “Tải lại”.</Notice>;
   }
   if (response.state === "empty") {
     return <Notice tone="info">Không tìm thấy case trong phạm vi được xem.</Notice>;
@@ -81,7 +106,7 @@ function Body({ response, onStateChange }: { response: CaseDetailResponse; onSta
             <CopyButton text={c.student_ref} />
           </div>
           <p style={{ margin: "4px 0 0", color: "#94a3b8", fontSize: 12.5 }}>
-            Mã định danh ẩn danh · tính lúc {c.calculated_at.slice(0, 16).replace("T", " ")} · model {c.model_version}
+            Mã định danh được bảo vệ · cập nhật lúc {c.calculated_at.slice(0, 16).replace("T", " ")} · phiên bản {c.model_version}
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -90,7 +115,7 @@ function Body({ response, onStateChange }: { response: CaseDetailResponse; onSta
         </div>
       </header>
 
-      {response.state === "stale" && <Notice tone="warning">Dữ liệu có thể đã cũ — snapshot chưa được cập nhật gần đây.</Notice>}
+      {response.state === "stale" && <Notice tone="warning">Dữ liệu có thể đã cũ vì chưa được cập nhật gần đây.</Notice>}
       {response.state === "insufficient_data" && <Notice tone="warning">Chưa đủ dữ liệu để tạo mức ưu tiên rà soát cho case này.</Notice>}
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(300px, 420px)", gap: "1rem", alignItems: "start" }}>
@@ -101,7 +126,7 @@ function Body({ response, onStateChange }: { response: CaseDetailResponse; onSta
           </section>
 
           <section style={card}>
-            <h2 style={h2}>YẾU TỐ ĐÓNG GÓP (từ model)</h2>
+            <h2 style={h2}>YẾU TỐ ĐÓNG GÓP</h2>
             {c.contributing_factors.length === 0 ? (
               <p style={{ margin: 0, fontSize: 14, color: "#64748b", fontStyle: "italic" }}>Không có yếu tố khi thiếu dữ liệu.</p>
             ) : (
@@ -133,7 +158,7 @@ function Body({ response, onStateChange }: { response: CaseDetailResponse; onSta
             <aside style={card}>
               <h2 style={h2}>THAO TÁC</h2>
               <p style={{ margin: 0, fontSize: 13, color: "#64748b", fontStyle: "italic" }}>
-                Không đủ dữ liệu để tạo mức ưu tiên — hệ thống không đề xuất hành động rà soát cho case này.
+                Không đủ dữ liệu để tạo mức ưu tiên. Hệ thống chưa đề xuất hành động rà soát cho case này.
               </p>
             </aside>
           ) : (
@@ -167,7 +192,7 @@ function StateTimeline({ state }: { state: CaseState }) {
   if (state === "dismissed") {
     return (
       <p style={{ margin: 0, fontSize: 13.5, color: "#64748b" }}>
-        Tín hiệu đã được rà soát và <strong>loại</strong> (kèm lý do chuẩn hóa) — không bàn giao.
+        Tín hiệu đã được rà soát và <strong>loại</strong> kèm lý do chuẩn hóa. Case không được bàn giao.
       </p>
     );
   }
@@ -262,7 +287,6 @@ function DetailSkeleton() {
   );
 }
 
-const pageBg: CSSProperties = { background: "#f6f7f9", minHeight: "100vh" };
 const card: CSSProperties = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "1.1rem 1.35rem" };
 const h2: CSSProperties = { margin: "0 0 0.75rem", fontSize: 13, color: "#64748b", letterSpacing: 0.3 };
 const avatar: CSSProperties = { width: 46, height: 46, borderRadius: "50%", background: "#e0edfb", color: "#2a78d6", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, flexShrink: 0 };

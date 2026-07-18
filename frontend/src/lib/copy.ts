@@ -62,11 +62,11 @@ export function copyForReasonCodes(reasonCodes: readonly string[]): string[] {
 export const BANNER_COPY = {
   "banner.mvp_scope_title": "Phạm vi MVP",
   "banner.mvp_scope_body":
-    "Silent Shield tạo tín hiệu cần rà soát từ điểm theo học kỳ và điểm danh theo thời gian (khi có nguồn đã duyệt). Con người duyệt trước mọi bàn giao. Forecasting / gated fusion điểm danh là hướng nghiên cứu bị chặn — chưa ship trong MVP.",
+    "Silent Shield tạo tín hiệu cần rà soát từ điểm theo học kỳ và điểm danh theo thời gian khi có nguồn đã duyệt. Con người duyệt trước mọi bàn giao. Dự báo và kết hợp dữ liệu điểm danh chưa thuộc phạm vi MVP.",
   "banner.attendance_mvp":
     "Điểm danh theo thời gian thuộc MVP. Thiếu nguồn đã duyệt → insufficient_data trên nhánh chuyên cần; không đẩy ra Post-MVP và không tạo chuỗi giả.",
   "banner.forecast_research_blocked":
-    "Forecasting và fusion điểm danh (hybrid) = research / blocked tới sau submission — không tuyên bố đã triển khai.",
+    "Dự báo và kết hợp dữ liệu điểm danh là hướng nghiên cứu sau MVP, chưa được triển khai trong sản phẩm hiện tại.",
 } as const;
 
 export type BannerCopyKey = keyof typeof BANNER_COPY;

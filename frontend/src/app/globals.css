@@ -12,5 +12,77 @@ body {
 }
 
 a {
-  color: #1d4ed8;
+  color: #dc2626;
+}
+
+/* Tài khoản chỉ xuất hiện ở topbar; không cho phép menu hồ sơ trong sidebar. */
+aside button[aria-haspopup="menu"] {
+  display: none !important;
+}
+
+/* ===== EduSignal AI assistant animations (overview hero) ===== */
+
+/* Robot lơ lửng nhẹ */
+@keyframes ss-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.ss-float { animation: ss-float 5s ease-in-out infinite; }
+
+/* Bóng đổ co giãn theo nhịp lơ lửng */
+@keyframes ss-shadow {
+  0%, 100% { transform: scaleX(1); opacity: 0.4; }
+  50% { transform: scaleX(0.8); opacity: 0.25; }
+}
+.ss-shadow-anim { animation: ss-shadow 5s ease-in-out infinite; }
+
+/* Chấm "đang hoạt động" lan sóng xanh */
+@keyframes ss-live {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45); }
+  70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+}
+.ss-live-dot { animation: ss-live 2s ease-out infinite; }
+
+/* Ba chấm "đang phân tích" */
+@keyframes ss-typing {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+  40% { transform: translateY(-4px); opacity: 1; }
+}
+.ss-typing-dot { animation: ss-typing 1.2s ease-in-out infinite; }
+.ss-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.ss-typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+/* Quầng sáng "suy nghĩ" quanh panel AI thở nhẹ */
+@keyframes ss-glow {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.9; }
+}
+.ss-glow { animation: ss-glow 3.5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ss-float, .ss-shadow-anim, .ss-live-dot, .ss-typing-dot, .ss-glow { animation: none; }
+}
+
+/* ===== Báo cáo tổng thể — In / Lưu PDF chỉ nội dung report (plan.md §3.2) =====
+   ReportModal render qua portal thẳng vào <body>; khi modal đang mở và người
+   dùng in, ẩn toàn bộ app còn lại và trải phẳng report sheet ra trang giấy. */
+@media print {
+  body:has(.ss-report-overlay) > *:not(.ss-report-overlay) { display: none !important; }
+  .ss-report-overlay {
+    position: static !important;
+    inset: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+  }
+  .ss-report-sheet {
+    position: static !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+  .ss-print-hide { display: none !important; }
 }

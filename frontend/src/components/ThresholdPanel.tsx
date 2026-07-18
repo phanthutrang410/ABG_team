@@ -42,7 +42,7 @@ export function ThresholdPanel() {
 
   if (config === undefined) return <div style={{ ...card, color: "#94a3b8" }}>Đang tải cấu hình ngưỡng…</div>;
   if (config === null) {
-    return <div style={noticeErr}>Không tải được cấu hình ngưỡng — máy chủ tạm thời không phản hồi.</div>;
+    return <div style={noticeErr}>Không tải được cấu hình ngưỡng. Máy chủ tạm thời không phản hồi.</div>;
   }
 
   return (
@@ -50,8 +50,8 @@ export function ThresholdPanel() {
       <section style={card}>
         <h2 style={{ margin: "0 0 0.25rem", fontSize: 16 }}>Ngưỡng tạo tín hiệu rà soát</h2>
         <p style={{ margin: "0 0 1rem", fontSize: 13, color: "#64748b" }}>
-          Phiên bản đang dùng: <code>{config.threshold_config_version}</code> · model <code>{config.model_version}</code>.
-          Kéo để xem trade-off giữa tải review và bỏ sót — thay đổi chỉ minh họa, không ghi cấu hình.
+          Cấu hình đang dùng: <code>{config.threshold_config_version}</code> · phiên bản phân tích <code>{config.model_version}</code>.
+          Kéo để xem sự cân bằng giữa khối lượng rà soát và khả năng bỏ sót. Thay đổi chỉ mang tính minh họa, không được lưu vào cấu hình.
         </p>
 
         <div style={{ display: "grid", gap: 14, maxWidth: 460 }}>
@@ -67,11 +67,11 @@ export function ThresholdPanel() {
       </section>
 
       <section style={{ ...card, display: "grid", gap: "0.75rem" }}>
-        <h3 style={{ margin: 0, fontSize: 14, color: "#64748b" }}>Tác động trên snapshot hiện tại (số đếm tổng hợp)</h3>
+        <h3 style={{ margin: 0, fontSize: 14, color: "#64748b" }}>Tác động trên dữ liệu hiện tại</h3>
         {impact === undefined ? (
           <p style={{ margin: 0, fontSize: 14, color: "#94a3b8" }}>Đang tính…</p>
         ) : impact === null ? (
-          <p style={{ margin: 0, fontSize: 14, color: "#991b1b" }}>Không tính được tác động — nguồn dữ liệu chưa sẵn sàng (fail-closed).</p>
+          <p style={{ margin: 0, fontSize: 14, color: "#991b1b" }}>Không tính được tác động vì nguồn dữ liệu chưa sẵn sàng.</p>
         ) : (
           <>
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
@@ -81,7 +81,7 @@ export function ThresholdPanel() {
               <Impact label="Không tạo case" value={impact.n_no_case} />
             </div>
             <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-              Siết ngưỡng → ít case cần review hơn nhưng dễ bỏ sót; nới ngưỡng → ngược lại. Không hiển thị điểm của từng sinh viên.
+              Tăng ngưỡng giúp giảm số case cần rà soát nhưng có thể làm tăng khả năng bỏ sót; giảm ngưỡng tạo tác động ngược lại. Hệ thống không hiển thị điểm của từng sinh viên.
             </p>
           </>
         )}

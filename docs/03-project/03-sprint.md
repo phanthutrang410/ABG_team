@@ -170,7 +170,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | G03 | Care UI review/handoff | H03, H12a | [x] **Done** — `CareActions.tsx` Process §4; AI-log G03 · historical |
 | G04 | Fairness/privacy/threshold panel | H04, H12a | [x] **Done** — login/role + Fairness/Threshold; AI-log G04; PR #23 · historical |
 | G06 | FE filter theo advisor + Copy/`mailto:` draft lô | H22, G05 | [ ] **TODO — owner Duy** · unblocked (H22+G05 Done); stretch FR-12 |
-| G07 | Authenticated layout + global Agent shell | H36 | [ ] **TODO — owner Duy** · unblocked (H36 Done) |
+| G07 | Authenticated layout + global Agent shell | H36 | [ ] **TODO — owner Duy** · unblocked (H36 Done); PR #35: `/analysis`→`/advisor#cases` + fail-closed default (local demo flag only) — **chưa** Done: cần wire scoped API + auth shell thật, không coi localStorage demo là Done |
 | G08 | Weekly briefing/report UI | H34b, G07 | [ ] BLOCKED → G07 · **owner Duy** |
 | G09 | `/notify` advisor draft FE | H35, G07 | [ ] BLOCKED → G07 · **owner Duy** |
 
@@ -303,7 +303,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | G03 | P2 · sau H12a | Care UI theo Process states + defer = giữ Pending | **Done** — `CareActions.tsx`; AI-log G03 · historical |
 | G04 | P2 · sau H12a | Fairness/privacy/threshold panel | **Done** — login/role + Fairness/Threshold; AI-log G04; PR #23 · historical |
 | G06 | P2 stretch · sau H22 | Filter theo advisor + Copy/`mailto:` bản nháp lô | FR-12; draft-only; **TODO — owner Duy**; H22 Live còn thiếu tới D4r |
-| G07 | Next wave · sau H36 | Authenticated layout + global Agent shell | **TODO — owner Duy** |
+| G07 | Next wave · sau H36 | Authenticated layout + global Agent shell | **TODO — owner Duy** · PR #35 chỉ gate redirect + unavailable default; chưa ship auth shell / scoped API consumer |
 | G08 | Next wave · sau G07 | Weekly briefing/report UI | BLOCKED → G07 · **owner Duy** |
 | G09 | Next wave · sau G07 | `/notify` advisor draft FE (H35) | BLOCKED → G07 · **owner Duy** |
 

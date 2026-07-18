@@ -18,10 +18,10 @@ const REFUSAL_LABEL: Record<RefusalReason, string> = {
   invent_or_compute_score: "AI không tự tính hay suy ra điểm số.",
   diagnose_mental_health: "AI không chẩn đoán sức khỏe hoặc tâm lý.",
   speculate_protected_or_personal_cause: "AI không suy đoán nguyên nhân cá nhân/nhạy cảm.",
-  decide_contact_discipline_or_status: "AI không quyết định hành động — con người quyết định.",
+  decide_contact_discipline_or_status: "AI không quyết định hành động. Con người là người đưa ra quyết định.",
   auto_send_or_notify: "AI không tự gửi tin nhắn hay thông báo.",
   access_data_out_of_scope: "Yêu cầu nằm ngoài phạm vi dữ liệu được cấp.",
-  reveal_raw_score_or_weights: "AI không tiết lộ điểm thô hay trọng số model.",
+  reveal_raw_score_or_weights: "AI không tiết lộ điểm thô hay trọng số của mô hình.",
 };
 
 export function AgentPanel({ caseId }: { caseId: string }) {
@@ -60,7 +60,7 @@ export function AgentPanel({ caseId }: { caseId: string }) {
       </div>
 
       {result === "transport_error" && (
-        <div style={quiet}>Máy chủ tạm thời không phản hồi — chưa có giải thích. Thử lại sau.</div>
+        <div style={quiet}>Máy chủ tạm thời không phản hồi. Chưa có giải thích, vui lòng thử lại sau.</div>
       )}
 
       {result && result !== "transport_error" && (

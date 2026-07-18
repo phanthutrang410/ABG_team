@@ -9,6 +9,13 @@
 - Decision #23 amend; ERD `app.*`; Sprint H39a/H39b Done. FE wiring → G07.
 - Checks: Ruff clean; pytest `-m "not slow and not eval"` → **555 passed, 1 skipped**.
 
+## 2026-07-19 (PR #35 — conflict resolve + advisor fail-closed gate)
+
+- Merge `main` vào branch Duy; resolve `frontend/src/app/analysis/page.tsx` theo cấu trúc redirect GVCN → `/advisor#cases` (không ghép lại `AdvisorAnalysis` / client filter từ #34).
+- Quyết định A+B: mặc định fail-closed `unavailable` trên `/advisor*`; localStorage generator chỉ khi `NEXT_PUBLIC_ADVISOR_LOCAL_DEMO=1` và `NODE_ENV !== production`.
+- Tests: redirect/gate + role guard + demo flag (`frontend/tests/advisor-routing.test.mts`).
+- G07 vẫn TODO: chưa wire scoped API / auth shell thật — không coi demo localStorage là Done.
+
 ## 2026-07-18 (Decision #25 — slide/pitch self-owned)
 
 - Hạ Giang + Văn Hải tự bàn làm slide + pitch; Hoàng **không** viết/cập nhật thêm claim-lock, skeleton slide, hay script.
