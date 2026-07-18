@@ -223,3 +223,45 @@ export const CASE_STATE_LABEL: Record<CaseState, string> = {
   resolved: "Đã xử lý",
   monitoring: "Đang theo dõi",
 };
+
+/* ---------- Agent explanation (H24) — mirror backend app/agent/schemas.py ---------- */
+
+export type AgentIntent = "explain_case" | "neutral_draft";
+
+export type ExplanationStatus = "ok" | "insufficient_data" | "refused" | "unavailable";
+
+/** mirror RefusalReason enum — agent-side guardrail codes (PRD §5.4, Ethics §8). */
+export type RefusalReason =
+  | "invent_or_compute_score"
+  | "diagnose_mental_health"
+  | "speculate_protected_or_personal_cause"
+  | "decide_contact_discipline_or_status"
+  | "auto_send_or_notify"
+  | "access_data_out_of_scope"
+  | "reveal_raw_score_or_weights";
+
+export type GroundedFact = {
+  statement_vi: string;
+  source: "model_factor" | "coverage" | "case_field";
+  ref: string | null;
+};
+
+/** Draft nháp trung lập — agent KHÔNG bao giờ tự gửi; luôn requires_human_approval. */
+export type DraftMessage = {
+  body_vi: string;
+  requires_human_approval: boolean;
+  channel: string | null;
+};
+
+export type AgentExplanation = {
+  status: ExplanationStatus;
+  answer_vi: string;
+  grounded_facts: GroundedFact[];
+  model_factors_used: string[];
+  limitation_keys: string[];
+  limitations_vi: string;
+  refusal_reason: RefusalReason | null;
+  draft_message: DraftMessage | null;
+  model_version: string | null;
+  disclaimer_vi: string;
+};
