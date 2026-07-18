@@ -1,46 +1,39 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { ScopeBanner } from "@/components/ScopeBanner";
 import { BandBadge, CaseStateBadge } from "@/components/badges";
 import { LimitationsList } from "@/components/LimitationsList";
-import {
-  CASE_LIST_EMPTY,
-  CASE_LIST_ERROR,
-  CASE_LIST_OK,
-  CASE_LIST_STALE,
-} from "@/lib/fixtures";
+import { apiBase, fetchReviewCases } from "@/lib/api";
 import type { CaseListResponse } from "@/lib/types";
 
 /**
- * G05 — dashboard shell on validated H11a fixtures (public DTO only, no raw score).
- * G02 replaces DEMO_SCENARIOS/fetch with a live call to GET /review-cases; the
- * render below (ok/empty/stale/error/loading) is what that call must satisfy.
+ * G02 — dashboard wired to live GET /review-cases (H02, H11a envelopes).
+ * Renders ok/empty/stale/error exactly as the API reports; never fabricates
+ * a band/item when the source is unavailable (fail-closed — RULES / AGENTS).
+ * Cohort/lớp scoping is NOT built here: public ReviewCase (H06a) has no
+ * cohort/department/class_code field today — see handoff note to Hoàng.
  */
-
-type Scenario = "ok" | "empty" | "stale" | "error";
-const SCENARIOS: Record<Scenario, CaseListResponse> = {
-  ok: CASE_LIST_OK,
-  empty: CASE_LIST_EMPTY,
-  stale: CASE_LIST_STALE,
-  error: CASE_LIST_ERROR,
-};
-
 export default function DashboardPage() {
   const router = useRouter();
-  const [scenario, setScenario] = useState<Scenario>("ok");
   const [loading, setLoading] = useState(true);
   const [response, setResponse] = useState<CaseListResponse | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true);
-    const t = setTimeout(() => {
-      setResponse(SCENARIOS[scenario]);
+    const controller = new AbortController();
+    fetchReviewCases(controller.signal).then((r) => {
+      setResponse(r);
       setLoading(false);
-    }, 350);
-    return () => clearTimeout(t);
-  }, [scenario]);
+    });
+    return controller;
+  }, []);
+
+  useEffect(() => {
+    const controller = load();
+    return () => controller.abort();
+  }, [load]);
 
   return (
     <main style={{ maxWidth: 1000, margin: "0 auto", padding: "2rem 1.5rem" }}>
@@ -54,16 +47,16 @@ export default function DashboardPage() {
 
       <ScopeBanner />
 
-      <DemoStateSwitcher scenario={scenario} onChange={setScenario} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", fontSize: 12, color: "#94a3b8" }}>
+        <span>Nguồn: <code>{apiBase()}/review-cases</code></span>
+        <button onClick={() => load()} style={retryBtn}>↻ Tải lại</button>
+      </div>
 
-      {loading ? (
-        <ListSkeleton />
-      ) : response ? (
-        <ListBody response={response} onOpenCase={(id) => router.push(`/cases/${id}`)} />
-      ) : null}
+      {loading ? <ListSkeleton /> : response ? <ListBody response={response} onOpenCase={(id) => router.push(`/cases/${id}`)} /> : null}
 
       <p style={{ marginTop: "1rem", fontSize: 13, color: "#94a3b8" }}>
-        Bản G05 trên fixture đã validate (H11a) — sẽ nối <code>GET /review-cases</code> thật ở G02. Không hiển thị điểm số nội bộ.
+        G02 — dữ liệu tải trực tiếp từ API. Không hiển thị điểm số nội bộ; scoping theo khoa/lớp chưa
+        có vì <code>ReviewCase</code> công khai (H06a) hiện chưa mang field cohort/department.
       </p>
     </main>
   );
@@ -73,7 +66,8 @@ function ListBody({ response, onOpenCase }: { response: CaseListResponse; onOpen
   if (response.state === "error") {
     return (
       <Notice tone="error">
-        Không tải được danh sách tín hiệu. {response.problem?.code === "upstream_unavailable" ? "Nguồn dữ liệu tạm thời không phản hồi." : ""} Vui lòng thử lại sau.
+        Không tải được danh sách tín hiệu từ nguồn dữ liệu.{" "}
+        {response.problem?.code === "upstream_unavailable" ? "Máy chủ tạm thời không phản hồi." : ""} Bấm “Tải lại” để thử lại.
       </Notice>
     );
   }
@@ -117,37 +111,6 @@ function ListBody({ response, onOpenCase }: { response: CaseListResponse; onOpen
   );
 }
 
-function DemoStateSwitcher({ scenario, onChange }: { scenario: Scenario; onChange: (s: Scenario) => void }) {
-  const opts: { id: Scenario; label: string }[] = [
-    { id: "ok", label: "Bình thường" },
-    { id: "empty", label: "Trống" },
-    { id: "stale", label: "Dữ liệu cũ" },
-    { id: "error", label: "Lỗi tải" },
-  ];
-  return (
-    <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: "1rem", fontSize: 12.5, color: "#64748b" }}>
-      <span>Xem minh họa trạng thái (QA):</span>
-      {opts.map((o) => (
-        <button
-          key={o.id}
-          onClick={() => onChange(o.id)}
-          style={{
-            padding: "4px 10px",
-            borderRadius: 999,
-            border: "1px solid " + (scenario === o.id ? "#1d4ed8" : "#e2e8f0"),
-            background: scenario === o.id ? "#eff6ff" : "#fff",
-            color: scenario === o.id ? "#1d4ed8" : "#64748b",
-            fontWeight: scenario === o.id ? 600 : 400,
-            cursor: "pointer",
-          }}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function Notice({ tone, children }: { tone: "info" | "warning" | "error"; children: React.ReactNode }) {
   const styles: Record<typeof tone, CSSProperties> = {
     info: { background: "#f8fafc", border: "1px solid #e2e8f0", color: "#475569" },
@@ -173,3 +136,4 @@ function ListSkeleton() {
 
 const th: CSSProperties = { padding: "12px 16px", fontSize: 13, color: "#64748b" };
 const td: CSSProperties = { padding: "13px 16px", fontSize: 14, verticalAlign: "top" };
+const retryBtn: CSSProperties = { padding: "3px 10px", borderRadius: 6, border: "1px solid #e2e8f0", background: "#fff", cursor: "pointer", color: "#475569", fontSize: 12 };
