@@ -1,8 +1,10 @@
 # H13 — Checkpoint 1: nội dung paste BTC
 
-> **Owner nộp:** Hoàng · **Deadline:** 11:00 18/7/2026 · **Status nội dung:** sẵn sàng paste · **Status form/receipt:** BLOCKED → human BTC submit  
-> Nguồn: [topic-selection](01-topic-selection.md), [PRD](../02-product/04-prd.md), [VAIC rules](../01-requirements/01-vaic-rules.md).  
+> **Owner nộp:** Hoàng · **Deadline:** 11:00 18/7/2026 · **Status nội dung:** sẵn sàng paste · **Status form/receipt:** BLOCKED → human BTC submit (refreshed ~06:35)
+> Nguồn: [topic-selection](01-topic-selection.md), [PRD](../02-product/04-prd.md), [VAIC rules](../01-requirements/01-vaic-rules.md).
 > **Không claim:** hybrid/forecast đã ship; “Điểm rủi ro” / raw score; chuyên cần = Post-MVP; “xu hướng dài hạn”.
+>
+> Evidence checklist: [07-release-evidence.md](07-release-evidence.md) §1 — ACTION banner; tick form/receipt chỉ sau khi có xác nhận BTC.
 
 Copy từng khối bên dưới vào form BTC (4 trường). Không invent URL form trong repo.
 

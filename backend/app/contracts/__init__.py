@@ -13,6 +13,7 @@ from app.contracts.integration import (
     CaseListResponse,
     IntegrationProblem,
 )
+from app.contracts.normalized import NormalizedStudentRecord
 from app.contracts.review_case import ContributingFactor, ReviewCase
 from app.contracts.scoring import ScoringFeatures
 
@@ -26,6 +27,7 @@ __all__ = [
     "Coverage",
     "FORBIDDEN_PUBLIC_FIELDS",
     "IntegrationProblem",
+    "NormalizedStudentRecord",
     "ReviewCase",
     "ScoringFeatures",
     "attendance_unapproved_defaults",

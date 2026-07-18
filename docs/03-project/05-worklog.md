@@ -14,6 +14,33 @@
 - Verify: pytest `tests/agent` **26 passed**; contract suite (agent + integration + review_case + scoring + fairness) **102 passed**; ruff pass; `git diff --check` sạch. **Skip có ghi:** `test_health`/`test_case_transitions`/`test_dwh_migrate` không chạy được trên máy build (env thiếu fastapi/sqlalchemy — không liên quan T03); chưa live-LLM eval (thuộc T02).
 - Doc draft cho H11b: [08-agent-grounding-guardrails.md](../04-engineering/08-agent-grounding-guardrails.md). Mở khóa: `T01` (TODO).
 
+## 2026-07-18 (M06 Done — domain transform + quality report)
+
+- `M06` **Done** (Duy): `backend/app/ml/domain/` — `models.py` (Pydantic domain rows + `DataQualityReport`, tên khớp cột `dwh`), `transform.py` (semester: term_code normalize, taxonomy `Trạng thái` decision #17, miền điểm `[0,10]`, khóa unique, reject reasons, coverage `single_term`/`grade_coverage_insufficient`/`status_unknown`), `attendance.py` (nhánh `mvp-attendance-over-time`; rate loại `excused=true`; ≥4 mốc; trend ≥2 điểm). `DataQualityReport` được lắp trong transform/attendance (không tách file riêng).
+- Fail-closed: field PII/token trong input ⇒ `PiiFieldError` (zero output). Không cross-join hai nguồn. `is_dropout_outcome` chỉ ở `academic_status` (evaluation) — test chứng minh không rò sang `student_dimension`/`term_grade`/`advisor_assignment`.
+- Committed attendance artifacts (pseudonymous, no PII): `tests/fixtures/attendance/mvp_attendance_source_manifest.json` + `…_data_quality_report.json` — regen-deterministic (test so khớp build).
+- Semester domain artifact **không commit**: sinh tại vị trí ngoài repo từ file M05b external (`v59-empty-program-students`) — `H20` đọc; repo chỉ giữ transform + tests (EPU §5). Không commit raw V59/PII/map MSSV.
+- Tests: `tests/test_m06_domain_fixture.py` (46) — normalize, taxonomy, reject layers, PII fail-closed, determinism, no cross-join, alignment field ↔ cột `dwh`, attendance rate/excused/coverage, artifact no-drift.
+- Verify: `ruff check app tests` pass; `pytest -q -m "not slow and not eval"` → **197 passed, 4 errors**. 4 errors = `test_dwh_migrate.py` (H19) yêu cầu Postgres (`docker compose up -d db`) — **không** liên quan M06 (transform thuần, không chạm DB); môi trường local không có Docker. FE không đổi (không chạy). Chưa commit trong bước này → commit/push branch `KhanhDuyBui` theo yêu cầu.
+- Mở khóa `H20` (Hoàng) — consume `app/ml/domain` output. `M02` vẫn `BLOCKED → H08` (H20→H08).
+
+## 2026-07-18 (~07:05 M05b + H15 unlock — decision #18)
+
+- **Decision #18:** team approver (Hoàng) unlock MVP demo — semester V59 ngoài git + attendance allowlisted `mvp-attendance-over-time`.
+- `M05a`/`H06c` board sync **Done** (PR #17). `M05b` **Done** — [14-m05b…](14-m05b-semester-approval.md) (hash `34a53298…`, 460 rows).
+- `H15` **Done** — [12-h15…](12-h15-attendance-approval-prep.md) + fixture `backend/tests/fixtures/attendance/mvp_attendance_over_time.json`; amend EPU/Data-ML/persistence; RULES pointer.
+- Gate: allowlist `mvp-attendance-over-time` role `attendance`; `tests/test_source_gate.py` **26** xanh.
+- **M06 mở** cho Duy. Không làm H20/H08 trong wave này. Public copy trung lập (không slogan synthetic / không claim institutional approval).
+
+## 2026-07-18 (~06:35 Option 1: M01 Done + H18)
+
+- Chốt **Option 1** multitask Hoàng (không spawn lane Duy/Giang/Trang).
+- `M01` **Done** (PR #16 `1046ffe`): board sync; dọn leftover `backend/app/ml/early_warning/` (`__pycache__`) — 4/4 `test_m01_legacy_quarantine` xanh.
+- `H18` **Done**: `backend/tests/test_h18_api_mvp_quarantine.py` (6) — API/MVP packages không legacy; OpenAPI/ReviewCase không raw risk; health/cases surface không cần early_warning.
+- `H02` còn `BLOCKED → M02` (H18/H06a-r Done).
+- `H13` vẫn TODO — human BTC submit + receipt trước 11:00; draft paste-ready giữ nguyên.
+- Chase `M05b`/`H15` refresh — vẫn BLOCKED → data-owner / M05a; **không** fake approval.
+
 ## 2026-07-18 (~05:56 chase M05b/H15)
 
 - Chase refresh only: [12-h15…](12-h15-attendance-approval-prep.md) §0 — status bảng M05a/M05b/H15 + next asks copy/paste cho Duy và data-owner; checklist §1 vẫn **OPEN** cả 5 hàng.

@@ -20,4 +20,13 @@ python -m pytest -q tests/test_dwh_migrate.py
 
 Revision: `20260718_h19_dwh` — seven empty tables in schema `dwh`; no seed/import (H20).
 
-`app/ml/early_warning/` — feature/prediction contracts (M01/M02 mở rộng).
+## ML (M01 + H18 quarantine)
+
+Legacy `app/ml/early_warning/` (synthetic generator, attendance theo tuần, `synth_socioeconomic_group`/`synth_ethnicity_group`, raw `risk_score`) đã bị gỡ khỏi MVP path theo **M01** (PR #16). Contract scoring hiện hành: `app/contracts/scoring.py` (`ScoringFeatures`) theo [Data-ML contract](../docs/04-engineering/08-data-ml-scoring-fairness-contract.md).
+
+Guards:
+
+- `tests/test_m01_legacy_quarantine.py` — scoring fields + MVP import ban + CSV tombstone
+- `tests/test_h18_api_mvp_quarantine.py` — API/cases/contracts/OpenAPI không legacy / raw risk public (**H18**)
+
+Baseline M02 sẽ build trên `ScoringFeatures` sau khi nguồn được duyệt (M05b/M06).

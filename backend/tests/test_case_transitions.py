@@ -183,7 +183,7 @@ def test_api_happy_path_and_forbidden(client: TestClient) -> None:
     assert r.status_code == 200
     assert r.json()["state"] == "approved_for_follow_up"
 
-    # Missing advisor_ref → 409, stay approved, mapping-repair queued
+    # Missing H08 advisor → 409, stay approved, mapping-repair queued
     r = client.post(
         "/cases/api-1/transitions",
         json=_transition_body("assign"),
@@ -199,14 +199,14 @@ def test_api_happy_path_and_forbidden(client: TestClient) -> None:
     assert got.json()["mapping_repair_queued"] is True
     assert "advisor_ref" not in got.json()
 
+    # Client-supplied advisor_ref alone is ignored (H03 — H08 required)
     r = client.post(
         "/cases/api-1/transitions",
         json=_transition_body("assign", advisor_ref="adv_9"),
     )
-    assert r.status_code == 200
-    assert r.json()["state"] == "assigned"
-    assert "advisor_ref" not in r.json()
-    assert r.json()["mapping_repair_queued"] is False
+    assert r.status_code == 409
+    assert r.json()["detail"]["code"] == "missing_advisor_ref"
+    assert r.json()["detail"]["state"] == "approved_for_follow_up"
 
 
 def test_api_rejects_forbidden_alias_and_skip(client: TestClient) -> None:
@@ -319,17 +319,21 @@ def test_api_public_responses_never_leak_advisor_ref(client: TestClient) -> None
         "/cases/leak-1/transitions",
         json=_transition_body("assign", advisor_ref="adv_secret"),
     )
-    assert r.status_code == 200
-    payload = r.json()
-    assert payload["state"] == "assigned"
+    # Client advisor_ref ignored without H08 — handoff stopped
+    assert r.status_code == 409
+    payload = r.json()["detail"]
+    assert payload["code"] == "missing_advisor_ref"
     assert "advisor_ref" not in payload
+    assert "advisor_ref" not in r.json()
 
     got = client.get("/cases/leak-1")
     assert "advisor_ref" not in got.json()
-    # Internal store still holds routing ref for care path
+    assert got.json()["state"] == "approved_for_follow_up"
+    assert got.json()["mapping_repair_queued"] is True
+    # Client secret must not land in internal store without H08
     internal = store.get("leak-1")
     assert internal is not None
-    assert internal.advisor_ref == "adv_secret"
+    assert internal.advisor_ref is None
 
 
 def test_seed_create_helper_defaults() -> None:

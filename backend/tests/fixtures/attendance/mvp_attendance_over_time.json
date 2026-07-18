@@ -1,0 +1,100 @@
+{
+  "source_id": "mvp-attendance-over-time",
+  "schema_version": "epu-1",
+  "events": [
+    {
+      "student_ref": "s-1001",
+      "observed_at": "2026-05-15",
+      "presence_status": "present",
+      "course_ref": "c-MATH101"
+    },
+    {
+      "student_ref": "s-1001",
+      "observed_at": "2026-05-29",
+      "presence_status": "present",
+      "course_ref": "c-MATH101"
+    },
+    {
+      "student_ref": "s-1001",
+      "observed_at": "2026-06-12",
+      "presence_status": "absent",
+      "course_ref": "c-MATH101",
+      "excused": false
+    },
+    {
+      "student_ref": "s-1001",
+      "observed_at": "2026-06-26",
+      "presence_status": "present",
+      "course_ref": "c-MATH101"
+    },
+    {
+      "student_ref": "s-1001",
+      "observed_at": "2026-07-10",
+      "presence_status": "present",
+      "course_ref": "c-MATH101"
+    },
+    {
+      "student_ref": "s-1002",
+      "observed_at": "2026-05-15",
+      "presence_status": "present",
+      "course_ref": "c-PHYS101"
+    },
+    {
+      "student_ref": "s-1002",
+      "observed_at": "2026-05-29",
+      "presence_status": "absent",
+      "course_ref": "c-PHYS101"
+    },
+    {
+      "student_ref": "s-1002",
+      "observed_at": "2026-06-12",
+      "presence_status": "absent",
+      "course_ref": "c-PHYS101",
+      "excused": false
+    },
+    {
+      "student_ref": "s-1002",
+      "observed_at": "2026-06-26",
+      "presence_status": "present",
+      "course_ref": "c-PHYS101"
+    },
+    {
+      "student_ref": "s-1002",
+      "observed_at": "2026-07-10",
+      "presence_status": "absent",
+      "course_ref": "c-PHYS101",
+      "excused": false
+    },
+    {
+      "student_ref": "s-1003",
+      "observed_at": "2026-05-15",
+      "presence_status": "present",
+      "course_ref": "c-ENG101"
+    },
+    {
+      "student_ref": "s-1003",
+      "observed_at": "2026-05-29",
+      "presence_status": "present",
+      "course_ref": "c-ENG101"
+    },
+    {
+      "student_ref": "s-1003",
+      "observed_at": "2026-06-12",
+      "presence_status": "present",
+      "course_ref": "c-ENG101"
+    },
+    {
+      "student_ref": "s-1003",
+      "observed_at": "2026-06-26",
+      "presence_status": "present",
+      "course_ref": "c-ENG101"
+    },
+    {
+      "student_ref": "s-1003",
+      "observed_at": "2026-07-10",
+      "presence_status": "absent",
+      "course_ref": "c-ENG101",
+      "excused": false
+    }
+  ]
+}

@@ -98,6 +98,8 @@ class CaseSnapshot:
     case_id: str
     state: CaseState
     advisor_ref: Optional[str] = None
+    student_ref: Optional[str] = None
+    source_id: Optional[str] = None
     review_at: Optional[datetime] = None
     reason_code: Optional[str] = None
     monitoring_until: Optional[datetime] = None
@@ -214,7 +216,8 @@ def apply_transition(case: CaseSnapshot, command: TransitionCommand) -> CaseSnap
         )
 
     if command.action == CaseAction.ASSIGN:
-        advisor = (command.advisor_ref or case.advisor_ref or "").strip()
+        # Advisor must be supplied on the command (H03: router resolves via H08).
+        advisor = (command.advisor_ref or "").strip()
         if not advisor:
             # Care gate §4.4: stop handoff, queue mapping-repair, keep approved.
             raise TransitionError(

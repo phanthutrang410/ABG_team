@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
 from app.cases.auth import resolve_trusted_actor, seed_create_allowed
 from app.cases.domain import TransitionError, TransitionErrorCode
+from app.cases.routing import resolve_advisor_for_assign
 from app.cases.schemas import (
     CaseCreateRequest,
     TransitionErrorBody,
@@ -13,12 +15,13 @@ from app.cases.schemas import (
     TransitionResponse,
 )
 from app.cases.store import command_from_strings, store
+from app.database import get_db
 
 router = APIRouter(prefix="/cases", tags=["cases"])
 
 
 def _to_public_response(case) -> TransitionResponse:
-    """Public projection — never includes advisor_ref (routing-only / H08)."""
+    """Public projection — never includes advisor_ref / student_ref / source_id."""
     return TransitionResponse(
         case_id=case.case_id,
         state=case.state.value,
@@ -68,7 +71,13 @@ def create_case(body: CaseCreateRequest) -> TransitionResponse:
         )
     try:
         # Never accept client advisor_ref on public create.
-        case = store.create(body.case_id, state=body.state, advisor_ref=None)
+        case = store.create(
+            body.case_id,
+            state=body.state,
+            advisor_ref=None,
+            student_ref=body.student_ref,
+            source_id=body.source_id,
+        )
     except TransitionError as err:
         raise HTTPException(
             status_code=_http_status(err.code),
@@ -92,19 +101,27 @@ def get_case(case_id: str) -> TransitionResponse:
 
 
 @router.post("/{case_id}/transitions", response_model=TransitionResponse)
-def transition_case(case_id: str, body: TransitionRequest) -> TransitionResponse:
+def transition_case(
+    case_id: str,
+    body: TransitionRequest,
+    db: Session = Depends(get_db),
+) -> TransitionResponse:
     case = store.get(case_id)
     if case is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="case not found")
     try:
         actor, actor_kind = resolve_trusted_actor(body.actor, body.actor_kind)
+        # H03: assign uses H08 only — ignore client body.advisor_ref.
+        resolved_advisor = None
+        if body.action == "assign":
+            resolved_advisor = resolve_advisor_for_assign(db, case)
         command = command_from_strings(
             action=body.action,
             actor=actor,
             actor_kind=actor_kind,
             reason_code=body.reason_code,
             review_at=body.review_at,
-            advisor_ref=body.advisor_ref,
+            advisor_ref=resolved_advisor,
             monitoring_until=body.monitoring_until,
         )
         updated = store.transition(case_id, command)
