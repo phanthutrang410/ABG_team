@@ -28,7 +28,8 @@ from app.ml.domain.models import DomainSourceManifest
 from app.ml.domain.transform import PiiFieldError
 
 _EXTRACTED = datetime(2026, 7, 18, tzinfo=timezone.utc)
-_ATTENDANCE_DIR = Path(__file__).resolve().parent / "fixtures" / "attendance"
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_ATTENDANCE_DIR = _REPO_ROOT / "data" / "approved" / "attendance"
 _ATTENDANCE_FIXTURE = _ATTENDANCE_DIR / "mvp_attendance_over_time.json"
 
 

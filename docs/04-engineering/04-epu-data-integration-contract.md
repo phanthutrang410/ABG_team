@@ -72,7 +72,7 @@ Hoàng nhận input `NormalizedStudentRecord`/`ScoringFeatures` chỉ gồm pseu
 
 - `H19` tạo bảng `dwh` versioned cho domain điểm + `source_manifest`/`data_quality_report`, và `attendance_event` theo `H15`; DB khởi tạo rỗng và migration có thể chạy lại an toàn.
 - Không có cột hay import path MVP cho `MSSV`, tên, email, SĐT, token, thuộc tính nhóm, raw score hay mapping định danh. Điểm danh qua path `mvp-attendance-over-time` (decision #18); vẫn cấm legacy synthetic đã liệt kê.
-- `H20` chỉ đọc artifact M06 ở vị trí ngoài repo được kiểm soát (semester) + fixture H15 trong repo tests. Thiếu approval, hash/count/schema lệch, PII/token, cross-source join hoặc quality gate fail phải rollback toàn bộ.
+- `H20` mặc định đọc package M06 semester + attendance dưới `data/approved/` (git-safe, pseudonymous). Raw V59 vẫn ngoài git (regen via `scripts/export_approved_semester_domain.py`). Thiếu approval, hash/count/schema lệch, PII/token, cross-source join hoặc quality gate fail phải rollback toàn bộ.
 - `H20` không phải public API endpoint và không dùng V59 raw / `epu_data` / legacy synthetic làm seed thay thế ngoài path đã duyệt.
 
 ## 6. Acceptance cho M05–M06, H19–H20 và H08

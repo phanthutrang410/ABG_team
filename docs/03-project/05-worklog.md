@@ -1,5 +1,17 @@
 # Nhật ký công việc
 
+## 2026-07-18 (H02 + H04 Done — review/threshold APIs)
+
+- `H02` **Done**: `GET /review-cases` + `GET /review-cases/{case_id}` — `review_projection.py` / `review_router.py`; H11a envelopes; no `model_score`/PII; tests `test_h02_review_case_api.py`.
+- `H04` **Done**: `GET /config/thresholds` (+ impact) + `GET /fairness/report` — `threshold_public.py` + `config_api/router.py`; fairness MVP fail-closed; tests `test_h04_threshold_fairness_api.py`.
+- Verify targeted: H02/H04/H18/H20/source_gate/m06 → **99 passed**. Mở khóa consumer `G02`/`G04` (sau G05/H12a) và `D4b` (sau G02).
+
+## 2026-07-18 (git-ready approved domain data)
+
+- Commit package M06 semester pseudonymous: `data/approved/semester/domain_package.json` (460 SV / 3680 grades); attendance moved to `data/approved/attendance/`.
+- H20 default import không cần env; regen raw qua `scripts/export_approved_semester_domain.py`. Raw V59 vẫn ngoài git.
+- Docs: `data/README.md`, M05b, EPU §5, persistence §4, `.env.example`.
+
 ## 2026-07-18 (T01 Done — agent stub, lane Thu Trang)
 
 - `T01` **Done**: stub deterministic `backend/app/agent/stub.py` — không LLM, lắp theo 3 tầng: (1) guardrail classifier `guardrails.py` (7 refusal codes, rule-based, first-match-wins — T02 tái dùng làm pre-LLM gate); (2) fail-closed mapping `context.status` (unavailable/empty/refused/insufficient → không bịa); (3) grounded assembly chỉ từ case fields (factor codes nguyên văn, coverage counts, H12a copy keys cho limitations).
@@ -18,8 +30,8 @@
 
 - `M06` **Done** (Duy): `backend/app/ml/domain/` — `models.py` (Pydantic domain rows + `DataQualityReport`, tên khớp cột `dwh`), `transform.py` (semester: term_code normalize, taxonomy `Trạng thái` decision #17, miền điểm `[0,10]`, khóa unique, reject reasons, coverage `single_term`/`grade_coverage_insufficient`/`status_unknown`), `attendance.py` (nhánh `mvp-attendance-over-time`; rate loại `excused=true`; ≥4 mốc; trend ≥2 điểm). `DataQualityReport` được lắp trong transform/attendance (không tách file riêng).
 - Fail-closed: field PII/token trong input ⇒ `PiiFieldError` (zero output). Không cross-join hai nguồn. `is_dropout_outcome` chỉ ở `academic_status` (evaluation) — test chứng minh không rò sang `student_dimension`/`term_grade`/`advisor_assignment`.
-- Committed attendance artifacts (pseudonymous, no PII): `tests/fixtures/attendance/mvp_attendance_source_manifest.json` + `…_data_quality_report.json` — regen-deterministic (test so khớp build).
-- Semester domain artifact **không commit**: sinh tại vị trí ngoài repo từ file M05b external (`v59-empty-program-students`) — `H20` đọc; repo chỉ giữ transform + tests (EPU §5). Không commit raw V59/PII/map MSSV.
+- Committed attendance artifacts (pseudonymous, no PII): later moved to `data/approved/attendance/` — regen-deterministic (test so khớp build).
+- Semester domain artifact: initially ngoài repo; sau đó commit package `data/approved/semester/domain_package.json` (git-ready).
 - Tests: `tests/test_m06_domain_fixture.py` (46) — normalize, taxonomy, reject layers, PII fail-closed, determinism, no cross-join, alignment field ↔ cột `dwh`, attendance rate/excused/coverage, artifact no-drift.
 - Verify: `ruff check app tests` pass; `pytest -q -m "not slow and not eval"` → **197 passed, 4 errors**. 4 errors = `test_dwh_migrate.py` (H19) yêu cầu Postgres (`docker compose up -d db`) — **không** liên quan M06 (transform thuần, không chạm DB); môi trường local không có Docker. FE không đổi (không chạy). Chưa commit trong bước này → commit/push branch `KhanhDuyBui` theo yêu cầu.
 - Mở khóa `H20` (Hoàng) — consume `app/ml/domain` output. `M02` vẫn `BLOCKED → H08` (H20→H08).
@@ -28,7 +40,7 @@
 
 - **Decision #18:** team approver (Hoàng) unlock MVP demo — semester V59 ngoài git + attendance allowlisted `mvp-attendance-over-time`.
 - `M05a`/`H06c` board sync **Done** (PR #17). `M05b` **Done** — [14-m05b…](14-m05b-semester-approval.md) (hash `34a53298…`, 460 rows).
-- `H15` **Done** — [12-h15…](12-h15-attendance-approval-prep.md) + fixture `backend/tests/fixtures/attendance/mvp_attendance_over_time.json`; amend EPU/Data-ML/persistence; RULES pointer.
+- `H15` **Done** — [12-h15…](12-h15-attendance-approval-prep.md) + fixture `data/approved/attendance/mvp_attendance_over_time.json`; amend EPU/Data-ML/persistence; RULES pointer.
 - Gate: allowlist `mvp-attendance-over-time` role `attendance`; `tests/test_source_gate.py` **26** xanh.
 - **M06 mở** cho Duy. Không làm H20/H08 trong wave này. Public copy trung lập (không slogan synthetic / không claim institutional approval).
 

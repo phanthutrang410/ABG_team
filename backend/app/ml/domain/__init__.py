@@ -8,9 +8,10 @@ no token, no cross-source join. Column names match the `dwh` persistence schema
 
 Two independent source snapshots (never joined by identity — EPU §2):
 
-* semester grades (`v59-empty-program-students`, external) → `build_semester_dataset`
-* attendance-over-time (`mvp-attendance-over-time`, in-repo H15 fixture)
-  → `build_attendance_dataset`
+* semester grades (`v59-empty-program-students`,
+  `data/approved/semester/domain_package.json`) → `build_semester_dataset`
+* attendance-over-time (`mvp-attendance-over-time`,
+  `data/approved/attendance/`) → `build_attendance_dataset`
 
 `is_dropout_outcome` is carried **only** on `academic_status` for internal
 M02/M03 evaluation — it never appears in scoring features / public case / agent

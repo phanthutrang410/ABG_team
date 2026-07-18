@@ -59,7 +59,7 @@
 | Mục | Owner | Task | Evidence | Status |
 |:--|:--|:--|:--|:--|
 | Semester approved (M05b) | Hoàng | M05b | [14-m05b…](14-m05b-semester-approval.md) · decision #18 · hash `34a53298…` / 460 · raw ngoài git | [x] |
-| Attendance approved (H15) | Hoàng | H15 | [12-h15…](12-h15-attendance-approval-prep.md) · fixture `backend/tests/fixtures/attendance/mvp_attendance_over_time.json` · hash `f65573ad…` / 15 events | [x] |
+| Attendance approved (H15) | Hoàng | H15 | [12-h15…](12-h15-attendance-approval-prep.md) · fixture `data/approved/attendance/mvp_attendance_over_time.json` · hash `f65573ad…` / 15 events | [x] |
 | Source gate allowlist | Hoàng | H15/M05a | `mvp-attendance-over-time` in `SOURCE_ALLOWLIST`; `tests/test_source_gate.py` 26 pass | [x] |
 
 ## 6. Fill template (H05b)

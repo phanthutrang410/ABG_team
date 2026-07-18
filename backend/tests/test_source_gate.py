@@ -252,7 +252,11 @@ def test_manifest_forbids_unknown_field() -> None:
 # --- H15 allowlisted attendance (decision #18) -----------------------------
 
 _ATTENDANCE_FIXTURE = (
-    Path(__file__).resolve().parent / "fixtures" / "attendance" / "mvp_attendance_over_time.json"
+    Path(__file__).resolve().parents[2]
+    / "data"
+    / "approved"
+    / "attendance"
+    / "mvp_attendance_over_time.json"
 )
 
 

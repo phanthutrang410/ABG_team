@@ -2,7 +2,7 @@
 
 > **Status: Done** — decision [#18](04-decisions.md). Owner duyệt = Admin kỹ thuật (Hoàng), không có data-owner ngoài trong cửa sổ demo.
 >
-> **Không** commit raw V59 / PII / map MSSV↔`student_ref`. File nguồn nằm **ngoài git** (reference local hoặc path cấu hình env).
+> **Không** commit raw V59 / PII / map MSSV↔`student_ref`. Team dùng package M06 đã pseudonymize trong git; raw chỉ để regen.
 
 ## Artifact
 
@@ -11,13 +11,15 @@
 | Owner | Hoàng / Admin kỹ thuật · Silent Shield MVP demo |
 | Rights | Chỉ pipeline MVP Silent Shield (M06→H20→scoring); cấm tái phân phối raw export; cấm đưa PII/map vào git/slide/video |
 | `source_id` | `v59-empty-program-students` |
-| Local path (ngoài git) | `reference-Learning-Analytics-AI/backend/db/v59-empty-program-students.json` (không track) |
-| Env hint cho M06 | `SILENT_SHIELD_SEMESTER_SOURCE_PATH` → absolute path tới file trên |
-| `snapshot_sha256` | `34a53298df3dafd4d248496e75fbc10d95f997b76d0a7e6566e04ea97c367c66` |
+| **Team default (in git)** | [`data/approved/semester/domain_package.json`](../../data/approved/semester/domain_package.json) — xem [APPROVAL.md](../../data/approved/semester/APPROVAL.md) |
+| Package gate SHA-256 | `a6bfdc959c83282e607e23dc115eb84980b8930338d94b7b72bc6c74a1fc1cae` |
+| Raw path (ngoài git, regen only) | `reference-Learning-Analytics-AI/backend/db/v59-empty-program-students.json` |
+| Raw provenance SHA-256 | `34a53298df3dafd4d248496e75fbc10d95f997b76d0a7e6566e04ea97c367c66` |
+| Optional env | `SILENT_SHIELD_SEMESTER_SOURCE_PATH` — override default package / raw owner path |
 | `record_count` | `460` |
 | `schema_version` | `epu-1` |
 | `provenance_approved` | `true` |
-| Approved at | 2026-07-18 (~07:05 +07) |
+| Approved at | 2026-07-18 (~07:05 +07); package committed 2026-07-18 |
 
 ## Scope
 
@@ -27,4 +29,4 @@
 
 ## Consumer
 
-`M06` (Duy) được mở: đọc path ngoài-repo + manifest khớp hash/count ở trên; fail-closed nếu lệch.
+`H20` mặc định import domain package trong repo (`python -m app.dwh.cli import-semester`). Regen: `python scripts/export_approved_semester_domain.py` trên máy có raw V59.
