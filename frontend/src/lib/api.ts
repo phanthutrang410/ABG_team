@@ -1,4 +1,6 @@
 import type {
+  AgentExplanation,
+  AgentIntent,
   CaseAction,
   CaseDetailResponse,
   CaseListResponse,
@@ -121,6 +123,32 @@ export async function fetchFairnessReport(signal?: AbortSignal): Promise<Fairnes
     const res = await fetch(`${API_BASE}/fairness/report`, { cache: "no-store", signal });
     if (!res.ok) return null;
     return (await res.json()) as FairnessReport;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * H24 — POST /review-cases/{id}/explanation. Body = AgentCommand only
+ * (intent/question/locale); context được server dựng, browser KHÔNG gửi.
+ * null = transport failure → UI hiển thị cùng copy fail-closed "unavailable".
+ */
+export async function postAgentExplanation(
+  caseId: string,
+  payload: { intent: AgentIntent; question: string },
+  signal?: AbortSignal,
+): Promise<AgentExplanation | null> {
+  try {
+    const res = await fetch(`${API_BASE}/review-cases/${encodeURIComponent(caseId)}/explanation`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...payload, locale: "vi" }),
+      signal,
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as AgentExplanation;
+    if (!body || typeof body.status !== "string" || typeof body.answer_vi !== "string") return null;
+    return body;
   } catch {
     return null;
   }

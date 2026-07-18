@@ -353,6 +353,7 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 | Advisor mail draft | Stretch `H21`→`H22`✓→`G06` (FR-12); **không** block G02/D4b; draft-only |
 | Agent runtime overclaim | `H23`–`H26` Done = FR-08 **backend HTTP** E2E (mocked FPT); **không** claim FE Agent UI / production RBAC / live FPT; `H11b` **Done** |
 | Hybrid | FREEZE `M07`/`H14`/`M08`/`H17`/`T04` tới sau submission |
+| FE scoping gap (G02) | `ReviewCase` public thiếu `cohort`/`department`/`class_code` — FE chưa scoping khoa/lớp; **decision cần Hoàng chốt** (mở rộng allowlist H11a hoặc chấp nhận giới hạn MVP); không tự thêm field |
 | Giang vs Hạ Giang | Giang = FE; Hạ Giang = UAT/slide/claim |
 | QA defects | V07 **và** A05 → owner fix → `D4r` → mới V05 |
 | Vercel candidate (`H27`) | Hoàng deploy frontend; chỉ thay Live URL nộp sau HTTPS-safe API smoke và V07+A05 re-smoke trên đúng URL |

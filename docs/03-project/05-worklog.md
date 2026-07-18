@@ -13,6 +13,13 @@
 - Board sync: `G05`/`G02`/`G03`/`G04` **Done** (PR #23 + AI-log); `H11b`/`V07`/`A05` **unblocked**; `D4r` còn chờ V07+A05.
 - Fixture gate: chuẩn hóa LF + hash approval `73274079…` / `78d7153f…` (CRLF working-tree hash cũ lệch GitHub tarball). Dockerfile/.dockerignore: giữ `alembic` trong image cho H20 migrate.
 
+## 2026-07-18 (Board sync lane M — G05/G02/G03/G04 Done, D4b/H11b unblocked; superseded bởi board sync D4b/H11b của Hoàng ở trên)
+
+- Đồng bộ [Sprint](03-sprint.md) với thực tế sau merge `d579909`: lane Giang `G05`/`G02`/`G03`/`G04` **Done** — evidence từ `.ai-log/manifest.csv` (sessions `20260718-G05-…-12`, `…-13`, `…-15`, `…-16`) và code đã merge (`frontend/src/lib/{types,fixtures,api,session,limitations}`, `CareActions`/`FairnessPanel`/`ThresholdPanel`/`AppShell`, các trang login/select-role/dashboard/my-class/cases; `mock-review-list.ts` đã xóa).
+- Dây chuyền mở khóa ghi nhận tại thời điểm đó: `D4b`/`H11b` unblocked; `A05` chỉ còn BLOCKED → D4b; `V02` chỉ còn BLOCKED → D4r — sau đó Hoàng đã hoàn tất D4b/H11b/H22 (xem entry trên).
+- Gap ghi nhận từ G02 (cần Hoàng chốt, không tự sửa contract): `ReviewCase` public thiếu `cohort`/`department`/`class_code` → FE chưa làm được scoping khoa/lớp; row risk giữ trong Sprint §10.
+- Checks: docs-only — `git diff --check` + `.\scripts\verify.ps1 -Quick` pass.
+
 ## 2026-07-18 (H23–H26 Done — Agent runtime FR-08 backend HTTP)
 
 - `H23`–`H26` **Done**: server-derived `AgentContext` → `POST /review-cases/{case_id}/explanation` → structured grounding + hardened FPT client → mocked HTTP E2E.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { postCaseTransition } from "@/lib/api";
 import { CASE_STATE_LABEL, type CaseAction, type CaseState, type TransitionErrorBody } from "@/lib/types";
 
@@ -34,13 +34,25 @@ const DISMISS_REASONS: { code: string; label: string }[] = [
 
 const ACTION_LABEL: Record<CaseAction, string> = {
   queue_for_review: "Đưa vào hàng chờ duyệt",
-  approve: "Duyệt chuyển tới người hỗ trợ",
-  dismiss: "Loại tín hiệu (lưu lý do)",
-  defer: "Hoãn (giữ Chờ duyệt)",
-  assign: "Bàn giao cố vấn phụ trách",
-  accept: "Xác nhận tiếp nhận",
-  resolve: "Kết thúc vòng hỗ trợ",
-  monitor: "Chuyển theo dõi có thời hạn",
+  approve: "Phê duyệt",
+  dismiss: "Loại",
+  defer: "Hoãn",
+  assign: "Bàn giao",
+  accept: "Tiếp nhận",
+  resolve: "Kết thúc hỗ trợ",
+  monitor: "Theo dõi",
+};
+
+/** Dòng giải thích ngắn dưới mỗi nút (theo design 18/7) — trung lập, không phán xét. */
+const ACTION_HELP: Record<CaseAction, string> = {
+  queue_for_review: "Chuyển tín hiệu vào hàng chờ để rà soát.",
+  approve: "Xác nhận đây là trường hợp cần hỗ trợ.",
+  dismiss: "Xác nhận không cần hỗ trợ — lưu lý do chuẩn hóa.",
+  defer: "Tạm hoãn rà soát; chọn thời điểm xem lại.",
+  assign: "Hệ thống tự tra cố vấn phụ trách từ nguồn đã duyệt.",
+  accept: "Xác nhận đã tiếp nhận case được bàn giao.",
+  resolve: "Kết thúc vòng hỗ trợ hiện tại.",
+  monitor: "Chuyển sang theo dõi có thời hạn.",
 };
 
 type LogEntry = { label: string; detail?: string };
@@ -115,8 +127,8 @@ export function CareActions({
 
   return (
     <aside style={panel}>
-      <h2 style={h2}>HÀNH ĐỘNG RÀ SOÁT</h2>
-      <p style={{ margin: "0 0 0.75rem", fontSize: 12.5, color: "#94a3b8" }}>
+      <h2 style={h2}>THAO TÁC</h2>
+      <p style={{ margin: "0 0 0.85rem", fontSize: 12.5, color: "#94a3b8" }}>
         Trạng thái: <strong style={{ color: "#334155" }}>{CASE_STATE_LABEL[caseState]}</strong> · quyền
         Ban quản lý (demo chưa gắn đăng nhập)
       </p>
@@ -127,75 +139,41 @@ export function CareActions({
         </p>
       )}
 
-      <div style={{ display: "grid", gap: 10 }}>
+      <div style={{ display: "grid", gap: 12 }}>
         {allowed.includes("queue_for_review") && (
-          <button style={btnPrimary} disabled={busy} onClick={() => run("queue_for_review")}>
-            → {ACTION_LABEL.queue_for_review}
-          </button>
+          <ActionRow action="queue_for_review" primary busy={busy} onRun={run} />
         )}
 
         {allowed.includes("approve") && (
-          <button style={{ ...btnPrimary, borderColor: "#86efac", background: "#f0fdf4" }} disabled={busy} onClick={() => run("approve")}>
-            ✓ {ACTION_LABEL.approve}
-          </button>
+          <ActionRow action="approve" primary busy={busy} onRun={run} />
         )}
 
         {allowed.includes("dismiss") && (
-          <div style={group}>
-            <label style={lbl}>
-              Lý do loại (chuẩn hóa)
-              <select value={dismissReason} onChange={(e) => setDismissReason(e.target.value)} style={input}>
-                {DISMISS_REASONS.map((r) => (
-                  <option key={r.code} value={r.code}>{r.label}</option>
-                ))}
-              </select>
-            </label>
-            <button style={btn} disabled={busy} onClick={() => run("dismiss")}>
-              ✕ {ACTION_LABEL.dismiss}
-            </button>
-          </div>
+          <ActionRow action="dismiss" busy={busy} onRun={run}>
+            <select value={dismissReason} onChange={(e) => setDismissReason(e.target.value)} style={input} aria-label="Lý do loại (chuẩn hóa)">
+              {DISMISS_REASONS.map((r) => (
+                <option key={r.code} value={r.code}>{r.label}</option>
+              ))}
+            </select>
+          </ActionRow>
         )}
 
         {allowed.includes("defer") && (
-          <div style={group}>
-            <label style={lbl}>
-              Ngày xem lại
-              <input type="date" value={deferDate} onChange={(e) => setDeferDate(e.target.value)} style={input} />
-            </label>
-            <button style={btn} disabled={busy} onClick={() => run("defer")}>
-              ⏸ {ACTION_LABEL.defer}
-            </button>
-          </div>
+          <ActionRow action="defer" busy={busy} onRun={run}>
+            <input type="date" value={deferDate} onChange={(e) => setDeferDate(e.target.value)} style={input} aria-label="Ngày xem lại" />
+          </ActionRow>
         )}
 
-        {allowed.includes("assign") && (
-          <button style={{ ...btnPrimary, borderColor: "#93c5fd", background: "#eff6ff" }} disabled={busy} onClick={() => run("assign")}>
-            → {ACTION_LABEL.assign}
-          </button>
-        )}
+        {allowed.includes("assign") && <ActionRow action="assign" primary busy={busy} onRun={run} />}
 
-        {allowed.includes("accept") && (
-          <button style={btnPrimary} disabled={busy} onClick={() => run("accept")}>
-            ✓ {ACTION_LABEL.accept}
-          </button>
-        )}
+        {allowed.includes("accept") && <ActionRow action="accept" primary busy={busy} onRun={run} />}
 
-        {allowed.includes("resolve") && (
-          <button style={btn} disabled={busy} onClick={() => run("resolve")}>
-            ✓ {ACTION_LABEL.resolve}
-          </button>
-        )}
+        {allowed.includes("resolve") && <ActionRow action="resolve" busy={busy} onRun={run} />}
 
         {allowed.includes("monitor") && (
-          <div style={group}>
-            <label style={lbl}>
-              Theo dõi đến ngày
-              <input type="date" value={monitorDate} onChange={(e) => setMonitorDate(e.target.value)} style={input} />
-            </label>
-            <button style={btn} disabled={busy} onClick={() => run("monitor")}>
-              👁 {ACTION_LABEL.monitor}
-            </button>
-          </div>
+          <ActionRow action="monitor" busy={busy} onRun={run}>
+            <input type="date" value={monitorDate} onChange={(e) => setMonitorDate(e.target.value)} style={input} aria-label="Theo dõi đến ngày" />
+          </ActionRow>
         )}
       </div>
 
@@ -232,6 +210,35 @@ export function CareActions({
   );
 }
 
+/** Nút hành động + dòng mô tả (bố cục theo mockup 18/7); input phụ nằm dưới mô tả. */
+function ActionRow({
+  action,
+  primary,
+  busy,
+  onRun,
+  children,
+}: {
+  action: CaseAction;
+  primary?: boolean;
+  busy: boolean;
+  onRun: (a: CaseAction) => void;
+  children?: ReactNode;
+}) {
+  return (
+    <div style={{ display: "grid", gap: 6 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+        <button style={primary ? btnPrimary : btn} disabled={busy} onClick={() => onRun(action)}>
+          {ACTION_LABEL[action]}
+        </button>
+        <span style={{ fontSize: 12.5, color: "#64748b", lineHeight: 1.45, paddingTop: 6 }}>
+          {ACTION_HELP[action]}
+        </span>
+      </div>
+      {children && <div style={{ paddingLeft: 2 }}>{children}</div>}
+    </div>
+  );
+}
+
 function describeError(err: TransitionErrorBody | null): string {
   if (!err) return "Máy chủ không phản hồi — hành động chưa được ghi nhận. Thử lại sau.";
   switch (err.code) {
@@ -252,12 +259,10 @@ function describeError(err: TransitionErrorBody | null): string {
   }
 }
 
-const panel: CSSProperties = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: "1.1rem 1.35rem", alignSelf: "start" };
+const panel: CSSProperties = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "1.1rem 1.35rem", alignSelf: "start" };
 const h2: CSSProperties = { margin: "0 0 0.4rem", fontSize: 13, color: "#64748b", letterSpacing: 0.3 };
-const btn: CSSProperties = { display: "block", width: "100%", padding: "9px 13px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#fff", fontSize: 13.5, cursor: "pointer", textAlign: "left" };
-const btnPrimary: CSSProperties = { ...btn, fontWeight: 600 };
-const group: CSSProperties = { display: "grid", gap: 6 };
-const lbl: CSSProperties = { display: "grid", gap: 4, fontSize: 12.5, color: "#475569" };
-const input: CSSProperties = { padding: "6px 9px", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: 13, fontFamily: "inherit" };
+const btn: CSSProperties = { flexShrink: 0, minWidth: 128, padding: "9px 14px", borderRadius: 8, border: "1px solid #cbd5e1", background: "#fff", fontSize: 13.5, fontWeight: 600, cursor: "pointer", textAlign: "center", color: "#334155" };
+const btnPrimary: CSSProperties = { ...btn, border: "1px solid #2a78d6", background: "#2a78d6", color: "#fff" };
+const input: CSSProperties = { width: "100%", maxWidth: 220, padding: "6px 9px", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: 13, fontFamily: "inherit" };
 const noticeWarn: CSSProperties = { marginTop: "0.75rem", padding: "0.7rem 0.9rem", borderRadius: 8, background: "#fffbeb", border: "1px solid #fde68a", color: "#92400e", fontSize: 13 };
 const noticeErr: CSSProperties = { marginTop: "0.75rem", padding: "0.7rem 0.9rem", borderRadius: 8, background: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", fontSize: 13 };
