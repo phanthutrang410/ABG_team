@@ -522,14 +522,14 @@ def test_briefing_deterministic_role_scoped_and_reused() -> None:
     report = materialize_report(repo, deltas, "snap-1", "semester")
     store = BriefingStore()
 
-    leader = get_or_create_briefing(store, report, "leader")
-    advisor = get_or_create_briefing(store, report, "advisor")
+    leader = get_or_create_briefing(store, report, "ban_quan_ly")
+    advisor = get_or_create_briefing(store, report, "gvcn")
     assert leader.message_vi != advisor.message_vi
     assert {c.key for c in leader.action_cards} != {c.key for c in advisor.action_cards}
     assert any(c.key == "open_advisor_drafts" for c in leader.action_cards)
     assert not any(c.key == "open_advisor_drafts" for c in advisor.action_cards)
 
-    leader_again = get_or_create_briefing(store, report, "leader")
+    leader_again = get_or_create_briefing(store, report, "ban_quan_ly")
     assert leader_again.briefing_id == leader.briefing_id
     assert leader_again is leader
 
@@ -537,22 +537,22 @@ def test_briefing_deterministic_role_scoped_and_reused() -> None:
 def test_briefing_shown_and_ack_are_one_time() -> None:
     store = BriefingStore()
     report = materialize_report(CaseRepository(), [], "snap-1", "semester")
-    briefing = get_or_create_briefing(store, report, "leader")
+    briefing = get_or_create_briefing(store, report, "ban_quan_ly")
 
-    receipt1 = mark_shown(store, "user-1", "leader", briefing.briefing_id)
+    receipt1 = mark_shown(store, "user-1", "ban_quan_ly", briefing.briefing_id)
     assert receipt1.shown_at is not None
     first_shown_at = receipt1.shown_at
 
-    receipt2 = mark_shown(store, "user-1", "leader", briefing.briefing_id)
+    receipt2 = mark_shown(store, "user-1", "ban_quan_ly", briefing.briefing_id)
     assert receipt2.shown_at == first_shown_at  # not overwritten on second navigation
 
-    ack1 = mark_ack(store, "user-1", "leader", briefing.briefing_id)
+    ack1 = mark_ack(store, "user-1", "ban_quan_ly", briefing.briefing_id)
     assert ack1.ack_at is not None
-    ack2 = mark_ack(store, "user-1", "leader", briefing.briefing_id)
+    ack2 = mark_ack(store, "user-1", "ban_quan_ly", briefing.briefing_id)
     assert ack2.ack_at == ack1.ack_at
 
     # A different role for the same user gets an independent receipt.
-    other_role_receipt = store.get_receipt("user-1", "advisor", briefing.briefing_id)
+    other_role_receipt = store.get_receipt("user-1", "gvcn", briefing.briefing_id)
     assert other_role_receipt is None
 
 
@@ -562,7 +562,7 @@ def test_briefing_is_openai_independent() -> None:
     # Building/showing a briefing must not require any provider credentials.
     report = materialize_report(CaseRepository(), [], "snap-1", "semester")
     store = BriefingStore()
-    briefing = get_or_create_briefing(store, report, "advisor")
+    briefing = get_or_create_briefing(store, report, "gvcn")
     assert briefing.message_vi
 
 
@@ -573,7 +573,7 @@ def test_no_pii_forbidden_fields_in_report_and_briefing_public_dicts() -> None:
     )
     report = materialize_report(repo, deltas, "snap-1", "semester")
     store = BriefingStore()
-    briefing = get_or_create_briefing(store, report, "leader")
+    briefing = get_or_create_briefing(store, report, "ban_quan_ly")
 
     report_dict = dataclasses.asdict(report)
     briefing_dict = dataclasses.asdict(briefing)

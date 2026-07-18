@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends
 from app.agent.model import TextModel
 from app.agent.openai_client import OpenAIResponsesClient
 from app.agent.turns import AgentTurnRequest, AgentTurnResponse, run_turn
-from app.auth.principal import Principal, get_principal
+from app.auth.principal import Principal, require_active_role
 from app.config import Settings, get_settings
 
 router = APIRouter(prefix="/agent", tags=["agent"])
@@ -42,7 +42,7 @@ def get_turn_model(settings: Settings = Depends(get_settings)) -> Optional[TextM
 )
 def create_agent_turn(
     body: AgentTurnRequest,
-    principal: Principal = Depends(get_principal),
+    principal: Principal = Depends(require_active_role),
     model: Optional[TextModel] = Depends(get_turn_model),
 ) -> AgentTurnResponse:
     return run_turn(body, principal, model=model)

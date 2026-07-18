@@ -11,12 +11,22 @@ from app.contracts.advisor_handoff_draft import assert_no_handoff_forbidden_keys
 from app.weekly.advisor_draft_v2 import build_advisor_drafts_v2
 from app.weekly.cases_durable import CaseRepository
 
-_LEADER_A = Principal(actor_id="leader:1", active_role="leader", org_scope="org-a", advisor_scope=None)
+_LEADER_A = Principal(
+    actor_id="acct:quanly", active_role="ban_quan_ly", org_scope="org-a", roles=("ban_quan_ly",)
+)
 _ADVISOR_1 = Principal(
-    actor_id="advisor:1", active_role="advisor", org_scope="org-a", advisor_scope="adv-1"
+    actor_id="acct:gvcn1",
+    active_role="gvcn",
+    org_scope="org-a",
+    advisor_scope="adv-1",
+    roles=("gvcn",),
 )
 _ADVISOR_2 = Principal(
-    actor_id="advisor:2", active_role="advisor", org_scope="org-a", advisor_scope="adv-2"
+    actor_id="acct:gvcn2",
+    active_role="gvcn",
+    org_scope="org-a",
+    advisor_scope="adv-2",
+    roles=("gvcn",),
 )
 
 

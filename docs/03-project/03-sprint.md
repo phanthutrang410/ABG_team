@@ -2,7 +2,7 @@
 
 > Nguồn chuẩn: [Quy chế VAIC](../01-requirements/01-vaic-rules.md) · [PRD MVP](../02-product/04-prd.md) · [Process](../02-product/03-process.md) · [RULES.md](../../RULES.md).
 >
-> **Điều chỉnh phân công 18/7:** Hoàng là owner duy nhất hoàn thiện tài liệu/contract nguồn chuẩn. Build tập trung vào Hoàng, Khánh Duy, Giang và Thu Trang. **Hạ Giang** (board ID `giang`) và Văn Hải nhận task từ P2: QA/UAT/claim/slide skeleton và release smoke — không sửa canonical docs/code. **18/7 chiều:** `V05` nộp CP2 chuyển **Thu Trang**; Hải giữ `V07` (checklist chi tiết).
+> **Điều chỉnh phân công 18/7:** Hoàng là owner duy nhất hoàn thiện tài liệu/contract nguồn chuẩn. Build tập trung vào Hoàng, Khánh Duy, Giang và Thu Trang. **Hạ Giang** (board ID `giang`) và Văn Hải nhận task từ P2: QA/UAT và release smoke — không sửa canonical docs/code. **18/7 chiều:** `V05` nộp CP2 chuyển **Thu Trang**; Hải giữ `V07`. **18/7 tối (decision #25):** Hạ Giang + Hải **tự làm slide/pitch**; Hoàng **không** cung cấp thêm doc slide/script.
 >
 > **Đảo lane 18/7 tối (decision #24):** **Khánh Duy** = Frontend; **Giang** (Nguyễn Trường Giang) = Data/ML / model / predict. Task ID không đổi; Owner task mở theo lane mới. **Hạ Giang** không đổi.
 >
@@ -10,16 +10,16 @@
 >
 > **Realign chốt ~05:45 18/7:** Direction giữ nguyên (prototype care/review, không claim dự báo dropout đã chứng minh). Wave update: `H06a-r`/`H11a-r` Done; `H06b` harden landed; `D4a` Live shell Done; `G05`/`T03` unblocked. Chi tiết §1.2 + board §3.
 
-**Quy ước tên:** **Giang** = Nguyễn Trường Giang (**ML / model / predict**). **Khánh Duy** = **Frontend**. **Hạ Giang** = Trần Hạ Giang (UAT / claim-copy / slide skeleton; board ID `giang`). Không viết tắt “giang” khi phân công miệng — luôn dùng **Hạ Giang** vs **Giang**. ID task ổn định; cột Owner là nguồn phân công.
+**Quy ước tên:** **Giang** = Nguyễn Trường Giang (**ML / model / predict**). **Khánh Duy** = **Frontend**. **Hạ Giang** = Trần Hạ Giang (UAT; slide tự làm với Hải — decision #25; board ID `giang`). Không viết tắt “giang” khi phân công miệng — luôn dùng **Hạ Giang** vs **Giang**. ID task ổn định; cột Owner là nguồn phân công.
 
 | Thành viên | Lane đang chịu trách nhiệm | Không chịu trách nhiệm |
 |:--|:--|:--|
-| Hoàng | Tất cả tài liệu/contract nguồn chuẩn; backend/API; deploy; tài liệu release | Không tự viết model/fusion của Giang |
+| Hoàng | Tài liệu/contract nguồn chuẩn; backend/API; deploy; release evidence; README (`H09`) | Không viết model/fusion của Giang; **không** viết thêm slide/pitch doc (#25) |
 | Khánh Duy | Frontend integration và UI (`G06` Notify, attendance UI, `G07`–`G09`) | Không hoàn thiện Markdown contract/PRD; không tự chốt copy/contract |
 | Giang | Data/ML, source validation, baseline/model/predict (open `M07`/`M08` khi unfreeze) | Không tự chốt copy/contract; không làm hybrid tới sau submission |
 | Thu Trang | Agent adapter, grounding/refusal tests; **nộp Checkpoint 2 (`V05`)** | Không tự tính/sửa mức ưu tiên; không nộp CP2 trước `D4r` |
-| Hạ Giang (`giang`) | UAT, claim-copy review, slide + asset skeleton/mô tả | Không sửa canonical docs hoặc code; không nhầm với Giang (ML) |
-| Văn Hải | QA release (`V07`), script/video, nộp cổng cuối (`V06`), AI-log rà | Không sửa canonical docs, deploy hoặc code; **không** nộp CP2 (`V05` → Thu Trang) |
+| Hạ Giang (`giang`) | UAT/claim-copy; **slide/mô tả tự làm** với Hải (#25) | Không sửa canonical docs/code; không đòi Hoàng slide doc; không nhầm Giang (ML) |
+| Văn Hải | QA `V07`; video `D2`; nộp `V06`; **pitch/script tự làm** với Hạ Giang (#25) | Không sửa canonical docs/deploy/code; không nộp CP2; không đòi Hoàng pitch doc |
 
 ## 1. Cổng BTC và gate nội bộ
 
@@ -35,7 +35,7 @@
 | P0 | 17/7 11:00–15:00 | Scaffold | Health, FE shell | [x] (M01 Done — PR #16) |
 | P0.5 | kế hoạch 17/7 22:30–18/7 00:30 | Contract lock | `H05a` + `M04` Done; schema/code chỉ theo contract | **[x] Done** — `H05a` + `M04` + `H10` (mốc cũ đã trễ) |
 | P1 | recovery 18/7 sáng → CP1 | Vertical slice | Baseline điểm theo kỳ + điểm danh theo thời gian + CP1 | Mở — `M05b`/`H15` Done; còn `M06`… |
-| P2 | 18/7 11:00–23:00 | Rubric + live | UI/API/test + QA→fix→re-smoke + CP2 | **V05 Done** — còn H16/H09/P3 |
+| P2 | 18/7 11:00–23:00 | Rubric + live | UI/API/test + QA→fix→re-smoke + CP2 | **V05+H16 Done** — còn H09/P3 |
 | P3 | 18/7 23:00–19/7 11:00 | Release | Docs cuối, slide/video, AI log, form nộp | Chưa |
 
 ### 1.1 Recovery P0.5 → P1 (chốt lúc ~02:03 +07)
@@ -67,7 +67,7 @@ Baseline khóa sau review progress/direction. **Không đổi** product directio
 
 **Bổ sung board:** Critical path Data hoàn tất tới `M02` (sau `H20`+`H08` **Done**) — Profile `M01`+`H18` **Done**; `M05a`/`H06c`/`M05b`/`H15`/`M06`/`H20`/`H08`/`M02`/`M03`/`H02`/`H04`/`H13` **Done** (decision #18). `H06b` = **Done — transition core** + deploy-blocker harden. `T02` = core/library Done; runtime FR-08 theo `H23`–`H26`. Stretch FR-12: `H21` Done → `H22`/`G06`. `V08` defer (decision #19).
 
-**Owner ngay:** Hoàng — **`H16` mở** (sau V05 Done). **Thu Trang** — `V05` **Done** (CP2 đã nộp). **Khánh Duy** (FE) — `G06`/attendance UI. **Giang** (ML) — freeze. Văn Hải — V02/D2/V08. **Hạ Giang** — D1 slide theo Live URL đã nộp.
+**Owner ngay:** Hoàng — **`H09`**. **Thu Trang** — `V05` Done. **Khánh Duy** — `G06`. **Giang** — ML freeze. **Hạ Giang + Văn Hải** — slide/pitch/video **tự làm** (decision #25; không chờ Hoàng doc).
 
 ## 2. Boundary bắt buộc cho ML, agent và hybrid
 
@@ -98,7 +98,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 
 **Freeze tới sau submission:** `M07` → `H14` → `M08` → `H17` → `T04`. `H15` **Done** (team-provisioned allowlist).
 
-**Wave sau release — weekly snapshot + Global Agent:** `H28` **Done ở mức kiến trúc/decision only**; build chưa ship. Hoàng sở hữu backend/docs/security/deploy `H28a`, `H29–H38`, `D6`; full brief tại [Stories — Hoàng](17-stories-hoang-weekly-agent.md). Wave này **không block** critical path hiện tại `V07+A05→D4r→V05→H16/H09` và không được dùng để overclaim feature đã có.
+**Wave sau release — weekly snapshot + Global Agent:** `H28` **Done ở mức kiến trúc/decision only**; build chưa ship. Hoàng sở hữu backend/docs/security/deploy `H28a`, `H29–H38`, `D6`; full brief tại [Stories — Hoàng](17-stories-hoang-weekly-agent.md). Wave này **không block** critical path hiện tại `V07+A05→D4r→V05→H16✓→H09` và không được dùng để overclaim feature đã có.
 
 ### Hoàng
 
@@ -145,13 +145,15 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | H35 | Advisor draft v2 trên durable approved cases/report | H34a, H36, H22 | [x] **Done** — draft-only v2; unlocks G09 · [brief](17-stories-hoang-weekly-agent.md#h35) |
 | H37 | Global Agent backend turn + strict capability registry | H29, H34b, H35, H36 | [x] **Done** — `POST /agent/turns`; unlocks T05 · [brief](17-stories-hoang-weekly-agent.md#h37) |
 | H38 | Export report an toàn + watermark/access audit | H34a, H36 | [x] **Done** — aggregate/case export; no bulk ID · [brief](17-stories-hoang-weekly-agent.md#h38) |
+| H39a | DB-backed auth/session + canonical roles `{ban_quan_ly,gvcn}` | H36, H30 | [x] **Done** — Alembic `20260719_h39a_auth_rbac`; `/auth/*`; seed CLI · [brief](17-stories-hoang-weekly-agent.md#h39a) |
+| H39b | Enforce RBAC trên case/config/draft/explanation/export | H39a | [x] **Done** — session Principal matrix; no client `source_id` · [brief](17-stories-hoang-weekly-agent.md#h39b) |
 | D6 | Scheduler/worker deploy + observability/retention/rollback | H31, H34b, H35, H37, H38 | [x] **Done — ops foundation** — kill switches + `scheduler_tick` + rollback stub; EventBridge deploy still manual · [brief](17-stories-hoang-weekly-agent.md#d6) |
 | D3 | GitHub public + PII/secret scan | — | [x] Done — tree sạch; **residual history accept CP2**; trước final: clean submission repo hoặc purge có phê duyệt |
 | D4a | Deploy infrastructure / Live shell (health + rollback sẵn) | H07, D3 | [x] **Done** — Live shell: API http://52.74.255.88:8000/health · FE http://52.74.255.88:3000 · EC2 i-0b0576945d080cb3f (**NOT** D4b) |
 | D4b | Product smoke list→case trên Live URL | D4a, H02, G02 | [x] **Done** — 2026-07-18 ~13:05 +07: health `database:true`; `GET /review-cases` state=ok n=50; detail `rc-s-00518c9485a9` band=`can_ra_soat`; FE `/login` `/dashboard` 200; no forbidden fields; images `:d4b` + Postgres import |
 | D4r | Fix từ QA → redeploy → re-smoke | D4b, V07, A05 | [x] **Done** — Vercel Live URL; API `:d4r`; advisor+explanation envelopes; evidence [07](07-release-evidence.md) |
-| H16 | Acceptance matrix + release evidence | A05, V07, V05 | [ ] **TODO — unblocked** · V05 Done · A05+V07 Done ([18](18-v07-a05-smoke-uat-2026-07-18.md)) |
-| H09 | README + verify/known-limit note cuối | H02, D4r, H16 | [ ] BLOCKED → H16 · D4r Done · H02 Done |
+| H16 | Acceptance matrix + release evidence | A05, V07, V05 | [x] **Done** — [20-h16…](20-h16-cp2-acceptance-matrix.md) · CP2 §2 tick · unlock H09 |
+| H09 | README + verify/known-limit note cuối | H02, D4r, H16 | [ ] **TODO — unblocked** · H16 Done · D4r Done · H02 Done |
 | D5 | AI collaboration log từ V08 | V08 | [ ] BLOCKED → V08 · V08 **defer** gần CP2/D5 |
 | H15 | Attendance source approval + amendment (**MVP**) | H10 + approval artifact | [x] **Done** — decision #18; fixture `mvp-attendance-over-time`; [12-h15…](12-h15-attendance-approval-prep.md) |
 | H17 | Post-MVP hybrid public API/envelope (forecast/fusion) | H14, M08 | [ ] BLOCKED → H14, M08 · **FREEZE** |
@@ -204,18 +206,18 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
+| D1 | Asset slide + mô tả dự án nộp | D4r | [ ] **Self-owned** (Hạ Giang + Hải) · decision #25 · **không** BLOCKED → H12b/H16/Hoàng doc |
 | A05 | UAT / claim-copy review → gap cho Hoàng | H02, G02, H03, G03, M03, H04, G04, H26, D4b, H12a | [x] **Done** — [18](18-v07-a05-smoke-uat-2026-07-18.md); gaps feed D4r |
-| D1 | Asset slide + mô tả dự án nộp | V02, H12b, H16, D4r | [ ] BLOCKED → V02… · **skeleton slide/claim matrix chạy ngay** (chưa screenshot thiếu evidence) |
 
 ### Văn Hải
 
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
 | V07 | QA release + smoke độc lập (lần 1) | D3, D4b | [x] **Done — PASS WITH MAJORS** · [18](18-v07-a05-smoke-uat-2026-07-18.md); defect → D4r |
-| V02 | Script demo 4′ + Q&A 2′, rehearsal | D4r, G02, H26, G03, G04, H12a | [ ] BLOCKED → D4r… · case-local Agent chỉ claim theo Live evidence; Global Agent/weekly briefing cần G07+ và chưa ship |
-| D2 | Video ≤5 phút đúng Live URL | D1, D4r | [ ] BLOCKED → D1, D4r |
+| V02 | Script demo 4′ + Q&A 2′, rehearsal | D4r | [ ] **Self-owned** (Hải + Hạ Giang) · decision #25 · không chờ Hoàng pitch doc |
+| D2 | Video ≤5 phút đúng Live URL | D1, D4r | [ ] Self-track với D1 · Live=`https://abg-team.vercel.app` |
 | V08 | Rà AI log → gap cho Hoàng | H05b | [ ] **DEFER** gần CP2 / trước D5 — log một thể (decision #19); không làm ngay |
-| V06 | Nộp cuối + lưu xác nhận BTC | D1, D2, D3, D4r, D5, H09, H16 | [ ] BLOCKED → D1…H16 |
+| V06 | Nộp cuối + lưu xác nhận BTC | D1, D2, D3, D4r, D5, H09, H16 | [ ] BLOCKED → D1… · H16✓ |
 
 ---
 
@@ -223,7 +225,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 
 **Lane:** docs/contract nguồn chuẩn, backend/API, deploy, release evidence.
 **Read first:** PRD §§4–8, Ethics, Process §4, decisions, [EPU contract](../04-engineering/04-epu-data-integration-contract.md), [Data-ML](../04-engineering/08-data-ml-scoring-fairness-contract.md).
-**Không làm:** tự viết model/fusion của Giang.
+**Không làm:** tự viết model/fusion của Giang; **không** viết thêm slide/pitch/claim-lock doc (decision #25).
 **Next wave:** target architecture [doc 13](../04-engineering/13-weekly-snapshot-global-agent-architecture.md); full Task Brief `H28/H28a/H29–H38/D6` tại [Stories — Hoàng](17-stories-hoang-weekly-agent.md).
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
@@ -265,17 +267,19 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | H35 | Next wave · P1 · **Done** | Advisor draft v2 | **Done:** durable approved/assigned; no send; unlocks G09; [full brief](17-stories-hoang-weekly-agent.md#h35) |
 | H37 | Next wave · P1 · **Done** | Global Agent backend turn/tools | **Done:** `POST /agent/turns`; capability registry; unlocks T05; [full brief](17-stories-hoang-weekly-agent.md#h37) |
 | H38 | Next wave · P1 · **Done** | Safe report export | **Done:** aggregate/case watermark; no bulk ID; [full brief](17-stories-hoang-weekly-agent.md#h38) |
+| H39a | Next wave · P0 · **Done** | DB auth/session + `{ban_quan_ly,gvcn}` | **Done:** Alembic `20260719_h39a_auth_rbac`; `/auth/*`; Decision #23 amend; [full brief](17-stories-hoang-weekly-agent.md#h39a) |
+| H39b | Next wave · P0 · **Done** | Enforce RBAC on FE APIs | **Done:** case/config/draft/explanation matrix; [full brief](17-stories-hoang-weekly-agent.md#h39b) |
 | D6 | Release wave · P1 · **Done ops foundation** | Scheduler/worker ops gate | **Done foundation:** kill switches + scheduler_tick + rollback stub; live EventBridge still manual; [full brief](17-stories-hoang-weekly-agent.md#d6) |
 | H03 | P2 · sau H08 | Care workflow API | **Done:** approve/dismiss/defer + assign-handoff; H08 `advisor_ref`/`mapping_repair` gate; client ref ignored; `tests/test_h03_care_workflow.py` — mở G03 |
 | H04 | P2 · sau M03 | Threshold/config API public semantics | **Done:** app/contracts/threshold_public.py + app/config_api/router.py; impact aggregates only; fairness MVP insufficient_data; tests/test_h04_threshold_fairness_api.py |
 | H12a | P2 · ~15:00 (trước T02/G03/G04) | Runtime privacy/care copy cho UI/agent | **Done:** `frontend/src/lib/copy.ts` 4 keys Data-ML §6; mock list không “Điểm rủi ro”; mở `H12b` / giảm blocker `G03`/`G04`/`T02` |
-| H12b | P2 · sau H12a · ~19:00 | Banner + asset copy | **Done:** banner + skeleton [13-h12b-asset-copy-skeleton.md](13-h12b-asset-copy-skeleton.md); forecast/fusion = research/blocked; điểm danh theo thời gian = MVP |
+| H12b | P2 · sau H12a · ~19:00 | Banner + asset copy | **Done (runtime banner):** [13-h12b…](13-h12b-asset-copy-skeleton.md). **Slide skeleton = historical** — decision #25: không cập nhật thêm cho D1 |
 | D3 | P2 · ~20:30 | GitHub public, PII/secret scan | **Done** tree + [scan notes](10-d3-github-pii-secret-scan.md); residual history **accept CP2**; trước final: clean submission repo hoặc purge có phê duyệt |
 | D4a | P2 · sớm sau H07+D3 | Live shell: deploy infra, health, rollback sẵn | **Done** — Live shell: API http://52.74.255.88:8000/health · FE http://52.74.255.88:3000 · EC2 i-0b0576945d080cb3f (**NOT** D4b) |
 | D4b | P2 · sau H02+G02 | Product smoke list→case ẩn danh trên Live | **Done** 2026-07-18 ~13:05 +07: health `database:true`; list state=ok n=50; detail `rc-s-00518c9485a9` / `can_ra_soat`; FE login+dashboard 200; CORS OK; no PII/score leak; [evidence](07-release-evidence.md) §2 |
 | D4r | P2 · sau V07+A05 | Owner fix → redeploy → re-smoke | **Done** — Vercel=`https://abg-team.vercel.app`; API `:d4r` `sha256:2b01b24a…`; advisor 200; explanation `unavailable` fail-closed; bulk export ẩn |
-| H16 | P3 · sau V05 | Acceptance matrix + release evidence | Phụ thuộc **A05 + V07 + V05**; mỗi FR/CP2 item có evidence hoặc limitation |
-| H09 | P3 · 09:00 | README + verify/known-limit | Khớp deploy và scope thật |
+| H16 | P3 · sau V05 · **Done** | Acceptance matrix + release evidence | **Done:** [20-h16…](20-h16-cp2-acceptance-matrix.md); FR Pass/Limit; CP2 tick; **không** còn deliverable slide/pitch (decision #25) |
+| H09 | P3 · 09:00 · **unblocked** | README + verify/known-limit | Khớp deploy và scope thật; known-limit từ H16 §1 (README only) |
 | D5 | P3 · 10:00 | AI collaboration log từ V08 | Gap có owner; sạch PII/secret |
 | H15 | P1 · MVP | Attendance source approval + amendment contract | **Done** decision #18: [12-h15…](12-h15-attendance-approval-prep.md) + fixture `mvp-attendance-over-time`; team approver |
 | H17 | Post-MVP · **FREEZE** | Hybrid forecast/fusion public API theo H14 | Không làm tới sau submission |
@@ -359,29 +363,27 @@ Chỉ chạy sau submission / khi unfreeze (**owner Giang**). So sánh semester 
 
 ## 8. Hạ Giang (`giang`) — chi tiết task
 
-**Owner:** Trần Hạ Giang — UAT / claim-copy / slide skeleton. **Không** nhầm với Giang (Nguyễn Trường Giang = ML).
-**Bắt đầu skeleton ngay; full UAT từ P2/Live.** Story: [08-stories-giang.md](08-stories-giang.md).
+**Owner:** Trần Hạ Giang — UAT/claim-copy; slide **tự làm** với Văn Hải (decision #25). **Không** nhầm với Giang (ML).
+**Hoàng không** cung cấp thêm claim-lock/skeleton slide. Story rút gọn: [08-stories-giang.md](08-stories-giang.md).
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
 | A05 | P2 · song song V07; **bắt buộc trước D4r** | UAT/claim-copy review | **Done** — [18](18-v07-a05-smoke-uat-2026-07-18.md); gap → Hoàng/`D4r` |
-| D1 | P3 · 09:00 | Asset slide + mô tả | Skeleton/claim matrix **ngay**; finalize URL/screenshot sau D4r + H12b/H16 |
+| D1 | P3 · self-owned | Asset slide + mô tả nộp BTC | Tự làm với Hải; đúng Live URL; không overclaim; **không** chờ Hoàng doc |
 
-**A05:** list→case→review/handoff trên Live URL; rà care/privacy/fairness/claim; gửi Hoàng + **bắt buộc feed `D4r`**.
-
-**D1:** chỉ copy/screenshot từ `H12b`/`H16` và Live URL đã `D4r`; điểm danh theo thời gian = MVP; forecast/fusion chỉ Post-MVP/research nếu chưa Done.
+**A05:** Done. **D1:** self-owned — Live=`https://abg-team.vercel.app`; không BLOCKED → H12b/H16.
 
 ---
 
 ## 9. Văn Hải — chi tiết task
 
-**Bắt đầu từ P2; V08 defer gần CP2/D5 (decision #19).** Story: [09-stories-van-hai.md](09-stories-van-hai.md). Evidence: [07-release-evidence.md](07-release-evidence.md). **`V05` không còn thuộc Hải** → Thu Trang ([16](16-stories-thu-trang.md)).
+**Bắt đầu từ P2; V08 defer gần CP2/D5 (decision #19).** Pitch/script **tự làm** với Hạ Giang (#25). Story: [09-stories-van-hai.md](09-stories-van-hai.md). Evidence: [07-release-evidence.md](07-release-evidence.md). **`V05` không còn thuộc Hải** → Thu Trang ([16](16-stories-thu-trang.md)).
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
 | V07 | P2 · sau D4b | QA release + smoke độc lập lần 1 | **Done — PASS WITH MAJORS** · [18](18-v07-a05-smoke-uat-2026-07-18.md); defect → `D4r` |
-| V02 | P3 · 08:00 | Script 4′ + Q&A 2′, rehearsal | Script skeleton sớm; Live sau `D4r` |
-| D2 | P3 · 09:30 | Video ≤5 phút | Đúng Live URL sau `D4r` |
+| V02 | P3 · self-owned | Script 4′ + Q&A 2′, rehearsal | Tự làm với Hạ Giang; khớp Live; **không** chờ Hoàng pitch doc |
+| D2 | P3 · 09:30 | Video ≤5 phút | Đúng Live URL; asset từ D1 self-owned |
 | V08 | **DEFER** · gần CP2 / trước D5 | Rà AI log một thể | Depends `H05b`; thu thập manifest + link **một lần**; gap → Hoàng/`D5`; CP2 không phụ thuộc V08 |
 | V06 | P3 · 10:30 | Nộp cuối | Sau evidence `H16` đã khóa CP2+final; CP2 đã do Thu Trang nộp ở `V05` |
 
@@ -394,21 +396,22 @@ Chỉ chạy sau submission / khi unfreeze (**owner Giang**). So sánh semester 
 | Realign §1.2 | Board này là SoT execution; không giữ snapshot “H11a mở G05/T03” cũ |
 | H06a/H11a semantic | `H06a-r` + `H11a-r` **Done**; `G05`/`T03` **Done** |
 | H06b ≠ deploy-ready (lịch sử) | Transition-core Done; deploy-blocker harden landed (seed-only create / server actor / no public `advisor_ref`) |
-| Critical path song song | Data/API/FE tới **V05 Done**; còn `H16`/`H09`/P3 release |
+| Critical path song song | Data/API/FE tới **V05+H16 Done**; còn `H09`/P3 release |
 | Source gate ≠ approved data | `M05b`/`H15` Done (decision #18); Live import LF hashes `73274079…` / `78d7153f…` |
 | D3 residual history | Accept CP2; quyết định clean submission trước final |
-| Release dồn muộn | Slide/script skeleton **ngay**; `V08` AI log **một thể** gần CP2/D5 (decision #19) |
+| Release dồn muộn | Slide/pitch **self-owned** Hạ Giang+Hải (#25); `V08` AI log **một thể** gần D5 (#19) |
 | Advisor mail draft | Stretch `H21`→`H22`✓→`G06` (FR-12); **không** block G02/D4b; draft-only |
 | Agent runtime overclaim | `H23`–`H26` = backend HTTP mocked-FPT history; repo có case-local `AgentPanel`, nhưng **không** claim Global Agent / weekly briefing / production RBAC / live OpenAI; target theo `H28+` |
 | Hybrid | FREEZE `M07`/`H14`/`M08`/`H17`/`T04` tới sau submission |
 | FE scoping gap (G02) | `ReviewCase` public thiếu `cohort`/`department`/`class_code` — FE chưa scoping khoa/lớp; **decision cần Hoàng chốt** (mở rộng allowlist H11a hoặc chấp nhận giới hạn MVP); không tự thêm field |
-| Giang vs Hạ Giang | Giang = Nguyễn Trường Giang = **ML**; Khánh Duy = **FE**; Hạ Giang = UAT/slide (decision #24) |
+| Giang vs Hạ Giang | Giang = Nguyễn Trường Giang = **ML**; Khánh Duy = **FE**; Hạ Giang = UAT/slide self-owned (decision #24+#25) |
 | QA defects | V07 **và** A05 → owner fix → `D4r` → **`V05` (Thu Trang)** |
-| V05 owner | **Thu Trang** nộp CP2; Hải giữ V07 / V02 / D2 / V08 / V06 |
+| V05 owner | **Thu Trang** nộp CP2; Hải giữ V07 / D2 / V08 / V06; V02+D1 self-owned với Hạ Giang |
+| Slide/pitch docs | **CANCEL Hoàng support** — decision #25; không thêm H12b/H16 claim-lock cho slide |
 | Vercel candidate (`H27`) | Hoàng deploy FE; **D4r flip Live URL nộp = Vercel** sau re-smoke |
 
-1. **Ngay:** Hoàng — **`H16`** evidence CP2. Văn Hải — V02/D2. **Hạ Giang** — D1 slide trên Live đã nộp. **Khánh Duy** — FE/`G06`. **Giang** — ML freeze.
-2. Critical path CP2: `D4b` ✓ → `V07`✓+`A05`✓ → `D4r`✓ → **`V05`✓ (Thu Trang)**. Stretch mail: H22 Live + G06 (**Duy**).
-3. Attendance Live: known-limit `attendance_source_unapproved` trừ khi Duy/Giang kịp.
-4. `V07`/`A05`/`D4r`/`V05` **Done**; decision **#24** Duy↔Giang; tiếp `H16`/`H09`/P3.
+1. **Ngay:** Hoàng — **`H09`** README/known-limit. **Hạ Giang + Hải** — D1/V02/D2 tự làm (#25). **Khánh Duy** — `G06`. **Giang** — ML freeze.
+2. Critical path CP2: `D4b` ✓ → `V07`✓+`A05`✓ → `D4r`✓ → **`V05`✓** → **`H16`✓**. Stretch mail: H22 Live + G06 (**Duy**).
+3. Attendance Live: known-limit `attendance_source_unapproved` (H16 §1 FR-02) trừ khi Duy/Giang kịp.
+4. `V07`/`A05`/`D4r`/`V05`/`H16` **Done**; decision **#24** Duy↔Giang + **#25** slide self-owned; Hoàng tiếp `H09`/P3.
 5. Trước handoff: verify phù hợp; trước final: `scripts/verify.ps1`, `git diff --check`, `git status --short`.

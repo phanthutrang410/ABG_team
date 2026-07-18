@@ -50,6 +50,7 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         connection.execute(text('CREATE SCHEMA IF NOT EXISTS "dwh"'))
+        connection.execute(text('CREATE SCHEMA IF NOT EXISTS "app"'))
         connection.commit()
         context.configure(
             connection=connection,

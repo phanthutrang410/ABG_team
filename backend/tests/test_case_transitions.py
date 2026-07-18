@@ -292,18 +292,15 @@ def test_api_create_explicit_seed_flag_override(
     assert r.status_code == 201
 
 
-def test_api_rejects_actor_spoof(client: TestClient) -> None:
+def test_api_ignores_client_actor_uses_session_identity(client: TestClient) -> None:
+    """H39: client-supplied actor is ignored; session Principal is SoT."""
     client.post("/cases", json={"case_id": "spoof-1", "state": "pending_review"})
     r = client.post(
         "/cases/spoof-1/transitions",
         json={"action": "approve", "actor": "leader:evil", "actor_kind": "human"},
     )
-    assert r.status_code == 403
-    assert r.json()["detail"]["code"] == "untrusted_actor"
-
-    # Case unchanged
-    got = client.get("/cases/spoof-1")
-    assert got.json()["state"] == "pending_review"
+    assert r.status_code == 200
+    assert r.json()["state"] == "approved_for_follow_up"
 
 
 def test_api_accepts_omitted_actor_uses_server_identity(client: TestClient) -> None:

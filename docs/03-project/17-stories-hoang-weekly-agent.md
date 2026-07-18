@@ -294,11 +294,35 @@ Verify: scheduled approved replay; duplicate schedule no-op; failed run keeps la
 Evidence / Done when: runbook có exact start/stop/replay/rollback; redacted scheduled-run evidence; report/briefing vẫn hoạt động khi OpenAI off.
 ```
 
+<a id="h39a"></a>
+### H39a — DB-backed auth/session + canonical roles
+
+```text
+ID — Outcome: H39a — Schema app.* auth + /auth/* cookie session; Principal chỉ {ban_quan_ly,gvcn}
+Phase / Priority / Timebox: Next wave / P0 / 3–4 giờ
+Owner: Hoàng
+Depends on: H36 Done; H30 Alembic/Postgres
+Scope: migration 20260719_h39a_auth_rbac; seed CLI; login/me/active-role/logout; Decision #23 amend; ERD app.*
+Do not touch: dwh domain; FE; RBAC enforcement on open APIs (H39b)
+Verify: migration + CHECK; login matrix; Ruff + targeted pytest
+```
+
+<a id="h39b"></a>
+### H39b — Enforce RBAC on frontend APIs
+
+```text
+ID — Outcome: H39b — ban_quan_ly/gvcn matrix trên case/config/draft/explanation/export; audit persist
+Depends on: H39a Done
+Scope: review-cases, transitions, thresholds/fairness, advisor drafts, agent explanation; no client source_id
+Do not touch: FE session UI (G07); ReviewCase DTO; new migrations
+Verify: RBAC matrix tests; full verify; OpenAPI
+```
+
 ## 4. Handoff sang lane khác
 
 | Hoàng hoàn tất | Consumer được mở | Contract/evidence bàn giao |
 |:--|:--|:--|
-| `H36` | Khánh Duy `G07` | Authenticated layout identity/scope contract + negative tests |
+| `H36` / `H39a`+`H39b` | Khánh Duy `G07` | `/auth/*` + cookie identity; roles `{ban_quan_ly,gvcn}`; negative tests |
 | `H34a` + `H34b` + `H36` | Khánh Duy `G08` | Weekly report/briefing OpenAPI + ok/empty/stale/failed/baseline fixtures |
 | `H35` + `H36` | Khánh Duy `G09` | Advisor draft v2 + mapping-repair/no-send fixtures |
 | `H29` + `H34b` + `H37` | Thu Trang `T05` | Mocked provider/tool runtime, capability matrix và forbidden-effect hooks |

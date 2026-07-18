@@ -1,11 +1,33 @@
 # Nhật ký công việc
 
+## 2026-07-19 (H39a+H39b Done — DB-backed RBAC `{ban_quan_ly,gvcn}`)
+
+- Alembic `20260719_h39a_auth_rbac`: schema `app` + `auth_account` / `auth_account_role` / `auth_session` / `access_audit_event`.
+- `/auth/login|me|active-role|logout` cookie `ss_session`; seed `python -m app.auth.cli seed` + `AUTH_SEED_PASSWORD`.
+- Principal từ session; roles canonical `{ban_quan_ly,gvcn}`; `admin`/`leader`/`advisor` unknown.
+- H39b: enforce RBAC trên review-cases, transitions, config/fairness, advisor drafts, explanation; no client `source_id`.
+- Decision #23 amend; ERD `app.*`; Sprint H39a/H39b Done. FE wiring → G07.
+- Checks: Ruff clean; pytest `-m "not slow and not eval"` → **555 passed, 1 skipped**.
+
 ## 2026-07-19 (PR #35 — conflict resolve + advisor fail-closed gate)
 
 - Merge `main` vào branch Duy; resolve `frontend/src/app/analysis/page.tsx` theo cấu trúc redirect GVCN → `/advisor#cases` (không ghép lại `AdvisorAnalysis` / client filter từ #34).
 - Quyết định A+B: mặc định fail-closed `unavailable` trên `/advisor*`; localStorage generator chỉ khi `NEXT_PUBLIC_ADVISOR_LOCAL_DEMO=1` và `NODE_ENV !== production`.
 - Tests: redirect/gate + role guard + demo flag (`frontend/tests/advisor-routing.test.mts`).
 - G07 vẫn TODO: chưa wire scoped API / auth shell thật — không coi demo localStorage là Done.
+
+## 2026-07-18 (Decision #25 — slide/pitch self-owned)
+
+- Hạ Giang + Văn Hải tự bàn làm slide + pitch; Hoàng **không** viết/cập nhật thêm claim-lock, skeleton slide, hay script.
+- Board: `D1`/`V02` → **Self-owned**; bỏ BLOCKED → H12b/H16/Hoàng doc.
+- H12b slide skeleton = historical; H16 §3 chỉ còn cho README/`H09`.
+
+## 2026-07-18 (H16 Done — CP2 acceptance matrix)
+
+- `H16` **Done**: FR-01…FR-12 Pass/Limit + claim lock · [20-h16-cp2-acceptance-matrix.md](20-h16-cp2-acceptance-matrix.md).
+- Checklist CP2 [07 §2](07-release-evidence.md) row H16 tick; Live nộp=`https://abg-team.vercel.app`.
+- Known-limits khóa: attendance_source_unapproved; agent Live=`unavailable`; no Global Agent/hybrid/G06 FE.
+- Unblock: Hoàng `H09` (README); slide/pitch chuyển self-owned (#25).
 
 ## 2026-07-18 (V05 Done — Thu Trang nộp CP2)
 

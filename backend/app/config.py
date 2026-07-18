@@ -36,8 +36,11 @@ class Settings(BaseSettings):
     app_env: str = "local"
     # None = derive from app_env (local/dev/test only); explicit bool overrides.
     cases_seed_create: Optional[bool] = None
-    cases_trusted_actor: str = "leader:demo"
+    cases_trusted_actor: str = "acct:demo"
     cases_trusted_actor_kind: str = "human"
+
+    # H39a — auth seed password (CLI only; never log/commit plaintext)
+    auth_seed_password: SecretStr = SecretStr("")
 
     model_config = SettingsConfigDict(
         env_file=("../.env", ".env"),

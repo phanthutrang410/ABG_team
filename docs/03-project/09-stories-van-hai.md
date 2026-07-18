@@ -122,16 +122,17 @@ Trình duyệt / máy: …
 
 ---
 
-## V02 — Script demo và rehearsal
+## V02 — Script demo và rehearsal (self-owned)
 
 | | |
 |:--|:--|
-| Outcome | Script 4 phút + Q&A 2 phút khớp live/copy đã khóa. |
-| Gate / deadline | P3 · 08:00 |
-| Owner | Văn Hải |
-| Depends | D4r, G02, H26, G03, G04, H12a |
+| Outcome | Script 4 phút + Q&A 2 phút khớp Live; tự làm với Hạ Giang. |
+| Gate / deadline | P3 |
+| Owner | Văn Hải (+ Hạ Giang) |
+| Depends | D4r (Live URL) |
+| Status | Self-owned · decision #25 |
 
-Script demo điểm theo kỳ + điểm danh theo thời gian, priority review, human review (Process states), grounded agent (backend HTTP — không overclaim FE Agent UI nếu chưa có), coverage/fairness gate. Forecast/fusion chỉ research/Post-MVP.
+Tự soạn pitch/script với Hạ Giang. **Không** chờ Hoàng viết script hay claim-lock. Live = `https://abg-team.vercel.app`. Không overclaim Global Agent / hybrid / chuyên cần đủ nếu chưa có trên Live.
 
 ## D2 — Video
 
