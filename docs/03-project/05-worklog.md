@@ -1,5 +1,19 @@
 # Nhật ký công việc
 
+## 2026-07-18 (T01 Done — agent stub, lane Thu Trang)
+
+- `T01` **Done**: stub deterministic `backend/app/agent/stub.py` — không LLM, lắp theo 3 tầng: (1) guardrail classifier `guardrails.py` (7 refusal codes, rule-based, first-match-wins — T02 tái dùng làm pre-LLM gate); (2) fail-closed mapping `context.status` (unavailable/empty/refused/insufficient → không bịa); (3) grounded assembly chỉ từ case fields (factor codes nguyên văn, coverage counts, H12a copy keys cho limitations).
+- Tests: `tests/agent/test_agent_stub.py` — **12/12 ca adversarial pass** + determinism + grounding-only-case-codes + quét `assert_no_forbidden_keys` trên output thật (không chỉ fixture). Tổng agent suite **42 xanh**; contract suite chung **118 passed**; ruff pass.
+- Mở khóa: `T02` chỉ còn chờ `H02` (T01 + H12a Done).
+
+## 2026-07-18 (T03 Done — agent contract, lane Thu Trang)
+
+- `T03` **Done**: output contract `backend/app/agent/schemas.py` (`AgentExplanationRequest` bọc `AgentContextResponse` H11a — không widen; `AgentExplanation` với invariants: refused⇒reason, draft chỉ khi ok + luôn `requires_human_approval`, ok⇒`model_version`, unavailable⇒không facts/draft).
+- 6 fixtures `backend/tests/fixtures/agent/` (ok / insufficient_data / refusal / draft / unavailable + adversarial); **12 ca adversarial** phủ đủ 7 refusal codes + 3 outcome không-refusal (chống over-refusal); input contexts **tham chiếu** fixtures H11a `tests/fixtures/integration/agent_context_*.json`, không nhân bản shape.
+- Privacy: mọi fixture quét đệ quy `assert_no_forbidden_keys` (H11a §2.1); chỉ `student_ref` pseudonym; không score/%/PII trong copy.
+- Verify: pytest `tests/agent` **26 passed**; contract suite (agent + integration + review_case + scoring + fairness) **102 passed**; ruff pass; `git diff --check` sạch. **Skip có ghi:** `test_health`/`test_case_transitions`/`test_dwh_migrate` không chạy được trên máy build (env thiếu fastapi/sqlalchemy — không liên quan T03); chưa live-LLM eval (thuộc T02).
+- Doc draft cho H11b: [08-agent-grounding-guardrails.md](../04-engineering/08-agent-grounding-guardrails.md). Mở khóa: `T01` (TODO).
+
 ## 2026-07-18 (M06 Done — domain transform + quality report)
 
 - `M06` **Done** (Duy): `backend/app/ml/domain/` — `models.py` (Pydantic domain rows + `DataQualityReport`, tên khớp cột `dwh`), `transform.py` (semester: term_code normalize, taxonomy `Trạng thái` decision #17, miền điểm `[0,10]`, khóa unique, reject reasons, coverage `single_term`/`grade_coverage_insufficient`/`status_unknown`), `attendance.py` (nhánh `mvp-attendance-over-time`; rate loại `excused=true`; ≥4 mốc; trend ≥2 điểm). `DataQualityReport` được lắp trong transform/attendance (không tách file riêng).

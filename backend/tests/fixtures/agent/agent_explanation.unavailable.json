@@ -1,0 +1,12 @@
+{
+  "status": "unavailable",
+  "answer_vi": "Hệ thống tạm thời không truy cập được dữ liệu case (nguồn dữ liệu không phản hồi). Tôi không thể giải thích hay suy đoán khi chưa có dữ liệu — anh/chị vui lòng thử lại sau. Các thao tác rà soát/bàn giao của con người vẫn sử dụng được bình thường.",
+  "grounded_facts": [],
+  "model_factors_used": [],
+  "limitation_keys": [],
+  "limitations_vi": "Lỗi upstream/timeout — không phải kết luận về dữ liệu hay về sinh viên.",
+  "refusal_reason": null,
+  "draft_message": null,
+  "model_version": null,
+  "disclaimer_vi": "Đây là tín hiệu cần rà soát nhằm hỗ trợ con người ưu tiên sự quan tâm, không phải kết luận về sinh viên. Quyết định và việc liên hệ do con người thực hiện."
+}

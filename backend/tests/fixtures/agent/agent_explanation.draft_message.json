@@ -1,0 +1,22 @@
+{
+  "status": "ok",
+  "answer_vi": "Tôi không thể tự gửi tin nhắn cho sinh viên — mọi liên hệ phải do con người quyết định và thực hiện. Dưới đây là bản nháp hỏi thăm trung lập để anh/chị xem lại, chỉnh sửa và tự gửi nếu thấy phù hợp.",
+  "grounded_facts": [
+    {
+      "statement_vi": "Case đang ở mức ưu tiên 'cần rà soát' với xu hướng điểm theo kỳ giảm.",
+      "source": "case_field",
+      "ref": "review_priority_band"
+    }
+  ],
+  "model_factors_used": ["grade_trend_negative"],
+  "limitation_keys": ["attendance_source_unapproved", "copy.partial_term_only"],
+  "limitations_vi": "Bản nháp không chẩn đoán, không kết luận, không nhắc điểm số hay nguy cơ. Người phụ trách chịu trách nhiệm rà soát và gửi.",
+  "refusal_reason": null,
+  "draft_message": {
+    "body_vi": "Chào em, thời gian gần đây thầy/cô thấy việc học của em có một vài thay đổi. Không có gì nghiêm trọng cả — thầy/cô chỉ muốn hỏi thăm xem em có đang gặp khó khăn gì cần hỗ trợ không. Nếu tiện, mình sắp xếp một buổi trao đổi ngắn nhé.",
+    "requires_human_approval": true,
+    "channel": null
+  },
+  "model_version": "ew-term-0.1-uncalibrated",
+  "disclaimer_vi": "Đây là tín hiệu cần rà soát nhằm hỗ trợ con người ưu tiên sự quan tâm, không phải kết luận về sinh viên. Quyết định và việc liên hệ do con người thực hiện."
+}
