@@ -1,0 +1,94 @@
+{
+  "state": "ok",
+  "bundles": [
+    {
+      "advisor_ref": "gv-7f2a",
+      "case_count": 2,
+      "cases": [
+        {
+          "case_id": "case-local-001",
+          "student_ref": "sv-a12f",
+          "review_priority_band": "uu_tien_som",
+          "contributing_factor_codes": [
+            "grade_trend_declining",
+            "attendance_trend_declining"
+          ],
+          "coverage_status": "ok",
+          "coverage_reason_codes": [],
+          "case_state": "approved_for_follow_up",
+          "class_code": "K66-CNTT-A"
+        },
+        {
+          "case_id": "case-local-002",
+          "student_ref": "sv-b48c",
+          "review_priority_band": "can_ra_soat",
+          "contributing_factor_codes": [
+            "grade_volatility_elevated"
+          ],
+          "coverage_status": "partial",
+          "coverage_reason_codes": [
+            "attendance_source_unapproved"
+          ],
+          "case_state": "assigned",
+          "class_code": "K66-CNTT-A"
+        }
+      ],
+      "draft": {
+        "subject": "Danh sách sinh viên cần theo dõi học vụ",
+        "body": "Kính gửi giảng viên phụ trách,\n\nBan quản lý gửi bản nháp danh sách sinh viên cần được rà soát và theo dõi học vụ:\n- sv-a12f · K66-CNTT-A · ưu tiên rà soát sớm · kết quả học tập và chuyên cần giảm dần\n- sv-b48c · K66-CNTT-A · cần rà soát · kết quả học tập biến động giữa các kỳ\n\nVui lòng rà soát bối cảnh thực tế trước khi lựa chọn cách hỗ trợ phù hợp.\n\nBản nháp — cần Ban quản lý duyệt trước khi gửi.",
+        "requires_human_approval": true
+      },
+      "limitations": [
+        "insufficient_contact_map"
+      ]
+    },
+    {
+      "advisor_ref": "gv-c93d",
+      "case_count": 1,
+      "cases": [
+        {
+          "case_id": "case-local-003",
+          "student_ref": "sv-d71e",
+          "review_priority_band": "uu_tien_som",
+          "contributing_factor_codes": [
+            "attendance_rate_below_target"
+          ],
+          "coverage_status": "ok",
+          "coverage_reason_codes": [],
+          "case_state": "assigned",
+          "class_code": "K67-QTKD-B"
+        }
+      ],
+      "draft": {
+        "subject": "Danh sách sinh viên cần theo dõi học vụ",
+        "body": "Kính gửi giảng viên phụ trách,\n\nBan quản lý gửi bản nháp danh sách sinh viên cần được rà soát và theo dõi học vụ:\n- sv-d71e · K67-QTKD-B · ưu tiên rà soát sớm · tỷ lệ điểm danh thấp\n\nVui lòng rà soát bối cảnh thực tế trước khi lựa chọn cách hỗ trợ phù hợp.\n\nBản nháp — cần Ban quản lý duyệt trước khi gửi.",
+        "requires_human_approval": true
+      },
+      "limitations": [
+        "insufficient_contact_map"
+      ]
+    }
+  ],
+  "mapping_repair": {
+    "case_count": 1,
+    "cases": [
+      {
+        "case_id": "case-local-004",
+        "student_ref": "sv-f05b",
+        "review_priority_band": "can_ra_soat",
+        "contributing_factor_codes": [
+          "grade_trend_declining"
+        ],
+        "coverage_status": "ok",
+        "coverage_reason_codes": [],
+        "case_state": "approved_for_follow_up",
+        "class_code": "K65-NNA-C"
+      }
+    ],
+    "limitations": [
+      "insufficient_contact_map",
+      "mapping_repair"
+    ]
+  },
+  "problem": null
+}

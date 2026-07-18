@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { postCaseTransition } from "@/lib/api";
 import { CASE_STATE_LABEL, type CaseAction, type CaseState, type TransitionErrorBody } from "@/lib/types";
@@ -69,6 +70,7 @@ export function CareActions({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mappingRepair, setMappingRepair] = useState(false);
+  const [assignedThisSession, setAssignedThisSession] = useState(false);
   const [log, setLog] = useState<LogEntry[]>([]);
   const [dismissReason, setDismissReason] = useState(DISMISS_REASONS[0].code);
   const [deferDate, setDeferDate] = useState("");
@@ -118,6 +120,9 @@ export function CareActions({
         ...l,
       ]);
       onStateChange(result.data.state);
+      if (action === "assign" && result.data.state === "assigned") {
+        setAssignedThisSession(true);
+      }
       return;
     }
 
@@ -202,6 +207,12 @@ export function CareActions({
         </div>
       )}
 
+      {assignedThisSession && (
+        <Link href="/notify" style={notifyCta}>
+          Soạn mail bàn giao cho GVCN →
+        </Link>
+      )}
+
       <p style={{ margin: "0.9rem 0 0", fontSize: 12, color: "#94a3b8" }}>
         Máy chỉ gợi ý — con người quyết định. Bàn giao do hệ thống tra cố vấn từ nguồn đã duyệt;
         không nhập tay danh tính.
@@ -266,3 +277,4 @@ const btnPrimary: CSSProperties = { ...btn, border: "1px solid #2a78d6", backgro
 const input: CSSProperties = { width: "100%", maxWidth: 220, padding: "6px 9px", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: 13, fontFamily: "inherit" };
 const noticeWarn: CSSProperties = { marginTop: "0.75rem", padding: "0.7rem 0.9rem", borderRadius: 8, background: "#fffbeb", border: "1px solid #fde68a", color: "#92400e", fontSize: 13 };
 const noticeErr: CSSProperties = { marginTop: "0.75rem", padding: "0.7rem 0.9rem", borderRadius: 8, background: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", fontSize: 13 };
+const notifyCta: CSSProperties = { display: "inline-flex", marginTop: "0.9rem", padding: "9px 13px", borderRadius: 8, border: "1px solid #fecaca", background: "#fef2f2", color: "#b91c1c", fontSize: 13, fontWeight: 700, textDecoration: "none" };

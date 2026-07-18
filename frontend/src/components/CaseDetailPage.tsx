@@ -4,9 +4,11 @@ import { use, useCallback, useEffect, useState, type CSSProperties } from "react
 import Link from "next/link";
 import { BandBadge, CaseStateBadge } from "@/components/badges";
 import { AgentPanel } from "@/components/AgentPanel";
+import { AppShell } from "@/components/AppShell";
 import { CareActions } from "@/components/CareActions";
 import { LimitationsList } from "@/components/LimitationsList";
 import { fetchReviewCase } from "@/lib/api";
+import { useSession } from "@/lib/session";
 import type { CaseDetailResponse, CaseState } from "@/lib/types";
 
 /**
@@ -17,6 +19,7 @@ import type { CaseDetailResponse, CaseState } from "@/lib/types";
  */
 export default function CaseDetailPage({ params }: { params: Promise<{ caseId: string }> }) {
   const { caseId } = use(params);
+  const { activeRole } = useSession();
   const [loading, setLoading] = useState(true);
   const [response, setResponse] = useState<CaseDetailResponse | null>(null);
 
@@ -42,10 +45,14 @@ export default function CaseDetailPage({ params }: { params: Promise<{ caseId: s
   }, []);
 
   return (
-    <div style={pageBg}>
-      <main style={{ maxWidth: 1080, margin: "0 auto", padding: "1.5rem 1.5rem 2.5rem" }}>
+    <AppShell
+      role={activeRole ?? "ban_quan_ly"}
+      title="Chi tiết case"
+      subtitle="Dữ liệu định danh giả và mức ưu tiên rà soát; con người phê duyệt trước mọi bàn giao."
+    >
+      <div style={{ maxWidth: 1080, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Link href="/dashboard" style={{ fontSize: 14, color: "#2a78d6" }}>← Danh sách tín hiệu</Link>
+          <Link href="/analysis?tab=signals" style={{ fontSize: 14, color: "#2a78d6" }}>← Danh sách tín hiệu</Link>
           <button onClick={() => load()} style={retryBtn}>↻ Tải lại</button>
         </div>
 
@@ -54,8 +61,8 @@ export default function CaseDetailPage({ params }: { params: Promise<{ caseId: s
         ) : response ? (
           <Body response={response} onStateChange={handleStateChange} />
         ) : null}
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
 
@@ -262,7 +269,6 @@ function DetailSkeleton() {
   );
 }
 
-const pageBg: CSSProperties = { background: "#f6f7f9", minHeight: "100vh" };
 const card: CSSProperties = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "1.1rem 1.35rem" };
 const h2: CSSProperties = { margin: "0 0 0.75rem", fontSize: 13, color: "#64748b", letterSpacing: 0.3 };
 const avatar: CSSProperties = { width: 46, height: 46, borderRadius: "50%", background: "#e0edfb", color: "#2a78d6", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, flexShrink: 0 };

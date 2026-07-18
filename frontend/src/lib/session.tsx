@@ -77,5 +77,21 @@ export function useSession(): SessionCtx {
 }
 
 export function roleHome(role: Role): string {
-  return role === "gvcn" ? "/my-class" : "/dashboard";
+  return role === "gvcn" ? "/analysis" : "/overview";
+}
+
+/**
+ * Tách tên hiển thị "TS. Nam — Giám sát học tập" thành {name, subtitle}.
+ * Dùng cho avatar/hero: dòng tên ngắn + dòng vai. Không có "—" → subtitle rỗng.
+ */
+export function splitAccountName(fullName: string): { name: string; subtitle: string } {
+  const idx = fullName.indexOf("—");
+  if (idx === -1) return { name: fullName.trim(), subtitle: "" };
+  return { name: fullName.slice(0, idx).trim(), subtitle: fullName.slice(idx + 1).trim() };
+}
+
+/** Chữ cái đầu của từ cuối trong tên ngắn (placeholder avatar demo). */
+export function initialsFromName(shortName: string): string {
+  const words = shortName.replace(/[.]/g, "").trim().split(/\s+/).filter(Boolean);
+  return words.length ? words[words.length - 1][0].toUpperCase() : "?";
 }

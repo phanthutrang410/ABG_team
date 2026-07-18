@@ -1,4 +1,5 @@
 import type {
+  AdvisorHandoffDraftListResponse,
   AgentExplanation,
   AgentIntent,
   CaseAction,
@@ -20,6 +21,9 @@ import type {
  */
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000").replace(/\/+$/, "");
+const ADVISOR_HANDOFF_DRAFTS_URL =
+  process.env.NEXT_PUBLIC_ADVISOR_HANDOFF_DRAFTS_URL?.trim() ||
+  `${API_BASE}/advisor-handoff-drafts`;
 
 const UPSTREAM_UNAVAILABLE_LIST: CaseListResponse = {
   items: [],
@@ -146,6 +150,32 @@ export async function postAgentExplanation(
     return body;
   } catch {
     return null;
+  }
+}
+
+/**
+ * F6 / G06 — GET /advisor-handoff-drafts (H22, FR-12). Draft-only: KHÔNG có
+ * endpoint send. Lỗi transport → cùng error envelope fail-closed (không bịa
+ * bundle/draft). advisor_ref chỉ hợp lệ trên envelope này (H11a exception).
+ */
+const UPSTREAM_UNAVAILABLE_HANDOFF: AdvisorHandoffDraftListResponse = {
+  state: "error",
+  bundles: [],
+  mapping_repair: { case_count: 0, cases: [], limitations: [] },
+  problem: { code: "upstream_unavailable", reason_codes: [], message_key: null },
+};
+
+export async function fetchAdvisorHandoffDrafts(
+  signal?: AbortSignal,
+): Promise<AdvisorHandoffDraftListResponse> {
+  try {
+    const res = await fetch(ADVISOR_HANDOFF_DRAFTS_URL, { cache: "no-store", signal });
+    if (!res.ok) return UPSTREAM_UNAVAILABLE_HANDOFF;
+    const body = (await res.json()) as AdvisorHandoffDraftListResponse;
+    if (!body || typeof body.state !== "string") return UPSTREAM_UNAVAILABLE_HANDOFF;
+    return body;
+  } catch {
+    return UPSTREAM_UNAVAILABLE_HANDOFF;
   }
 }
 
