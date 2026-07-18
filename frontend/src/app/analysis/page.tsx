@@ -82,7 +82,7 @@ function AdvisorAnalysis() {
   if (!response || response.state === "error") {
     return (
       <div style={{ ...card, background: "#fef2f2", borderColor: "#fecaca", color: "#991b1b" }}>
-        Không tải được danh sách — máy chủ tạm thời không phản hồi.{" "}
+        Không tải được danh sách. Máy chủ tạm thời không phản hồi.{" "}
         <button onClick={() => load()} style={retryBtn}>↻ Thử lại</button>
       </div>
     );
@@ -92,7 +92,7 @@ function AdvisorAnalysis() {
     <>
       {response.state === "stale" && (
         <div style={staleNotice}>
-          Dữ liệu có thể đã cũ — danh sách vẫn hiển thị nhưng không được coi là mới nhất.
+          Dữ liệu có thể đã cũ. Danh sách vẫn hiển thị nhưng không được coi là mới nhất.
         </div>
       )}
 
@@ -128,9 +128,8 @@ function AdvisorAnalysis() {
       )}
 
       <p style={{ marginTop: "1.25rem", fontSize: 12, color: "#94a3b8" }}>
-        Bạn không thấy danh sách tín hiệu toàn đơn vị hay mức ưu tiên của case chưa duyệt — chỉ dữ liệu
-        tối thiểu để bắt đầu hỗ trợ (Ethics §3). Demo lọc theo trạng thái; production cần scope theo cố
-        vấn ở phía máy chủ.
+        Trang này chỉ hiển thị các case đã được phê duyệt và bàn giao trong phạm vi phụ trách.
+        Thông tin được giới hạn ở mức cần thiết để bắt đầu hỗ trợ sinh viên.
       </p>
     </>
   );

@@ -13,12 +13,12 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { initialsFromName, roleHome, splitAccountName, useSession } from "@/lib/session";
-import { ROLE_ICON, ROLE_LABEL, type DemoAccount, type Role } from "@/lib/types";
+import { ROLE_LABEL, type DemoAccount, type Role } from "@/lib/types";
 
 /**
  * Khung trang + guard theo vai (demo, client-side — không phải bảo mật production).
- * Sidebar EduSignal (mockup 18/7 v4): logo asset, nav icon line, thẻ Silent Shield,
- * hồ sơ người dùng. Topbar: chuông + thời điểm cập nhật + menu người dùng.
+ * Sidebar EduSignal (mockup 18/7 v4): logo asset, nav icon line và thẻ Silent Shield.
+ * Topbar: chuông + thời điểm cập nhật + menu người dùng duy nhất.
  * Thời điểm cập nhật / số cảnh báo do trang con bơm vào qua TopbarInfo context —
  * KHÔNG hardcode; luôn tính từ dữ liệu API (calculated_at, band ưu tiên).
  */
@@ -81,7 +81,7 @@ export function AppShell({ role, title, subtitle, children }: { role: Role; titl
   return (
     <TopbarInfoSetter.Provider value={setTopInfo}>
       <div style={{ display: "flex", minHeight: "100vh", background: "#f6f7f9", alignItems: "stretch" }}>
-        <aside style={sidebar}>
+        <aside style={sidebar} data-app-sidebar>
           {/* Logo EduSignal — dùng asset có sẵn, crop bằng background để bỏ nền trắng thừa. */}
           <div style={logoBox} aria-label="EduSignal" role="img" />
 
@@ -96,9 +96,6 @@ export function AppShell({ role, title, subtitle, children }: { role: Role; titl
                 <p style={{ margin: 0, fontWeight: 700, fontSize: 13.5, color: "#dc2626" }}>Silent Shield</p>
                 <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "#64748b", lineHeight: 1.35 }}>Hỗ trợ quan tâm sinh viên</p>
               </div>
-            </div>
-            <div style={{ borderTop: "1px solid #eef1f4", paddingTop: 10 }}>
-              <UserMenu account={account} role={role} multi={multi} placement="up" onChooseRole={onChooseRole} onLogout={onLogout} />
             </div>
           </div>
         </aside>
@@ -121,7 +118,7 @@ export function AppShell({ role, title, subtitle, children }: { role: Role; titl
                     {topInfo.alertCount > 0 && <span style={bellDot} aria-hidden />}
                   </button>
                 )}
-                <UserMenu account={account} role={role} multi={multi} placement="down" onChooseRole={onChooseRole} onLogout={onLogout} />
+                <UserMenu account={account} role={role} multi={multi} onChooseRole={onChooseRole} onLogout={onLogout} />
               </div>
               {topInfo?.updatedAt && (
                 <span style={updatedText}>
@@ -175,20 +172,18 @@ function SideNav({ items }: { items: NavItem[] }) {
   );
 }
 
-/* ---------- User menu (topbar + sidebar) ---------- */
+/* ---------- User menu (chỉ hiển thị ở topbar) ---------- */
 
 function UserMenu({
   account,
   role,
   multi,
-  placement,
   onChooseRole,
   onLogout,
 }: {
   account: DemoAccount;
   role: Role;
   multi: boolean;
-  placement: "up" | "down";
   onChooseRole: (next: Role) => void;
   onLogout: () => void;
 }) {
@@ -218,7 +213,7 @@ function UserMenu({
       </button>
 
       {open && (
-        <div style={{ ...dropdownPanel, ...(placement === "up" ? { bottom: "calc(100% + 8px)" } : { top: "calc(100% + 8px)" }) }} role="menu">
+        <div style={{ ...dropdownPanel, top: "calc(100% + 8px)" }} role="menu">
           <div style={{ padding: "4px 8px 10px" }}>
             <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: "#0f172a" }}>{name}</p>
             <p style={{ margin: "2px 0 0", fontSize: 12, color: "#94a3b8" }}>{roleLine}</p>
@@ -229,10 +224,10 @@ function UserMenu({
                 value={role}
                 onChange={(e) => { onChooseRole(e.target.value as Role); setOpen(false); }}
                 style={roleSelect}
-                title="Đổi vai (trình diễn)"
+                title="Chuyển vai trò"
               >
                 {account.roles.map((r) => (
-                  <option key={r} value={r}>{ROLE_ICON[r]} {ROLE_LABEL[r]}</option>
+                  <option key={r} value={r}>{ROLE_LABEL[r]}</option>
                 ))}
               </select>
             </div>

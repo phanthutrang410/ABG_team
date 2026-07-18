@@ -15,6 +15,11 @@ a {
   color: #dc2626;
 }
 
+/* Tài khoản chỉ xuất hiện ở topbar; không cho phép menu hồ sơ trong sidebar. */
+aside button[aria-haspopup="menu"] {
+  display: none !important;
+}
+
 /* ===== EduSignal AI assistant animations (overview hero) ===== */
 
 /* Robot lơ lửng nhẹ */

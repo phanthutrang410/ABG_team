@@ -48,7 +48,7 @@ const ACTION_LABEL: Record<CaseAction, string> = {
 const ACTION_HELP: Record<CaseAction, string> = {
   queue_for_review: "Chuyển tín hiệu vào hàng chờ để rà soát.",
   approve: "Xác nhận đây là trường hợp cần hỗ trợ.",
-  dismiss: "Xác nhận không cần hỗ trợ — lưu lý do chuẩn hóa.",
+  dismiss: "Xác nhận không cần hỗ trợ và lưu lý do chuẩn hóa.",
   defer: "Tạm hoãn rà soát; chọn thời điểm xem lại.",
   assign: "Hệ thống tự tra cố vấn phụ trách từ nguồn đã duyệt.",
   accept: "Xác nhận đã tiếp nhận case được bàn giao.",
@@ -134,13 +134,12 @@ export function CareActions({
     <aside style={panel}>
       <h2 style={h2}>THAO TÁC</h2>
       <p style={{ margin: "0 0 0.85rem", fontSize: 12.5, color: "#94a3b8" }}>
-        Trạng thái: <strong style={{ color: "#334155" }}>{CASE_STATE_LABEL[caseState]}</strong> · quyền
-        Ban quản lý (demo chưa gắn đăng nhập)
+        Trạng thái: <strong style={{ color: "#334155" }}>{CASE_STATE_LABEL[caseState]}</strong> · Ban quản lý
       </p>
 
       {allowed.length === 0 && (
         <p style={{ margin: 0, fontSize: 13, color: "#64748b", fontStyle: "italic" }}>
-          Case ở trạng thái kết thúc — chỉ mở case mới khi có thay đổi đáng kể.
+          Case đã kết thúc. Chỉ mở case mới khi có thay đổi đáng kể.
         </p>
       )}
 
@@ -186,7 +185,7 @@ export function CareActions({
 
       {mappingRepair ? (
         <div style={noticeWarn}>
-          Chưa xác định được cố vấn phụ trách — bàn giao tạm dừng, case đã vào hàng chờ sửa mapping.
+          Chưa xác định được cố vấn phụ trách. Việc bàn giao tạm dừng và case đã được đưa vào hàng chờ cập nhật.
           Không bàn giao chỉ vì đã duyệt.
         </div>
       ) : error ? (
@@ -214,7 +213,7 @@ export function CareActions({
       )}
 
       <p style={{ margin: "0.9rem 0 0", fontSize: 12, color: "#94a3b8" }}>
-        Máy chỉ gợi ý — con người quyết định. Bàn giao do hệ thống tra cố vấn từ nguồn đã duyệt;
+        Hệ thống chỉ gợi ý, con người quyết định. Cố vấn phụ trách được xác định từ nguồn dữ liệu đã duyệt;
         không nhập tay danh tính.
       </p>
     </aside>
@@ -251,7 +250,7 @@ function ActionRow({
 }
 
 function describeError(err: TransitionErrorBody | null): string {
-  if (!err) return "Máy chủ không phản hồi — hành động chưa được ghi nhận. Thử lại sau.";
+  if (!err) return "Máy chủ không phản hồi. Hành động chưa được ghi nhận, vui lòng thử lại sau.";
   switch (err.code) {
     case "missing_advisor_ref":
       return "Chưa xác định cố vấn phụ trách cho sinh viên này.";
@@ -260,7 +259,7 @@ function describeError(err: TransitionErrorBody | null): string {
     case "missing_reason":
       return "Loại tín hiệu cần chọn lý do chuẩn hóa.";
     case "terminal_state":
-      return "Case đã kết thúc — không thể thao tác thêm.";
+      return "Case đã kết thúc và không thể thao tác thêm.";
     case "forbidden_transition":
       return "Hành động này không hợp lệ ở trạng thái hiện tại.";
     case "agent_forbidden":
