@@ -1,6 +1,6 @@
 # MVP persistence schema — H19/H20
 
-> **Trạng thái:** `H19` **Done** — empty versioned `dwh` schema + Alembic revision `20260718_h19_dwh`. `H15` **Done** (decision #18). `H20` **Done** — CLI/service importer (`app/dwh/import_gate.py`, `importer.py`, `cli.py`) nạp fixture attendance in-repo + semester qua `SILENT_SHIELD_SEMESTER_SOURCE_PATH` (atomic/idempotent/fail-closed; readiness report không PII). `H08` đọc adapter trên snapshot đã nạp. Không commit raw V59 / PII / legacy synthetic cấm.
+> **Trạng thái:** `H19` **Done** — empty versioned `dwh` schema + Alembic revision `20260718_h19_dwh`. `H15` **Done** (decision #18). `H20` **Done** — CLI/service importer (`app/dwh/import_gate.py`, `importer.py`, `cli.py`) nạp `data/approved/` (attendance + semester domain package; optional raw via `SILENT_SHIELD_SEMESTER_SOURCE_PATH`); atomic/idempotent/fail-closed; readiness report không PII. `H08` đọc adapter trên snapshot đã nạp. Không commit raw V59 / PII / legacy synthetic cấm.
 >
 > **Owner:** Hoàng · **Evidence:** migration revision; `tests/test_h20_import_gates.py`, `tests/test_h20_import.py`, `tests/test_h08_read_adapter.py`; CLI `python -m app.dwh.cli`.
 
@@ -39,7 +39,7 @@ Nếu inventory legacy không có DDL truy cập được, H19 ghi `legacy_schem
 
 ## 4. Import gate của H20
 
-Input semester đặt ở vị trí artifact có kiểm soát ngoài repo (`SILENT_SHIELD_SEMESTER_SOURCE_PATH`). Attendance dùng fixture H15 đã commit dưới `backend/tests/fixtures/attendance/`. H20 chỉ commit code/test/docs; không commit export V59 raw.
+Semester mặc định: package M06 đã pseudonymize `data/approved/semester/domain_package.json` (git). Attendance: `data/approved/attendance/`. Override semester qua `SILENT_SHIELD_SEMESTER_SOURCE_PATH` (raw V59 hoặc package khác). Không commit export V59 raw.
 
 **CLI (không phải FastAPI public endpoint):**
 

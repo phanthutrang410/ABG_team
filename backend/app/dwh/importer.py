@@ -15,6 +15,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Literal, Optional
 
+from pydantic import ValidationError
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -36,20 +37,19 @@ from app.dwh.models import (
 )
 from app.dwh.semester_adapt import adapt_v59_records
 from app.ml.domain import build_attendance_dataset, build_semester_dataset
-from app.ml.domain.models import DomainSourceManifest
+from app.ml.domain.models import DomainSourceManifest, SemesterDataset
 from app.ml.domain.transform import PiiFieldError
 
 ATTENDANCE_SOURCE_ID = "mvp-attendance-over-time"
 SEMESTER_SOURCE_ID = "v59-empty-program-students"
 SEMESTER_SOURCE_ENV = "SILENT_SHIELD_SEMESTER_SOURCE_PATH"
 
-# Committed H15 fixture (relative to backend/)
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 _DEFAULT_ATTENDANCE_PATH = (
-    Path(__file__).resolve().parents[2]
-    / "tests"
-    / "fixtures"
-    / "attendance"
-    / "mvp_attendance_over_time.json"
+    _REPO_ROOT / "data" / "approved" / "attendance" / "mvp_attendance_over_time.json"
+)
+_DEFAULT_SEMESTER_DOMAIN_PATH = (
+    _REPO_ROOT / "data" / "approved" / "semester" / "domain_package.json"
 )
 
 # M05b / H15 approval constants (decision #18) — no PII.
@@ -64,9 +64,10 @@ ATTENDANCE_APPROVAL = ApprovalArtifact(
     usage_rights="MVP Silent Shield pipeline only; no redistribution; no PII in git",
 )
 
+# Gate hash = committed domain_package.json bytes (not raw V59).
 SEMESTER_APPROVAL = ApprovalArtifact(
     source_id=SEMESTER_SOURCE_ID,
-    snapshot_sha256="34a53298df3dafd4d248496e75fbc10d95f997b76d0a7e6566e04ea97c367c66",
+    snapshot_sha256="a6bfdc959c83282e607e23dc115eb84980b8930338d94b7b72bc6c74a1fc1cae",
     record_count=460,
     provenance_approved=True,
     schema_version="epu-1",
@@ -184,6 +185,92 @@ def _reject(source_id: str, gate: ImportGateResult, detail: str = "") -> ImportR
     )
 
 
+def _resolve_semester_path(source_path: Optional[Path]) -> Optional[Path]:
+    if source_path is not None:
+        return Path(source_path)
+    env = os.environ.get(SEMESTER_SOURCE_ENV, "").strip()
+    if env:
+        return Path(env)
+    if _DEFAULT_SEMESTER_DOMAIN_PATH.is_file():
+        return _DEFAULT_SEMESTER_DOMAIN_PATH
+    return None
+
+
+def _persist_semester_dataset(
+    session: Session,
+    *,
+    approval: ApprovalArtifact,
+    dataset: SemesterDataset,
+) -> ImportResult:
+    conflict = _check_idempotent(session, approval)
+    if conflict is not None:
+        return conflict
+    session.rollback()
+
+    try:
+        _write_manifest(session, approval)
+        session.flush()
+        for row in dataset.student_dimension:
+            session.add(
+                StudentDimension(
+                    source_id=row.source_id,
+                    student_ref=row.student_ref,
+                    cohort=row.cohort,
+                    department=row.department,
+                    program=row.program,
+                    major=row.major,
+                    class_code=row.class_code,
+                )
+            )
+        session.flush()
+        for row in dataset.term_grade:
+            session.add(
+                TermGrade(
+                    source_id=row.source_id,
+                    student_ref=row.student_ref,
+                    term_code=row.term_code,
+                    course_ref=row.course_ref,
+                    credits=Decimal(str(row.credits)) if row.credits is not None else None,
+                    final_grade=(
+                        Decimal(str(row.final_grade)) if row.final_grade is not None else None
+                    ),
+                    grade_status=row.grade_status,
+                )
+            )
+        for row in dataset.academic_status:
+            session.add(
+                AcademicStatus(
+                    source_id=row.source_id,
+                    student_ref=row.student_ref,
+                    status_code=row.status_code,
+                    status_observed_at=row.status_observed_at,
+                    is_dropout_outcome=row.is_dropout_outcome,
+                )
+            )
+        for row in dataset.advisor_assignment:
+            session.add(
+                AdvisorAssignment(
+                    source_id=row.source_id,
+                    student_ref=row.student_ref,
+                    advisor_ref=row.advisor_ref,
+                    scope_source=row.scope_source,
+                )
+            )
+        session.flush()
+        _write_dqr(session, dataset.data_quality_report)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+
+    return ImportResult(
+        status="imported",
+        source_id=approval.source_id,
+        snapshot_sha256=approval.normalized_sha256,
+        row_counts=_count_tables(session, approval.source_id),
+    )
+
+
 def import_attendance(
     database_url: str,
     *,
@@ -298,21 +385,25 @@ def import_semester(
     approval: Optional[ApprovalArtifact] = None,
     ensure_schema: bool = True,
 ) -> ImportResult:
-    """Import M05b semester snapshot via env path → adapt → M06 → `dwh`."""
-    path_str = (
-        str(source_path)
-        if source_path is not None
-        else os.environ.get(SEMESTER_SOURCE_ENV, "").strip()
-    )
-    if not path_str:
+    """Import semester into `dwh`.
+
+    Default: committed M06 domain package under ``data/approved/semester/``.
+    Override with ``source_path`` / ``SILENT_SHIELD_SEMESTER_SOURCE_PATH``:
+    - domain package dict (``student_dimension`` …) → validate + write
+    - raw V59 JSON array → adapt → M06 → write (owner / tests)
+    """
+    path = _resolve_semester_path(source_path)
+    if path is None:
         return ImportResult(
             status="skipped",
             source_id=SEMESTER_SOURCE_ID,
             reason_codes=["semester_source_path_missing"],
-            detail=f"set {SEMESTER_SOURCE_ENV} to the approved external V59 JSON",
+            detail=(
+                f"missing {_DEFAULT_SEMESTER_DOMAIN_PATH.name}; "
+                f"or set {SEMESTER_SOURCE_ENV} to raw V59 / domain package"
+            ),
         )
 
-    path = Path(path_str)
     use_approval = approval or SEMESTER_APPROVAL
     if ensure_schema:
         upgrade_head(database_url)
@@ -337,16 +428,47 @@ def import_semester(
             detail=str(exc),
         )
 
+    # --- Committed / explicit M06 domain package --------------------------------
+    if isinstance(raw_payload, dict) and "student_dimension" in raw_payload:
+        students = raw_payload.get("student_dimension")
+        observed = len(students) if isinstance(students, list) else -1
+        snap_gate = evaluate_snapshot_bytes(
+            raw_bytes, use_approval, observed_record_count=observed
+        )
+        if not snap_gate.admitted:
+            return _reject(use_approval.source_id, snap_gate)
+
+        domain_gate = evaluate_domain_package(
+            raw_payload, source_id=use_approval.source_id, role="primary"
+        )
+        if not domain_gate.admitted:
+            return _reject(use_approval.source_id, domain_gate)
+
+        try:
+            dataset = SemesterDataset.model_validate(raw_payload)
+        except ValidationError as exc:
+            return ImportResult(
+                status="rejected",
+                source_id=use_approval.source_id,
+                reason_codes=["schema_invalid"],
+                detail=str(exc),
+            )
+
+        factory = _session_factory(database_url)
+        with factory() as session:
+            return _persist_semester_dataset(
+                session, approval=use_approval, dataset=dataset
+            )
+
+    # --- Raw V59 array (optional owner path / unit tests) -----------------------
     if not isinstance(raw_payload, list):
         return ImportResult(
             status="rejected",
             source_id=use_approval.source_id,
             reason_codes=["schema_invalid"],
-            detail="semester source must be a JSON array of student records",
+            detail="semester source must be a domain package or JSON array of V59 records",
         )
 
-    # When caller supplies a test approval, observe count from payload; live M05b
-    # uses the fixed approval.record_count (460).
     observed = len(raw_payload)
     snap_gate = evaluate_snapshot_bytes(
         raw_bytes, use_approval, observed_record_count=observed
@@ -386,75 +508,8 @@ def import_semester(
 
     factory = _session_factory(database_url)
     with factory() as session:
-        conflict = _check_idempotent(session, use_approval)
-        if conflict is not None:
-            return conflict
-        session.rollback()
-
-        try:
-            # Flush in FK order: manifest → students → dependent domain tables → DQR.
-            _write_manifest(session, use_approval)
-            session.flush()
-            for row in dataset.student_dimension:
-                session.add(
-                    StudentDimension(
-                        source_id=row.source_id,
-                        student_ref=row.student_ref,
-                        cohort=row.cohort,
-                        department=row.department,
-                        program=row.program,
-                        major=row.major,
-                        class_code=row.class_code,
-                    )
-                )
-            session.flush()
-            for row in dataset.term_grade:
-                session.add(
-                    TermGrade(
-                        source_id=row.source_id,
-                        student_ref=row.student_ref,
-                        term_code=row.term_code,
-                        course_ref=row.course_ref,
-                        credits=Decimal(str(row.credits)) if row.credits is not None else None,
-                        final_grade=(
-                            Decimal(str(row.final_grade))
-                            if row.final_grade is not None
-                            else None
-                        ),
-                        grade_status=row.grade_status,
-                    )
-                )
-            for row in dataset.academic_status:
-                session.add(
-                    AcademicStatus(
-                        source_id=row.source_id,
-                        student_ref=row.student_ref,
-                        status_code=row.status_code,
-                        status_observed_at=row.status_observed_at,
-                        is_dropout_outcome=row.is_dropout_outcome,
-                    )
-                )
-            for row in dataset.advisor_assignment:
-                session.add(
-                    AdvisorAssignment(
-                        source_id=row.source_id,
-                        student_ref=row.student_ref,
-                        advisor_ref=row.advisor_ref,
-                        scope_source=row.scope_source,
-                    )
-                )
-            session.flush()
-            _write_dqr(session, dataset.data_quality_report)
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
-
-        return ImportResult(
-            status="imported",
-            source_id=use_approval.source_id,
-            snapshot_sha256=use_approval.normalized_sha256,
-            row_counts=_count_tables(session, use_approval.source_id),
+        return _persist_semester_dataset(
+            session, approval=use_approval, dataset=dataset
         )
 
 
@@ -481,10 +536,12 @@ def readiness_report(database_url: str) -> dict[str, Any]:
         if ATTENDANCE_SOURCE_ID not in present:
             gaps.append("attendance_not_imported")
         if SEMESTER_SOURCE_ID not in present:
-            if not os.environ.get(SEMESTER_SOURCE_ENV, "").strip():
-                gaps.append("semester_source_path_missing")
-            else:
+            if _DEFAULT_SEMESTER_DOMAIN_PATH.is_file() or os.environ.get(
+                SEMESTER_SOURCE_ENV, ""
+            ).strip():
                 gaps.append("semester_not_imported")
+            else:
+                gaps.append("semester_source_path_missing")
         return {
             "ready": not gaps,
             "sources": sorted(sources, key=lambda s: s["source_id"]),
@@ -492,6 +549,7 @@ def readiness_report(database_url: str) -> dict[str, Any]:
             "notes": [
                 "No student_ref/PII in this report",
                 "Attendance and semester snapshots are never cross-joined",
+                "Default semester path: data/approved/semester/domain_package.json",
             ],
         }
 

@@ -20,7 +20,7 @@
 |:--|:--|:--|
 | 1 | **Owner** | Hoàng / Admin kỹ thuật · Silent Shield MVP demo |
 | 2 | **Rights** | Chỉ pipeline MVP; cấm tái phân phối; không PII trong git |
-| 3 | **Hash** | `f65573ad1ec0e11f4093a57d3cf6e947a78ca994aa8d2feeaeabb6a25e2a2106` (`backend/tests/fixtures/attendance/mvp_attendance_over_time.json`) |
+| 3 | **Hash** | `f65573ad1ec0e11f4093a57d3cf6e947a78ca994aa8d2feeaeabb6a25e2a2106` (`data/approved/attendance/mvp_attendance_over_time.json`) |
 | 4 | **Cadence** | Cửa sổ 90 ngày lịch; snapshot demo cố định tới CP2 |
 | 5 | **Privacy** | Chỉ `student_ref` pseudonymous; không MSSV/tên/email/SĐT; không map danh tính trong repo |
 
@@ -29,7 +29,7 @@
 | Field | Value |
 |:--|:--|
 | `source_id` | `mvp-attendance-over-time` |
-| Fixture path | `backend/tests/fixtures/attendance/mvp_attendance_over_time.json` |
+| Fixture path | `data/approved/attendance/mvp_attendance_over_time.json` |
 | `record_count` | `15` (events) |
 | `schema_version` | `epu-1` |
 | `provenance_approved` | `true` |

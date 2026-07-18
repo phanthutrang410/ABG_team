@@ -4,6 +4,12 @@ Usage (from backend/):
   python -m app.dwh.cli import-attendance
   python -m app.dwh.cli import-semester
   python -m app.dwh.cli readiness
+
+Defaults (no env required):
+  data/approved/attendance/mvp_attendance_over_time.json
+  data/approved/semester/domain_package.json
+
+Optional: SILENT_SHIELD_SEMESTER_SOURCE_PATH → raw V59 or alternate domain package.
 """
 
 from __future__ import annotations
@@ -33,12 +39,15 @@ def main(argv: list[str] | None = None) -> int:
     p_att = sub.add_parser("import-attendance", help="Import H15 mvp-attendance-over-time fixture")
     p_att.add_argument("--path", type=Path, default=None, help="Override attendance JSON path")
 
-    p_sem = sub.add_parser("import-semester", help="Import M05b semester via env/path")
+    p_sem = sub.add_parser(
+        "import-semester",
+        help="Import approved semester domain package (default under data/approved/semester/)",
+    )
     p_sem.add_argument(
         "--path",
         type=Path,
         default=None,
-        help="Override SILENT_SHIELD_SEMESTER_SOURCE_PATH",
+        help="Override default domain package or SILENT_SHIELD_SEMESTER_SOURCE_PATH",
     )
 
     sub.add_parser("readiness", help="Print non-PII readiness report")

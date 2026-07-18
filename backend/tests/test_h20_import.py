@@ -225,37 +225,66 @@ def test_semester_import_from_tmp_raw(import_database_url: str, tmp_path: Path) 
     assert again.status == "idempotent_skip"
 
 
-def test_semester_missing_env_skipped(import_database_url: str, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_semester_default_domain_package(import_database_url: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Committed domain package imports without SILENT_SHIELD_SEMESTER_SOURCE_PATH."""
     monkeypatch.delenv(SEMESTER_SOURCE_ENV, raising=False)
     result = import_semester(import_database_url, ensure_schema=False)
-    assert result.status == "skipped"
-    assert "semester_source_path_missing" in result.reason_codes
+    assert result.status == "imported"
+    assert result.snapshot_sha256 == SEMESTER_APPROVAL.normalized_sha256
+    assert result.row_counts["student_dimension"] == 460
+    assert result.row_counts["term_grade"] == 3680
+    assert result.row_counts["academic_status"] == 460
+    assert result.row_counts["advisor_assignment"] == 460
+
+    again = import_semester(import_database_url, ensure_schema=False)
+    assert again.status == "idempotent_skip"
+
+    with _session(import_database_url) as session:
+        student = session.scalars(select(StudentDimension)).first()
+        assert student is not None
+        assert student.student_ref.startswith("s-")
+        assert "MSSV" not in (student.student_ref or "")
 
 
-def test_semester_live_m05b_optional(import_database_url: str) -> None:
-    """Live external V59 — skip when path missing or hash/count drift."""
-    path = os.environ.get(SEMESTER_SOURCE_ENV, "").strip()
-    default = Path("reference-Learning-Analytics-AI/backend/db/v59-empty-program-students.json")
-    # Resolve from repo root if relative
+def test_semester_raw_v59_optional_owner_path(import_database_url: str) -> None:
+    """Optional raw V59 adapt path — skip when file missing; uses raw-hash approval."""
+    raw_sha = "34a53298df3dafd4d248496e75fbc10d95f997b76d0a7e6566e04ea97c367c66"
+    repo_root = Path(__file__).resolve().parents[2]
     candidates = []
-    if path:
-        candidates.append(Path(path))
-    repo_root = Path(__file__).resolve().parents[2]  # VAIC2026/
-    candidates.append(repo_root / default)
+    env = os.environ.get(SEMESTER_SOURCE_ENV, "").strip()
+    if env:
+        candidates.append(Path(env))
+    candidates.append(
+        repo_root
+        / "reference-Learning-Analytics-AI"
+        / "backend"
+        / "db"
+        / "v59-empty-program-students.json"
+    )
     live = next((p for p in candidates if p.is_file()), None)
     if live is None:
-        pytest.skip(f"BLOCKED → external M05b path ({SEMESTER_SOURCE_ENV})")
+        pytest.skip(f"BLOCKED → external raw V59 ({SEMESTER_SOURCE_ENV})")
 
     raw = live.read_bytes()
-    sha = hashlib.sha256(raw).hexdigest()
-    if sha != SEMESTER_APPROVAL.normalized_sha256:
-        pytest.skip("external semester hash does not match M05b approval")
+    if hashlib.sha256(raw).hexdigest() != raw_sha:
+        pytest.skip("external raw semester hash does not match M05b provenance")
     payload = json.loads(raw.decode("utf-8"))
-    if not isinstance(payload, list) or len(payload) != SEMESTER_APPROVAL.record_count:
-        pytest.skip("external semester record_count does not match M05b approval")
+    if not isinstance(payload, list) or len(payload) != 460:
+        pytest.skip("external semester record_count does not match M05b")
 
+    # Raw path must not use package-gate SEMESTER_APPROVAL (different SHA).
+    approval = ApprovalArtifact(
+        source_id=SEMESTER_SOURCE_ID,
+        snapshot_sha256=raw_sha,
+        record_count=460,
+        provenance_approved=True,
+        schema_version="epu-1",
+        extracted_at=_EXTRACTED,
+        owner="test-raw-owner",
+        usage_rights="mvp-raw-optional",
+    )
     result = import_semester(
-        import_database_url, source_path=live, approval=SEMESTER_APPROVAL, ensure_schema=False
+        import_database_url, source_path=live, approval=approval, ensure_schema=False
     )
     assert result.status == "imported"
     assert result.row_counts["student_dimension"] == 460

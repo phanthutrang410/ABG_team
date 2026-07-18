@@ -1,7 +1,7 @@
-"""H18 — quarantine legacy ML synthetic khỏi API / MVP public path.
+"""H18 â€” quarantine legacy ML synthetic khá»i API / MVP public path.
 
 Builds on M01 (module/CSV/scoring field bans). This suite locks the *API surface*:
-cases router, public contracts, OpenAPI — no EarlyWarning*, no raw risk public,
+cases router, public contracts, OpenAPI â€” no EarlyWarning*, no raw risk public,
 no synthetic dataset on ReviewCase path.
 
 Does **not** ban approved attendance_event after H15.
@@ -29,6 +29,7 @@ API_MVP_PACKAGES = (
     APP_DIR / "config.py",
     APP_DIR / "database.py",
     APP_DIR / "dwh",
+    APP_DIR / "config_api",
 )
 
 FORBIDDEN_LEGACY_IDENTIFIERS = (
@@ -62,11 +63,11 @@ def _iter_api_mvp_py() -> list[Path]:
 
 def test_legacy_early_warning_module_absent() -> None:
     assert importlib.util.find_spec("app.ml.early_warning") is None, (
-        "H18: app.ml.early_warning phải vắng trên MVP path (sau M01)"
+        "H18: app.ml.early_warning pháº£i váº¯ng trÃªn MVP path (sau M01)"
     )
     leftover = APP_DIR / "ml" / "early_warning"
     assert not leftover.exists(), (
-        f"H18: leftover path còn tồn tại: {leftover} (xóa cả __pycache__)"
+        f"H18: leftover path cÃ²n tá»“n táº¡i: {leftover} (xÃ³a cáº£ __pycache__)"
     )
 
 
@@ -78,21 +79,21 @@ def test_api_mvp_packages_do_not_reference_legacy_synthetic() -> None:
             if identifier in text:
                 offenders.append(f"{path.relative_to(BACKEND_DIR)}: {identifier}")
     assert offenders == [], (
-        "H18 API/MVP path còn legacy synthetic: " + "; ".join(offenders)
+        "H18 API/MVP path cÃ²n legacy synthetic: " + "; ".join(offenders)
     )
 
 
 def test_forbidden_public_fields_include_raw_risk() -> None:
     for name in FORBIDDEN_PUBLIC_RISK_FIELDS:
         assert name in FORBIDDEN_PUBLIC_FIELDS, (
-            f"H18: FORBIDDEN_PUBLIC_FIELDS thiếu {name}"
+            f"H18: FORBIDDEN_PUBLIC_FIELDS thiáº¿u {name}"
         )
 
 
 def test_review_case_public_fields_exclude_raw_risk() -> None:
     public = set(ReviewCase.model_fields.keys())
     leaked = public.intersection(FORBIDDEN_PUBLIC_RISK_FIELDS)
-    assert leaked == set(), f"H18: ReviewCase còn field raw risk: {sorted(leaked)}"
+    assert leaked == set(), f"H18: ReviewCase cÃ²n field raw risk: {sorted(leaked)}"
     for banned in (
         "EarlyWarningFeatures",
         "synth_socioeconomic_group",
@@ -112,7 +113,7 @@ def test_openapi_paths_do_not_expose_raw_risk_properties() -> None:
             if field in props:
                 offenders.append(f"{schema_name}.{field}")
     assert offenders == [], (
-        "H18 OpenAPI còn raw risk properties: " + ", ".join(offenders)
+        "H18 OpenAPI cÃ²n raw risk properties: " + ", ".join(offenders)
     )
 
 
@@ -127,3 +128,7 @@ def test_health_and_cases_surface_reachable_without_legacy_ml() -> None:
     paths = openapi.json().get("paths", {})
     assert "/health" in paths
     assert any(p.startswith("/cases") for p in paths)
+    assert any(p.startswith("/review-cases") for p in paths)
+    assert "/config/thresholds" in paths
+    assert "/config/thresholds/impact" in paths
+    assert "/fairness/report" in paths
