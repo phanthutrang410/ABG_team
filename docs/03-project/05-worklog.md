@@ -1,5 +1,11 @@
 # Nhật ký công việc
 
+## 2026-07-18 (Phân công: V05 → Thu Trang; V07 checklist rõ cho Hải)
+
+- `V05` (nộp Checkpoint 2) **chuyển owner** Văn Hải → **Thu Trang**; story [16-stories-thu-trang.md](16-stories-thu-trang.md).
+- `V07` viết lại thành checklist từng bước + **output template** bắt buộc trong [09-stories-van-hai.md](09-stories-van-hai.md); Hải không nộp CP2.
+- Đồng bộ [Sprint](03-sprint.md) board/lane + [07-release-evidence §2](07-release-evidence.md).
+
 ## 2026-07-18 (H11b + H22 Done — docs agent/FE + advisor handoff draft API)
 
 - `H11b` **Done**: sync arch §6 (bounded DAG HTTP), [guardrails](../04-engineering/08-agent-grounding-guardrails.md) canonical, [doc 10](../04-engineering/10-fe-agent-integration-contract.md) after-build matrix; claim FR-08 = backend HTTP only; no FE Agent UI overclaim.

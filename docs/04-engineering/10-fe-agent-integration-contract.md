@@ -6,6 +6,8 @@
 > Contract tối thiểu cho FE và agent. Schema Pydantic: `backend/app/contracts/integration.py`. Fixture JSON dưới `backend/tests/fixtures/integration/`. Khi lệch prose ↔ code, sửa schema hoặc mở decision — không âm thầm chọn một bản.
 >
 > **Không** thay [Data-ML](08-data-ml-scoring-fairness-contract.md) hay [Process](../02-product/03-process.md). Copy VI runtime thuộc [H12a](../03-project/03-sprint.md) / Data-ML §6 — contract này khóa **field allowlist** và **trạng thái lỗi**.
+>
+> **Delta sau H11b:** Repo hiện có `AgentPanel` trên case detail. Global Agent/weekly briefing và provider OpenAI vẫn là target chưa ship; xem [doc 13](13-weekly-snapshot-global-agent-architecture.md). Các dòng “no FE Agent UI” bên dưới chỉ mô tả thời điểm đóng H11b nếu được ghi là history.
 
 ## 1. Mục tiêu
 
@@ -23,10 +25,11 @@ H02 HTTP list/detail và T01/T02 core/library implement theo envelope này. Serv
 | `GET /review-cases` list/detail | **Done** | G05 + G02 |
 | Care `POST /cases/.../transitions` | **Done** | G03 |
 | Threshold / fairness config | **Done** | G04 |
-| Agent `POST /review-cases/{id}/explanation` | **Done — backend HTTP** | Swagger / mocked E2E / future FE |
-| FE Agent explain UI | **Chưa ship** | Không claim trong slide/demo như đã có UI chat |
+| Agent `POST /review-cases/{id}/explanation` | **Done — backend HTTP** | Mocked E2E + `AgentPanel` case-local |
+| FE Agent explain UI | **Done — case-local only** | `frontend/src/components/AgentPanel.tsx`; chưa phải Agent toàn cục |
+| Global Agent + weekly briefing | **Chưa ship** | Target contract ở doc 13 |
 
-**Claim boundary:** FR-08 = backend HTTP (H26). Không claim FE Agent UI, live FPT default smoke, hay production RBAC.
+**Claim boundary:** Có backend HTTP và case-local consumer. Không claim Global Agent, weekly workflow/briefing, live provider smoke hay production RBAC.
 
 **`advisor_ref`:** vẫn **forbidden** trên ReviewCase / agent context (H11a §2.1). Exception chỉ trên FR-12 handoff-draft envelope ([doc 11](11-advisor-batch-mail-draft.md) / H22) — không mở rộng vào list/detail/agent.
 
@@ -125,7 +128,7 @@ IntegrationProblem:
 - Mọi fixture trên validate được.
 - Sprint `H11a` / `H11a-r` Done → mở `G05` / `T03`.
 
-### H11b (docs after build — Done when)
-- Docs khớp: G05–G04 consume list/detail/care/config; agent = backend HTTP; **no FE Agent UI**.
+### H11b (docs after build — historical Done criteria)
+- Tại thời điểm đóng H11b: G05–G04 consume list/detail/care/config; agent = backend HTTP; chưa có FE Agent UI. Repo đã thêm case-local `AgentPanel` sau mốc này; Global Agent vẫn chưa ship.
 - Architecture §6 + [guardrails](08-agent-grounding-guardrails.md) không còn “HTTP pending”.
-- Không overclaim live FPT / production RBAC / ReAct multi-loop.
+- Không overclaim live provider / Global Agent / production RBAC / ReAct multi-loop.

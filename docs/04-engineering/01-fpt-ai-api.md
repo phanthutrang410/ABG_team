@@ -1,5 +1,7 @@
 # Hướng dẫn FPT AI API
 
+> **Trạng thái:** tài liệu provider lịch sử của H23–H26. Theo [Decision #22](../03-project/04-decisions.md), provider đích cho build mới là OpenAI; xem [kiến trúc weekly snapshot + Global Agent](13-weekly-snapshot-global-agent-architecture.md). Không thêm key/config FPT mới dựa trên tài liệu này.
+>
 > FPT AI Inference **tương thích chuẩn OpenAI API** — dùng y hệt cách gọi OpenAI, chỉ đổi `base_url`.
 
 - **Base URL:** `https://mkp-api.fptcloud.com`

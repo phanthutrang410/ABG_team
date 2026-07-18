@@ -2,9 +2,11 @@
 
 > **Owner:** Hoàng · **FR:** FR-08 · **Trạng thái:** Done (H23–H26 backend HTTP; mocked FPT)
 >
-> **Baseline (historical):** `T03`/`T01`/`T02` cung cấp schema/guardrail/stub/FPT adapter ở mức library. **Hiện tại:** H23 context service, H24 HTTP route, H25 structured grounding + transport harden, H26 mocked HTTP E2E + release evidence đã Done. FR-08 claimable ở **backend HTTP**; FE Agent UI và live FPT vẫn ngoài scope. **H11b closed** — docs FE/agent đồng bộ ([doc 10](10-fe-agent-integration-contract.md), [guardrails](08-agent-grounding-guardrails.md), arch §6).
+> **Provider target đã supersede:** Tài liệu này giữ nguyên history/DoD của H23–H26. Theo [Decision #22](../03-project/04-decisions.md), build mới chuyển sang OpenAI và kiến trúc Global Agent + weekly workflow nằm tại [doc 13](13-weekly-snapshot-global-agent-architecture.md). Không dùng các đoạn FPT dưới đây làm hướng provider mới.
 >
-> **Nguồn chuẩn:** [PRD §5.4 / FR-08](../02-product/04-prd.md), [Ethics §8](../02-product/05-ethics.md), [Process §3–4](../02-product/03-process.md), [system architecture §6](05-system-architecture.md), [H11a contract](10-fe-agent-integration-contract.md), [grounding/guardrails](08-agent-grounding-guardrails.md), [FPT API](01-fpt-ai-api.md).
+> **Baseline (historical):** `T03`/`T01`/`T02` cung cấp schema/guardrail/stub/FPT adapter ở mức library. H23 context service, H24 HTTP route, H25 structured grounding + transport harden, H26 mocked HTTP E2E + release evidence đã Done. Tại DoD H26, FE Agent UI và live FPT nằm ngoài scope. Repo sau đó đã có `AgentPanel` cục bộ trên case detail, nhưng chưa có Global Agent/weekly briefing và chưa làm thay đổi evidence H26. **H11b closed** — docs FE/agent đồng bộ ([doc 10](10-fe-agent-integration-contract.md), [guardrails](08-agent-grounding-guardrails.md), arch §6).
+>
+> **Nguồn chuẩn:** [PRD §5.4 / FR-08](../02-product/04-prd.md), [Ethics §8](../02-product/05-ethics.md), [Process §3–4](../02-product/03-process.md), [system architecture §6](05-system-architecture.md), [target architecture](13-weekly-snapshot-global-agent-architecture.md), [H11a contract](10-fe-agent-integration-contract.md), [grounding/guardrails](08-agent-grounding-guardrails.md), [FPT API lịch sử](01-fpt-ai-api.md).
 
 Tài liệu này là implementation brief cho phần integration/hardening do Hoàng sở hữu. Nó không đổi công thức M02, không mở rộng dữ liệu Agent được đọc và không biến Agent thành workflow tự hành.
 
