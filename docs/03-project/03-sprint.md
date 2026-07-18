@@ -161,7 +161,7 @@ Deploy:   (H07 ∥ D3) → D4a (shell) → D4b (product smoke) → V07 + A05 →
 |:--|:--|:--|:--|
 | T03 | Agent interface + fixture + refusal/adversarial | H11a | [x] **Done** — output contract `backend/app/agent/schemas.py` consume `AgentContextResponse` (H11a); 6 fixtures + 12 ca adversarial (phủ 7 refusal + ok/insufficient/unavailable); 26 tests xanh `backend/tests/agent/`; forbidden-field scan `assert_no_forbidden_keys`; không vỡ contract tests của H06a/H11a/H06c |
 | T01 | Agent stub từ fixture, refusal tests xanh | T03, H06a | [x] **Done** — stub deterministic `backend/app/agent/stub.py` + guardrail classifier `guardrails.py` (mock model, không LLM); 12/12 ca adversarial pass + determinism + grounding-only-case-codes; 16 tests mới (`tests/agent/test_agent_stub.py`), tổng agent 42 xanh; output quét `assert_no_forbidden_keys` |
-| T02 | Agent grounded explanation từ API/ML | T01, H02, H12a | [ ] BLOCKED → H02 · T01/H12a Done |
+| T02 | Agent grounded explanation từ API/ML | T01, H02, H12a | [x] **Done** — FPT chat adapter + guardrail/context fail-closed; LLM chỉ viết copy từ band/factors/coverage/limits; 59 agent tests + full verify xanh |
 | T04 | Agent adapter hybrid (Post-MVP) | H17 | [ ] **FREEZE** tới sau submission |
 
 ### Hạ Giang (`giang`)
