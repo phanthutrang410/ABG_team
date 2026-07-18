@@ -1,8 +1,8 @@
 # MVP persistence schema — H19/H20
 
-> **Trạng thái:** `H19` **Done** — empty versioned `dwh` schema + Alembic revision `20260718_h19_dwh`. `H15` **Done** (decision #18) — `attendance_event` được phép nạp qua M06/H20 từ `mvp-attendance-over-time`. `H20` bắt đầu sau `H19` + `M06` (M05b + H15 artifacts sẵn). Không commit raw V59 / PII / legacy synthetic cấm.
+> **Trạng thái:** `H19` **Done** — empty versioned `dwh` schema + Alembic revision `20260718_h19_dwh`. `H15` **Done** (decision #18). `H20` **Done** — CLI/service importer (`app/dwh/import_gate.py`, `importer.py`, `cli.py`) nạp fixture attendance in-repo + semester qua `SILENT_SHIELD_SEMESTER_SOURCE_PATH` (atomic/idempotent/fail-closed; readiness report không PII). `H08` đọc adapter trên snapshot đã nạp. Không commit raw V59 / PII / legacy synthetic cấm.
 >
-> **Owner:** Hoàng · **Evidence khi Done:** migration revision, mapping metadata không PII, test DB rỗng/repeatable và import-gate test.
+> **Owner:** Hoàng · **Evidence:** migration revision; `tests/test_h20_import_gates.py`, `tests/test_h20_import.py`, `tests/test_h08_read_adapter.py`; CLI `python -m app.dwh.cli`.
 
 ## 1. Quyết định persistence
 
@@ -39,16 +39,24 @@ Nếu inventory legacy không có DDL truy cập được, H19 ghi `legacy_schem
 
 ## 4. Import gate của H20
 
-Input được đặt ở vị trí artifact có kiểm soát ngoài repo. H20 chỉ commit migration/code/test và readiness report tối thiểu, không commit export/fixture raw.
+Input semester đặt ở vị trí artifact có kiểm soát ngoài repo (`SILENT_SHIELD_SEMESTER_SOURCE_PATH`). Attendance dùng fixture H15 đã commit dưới `backend/tests/fixtures/attendance/`. H20 chỉ commit code/test/docs; không commit export V59 raw.
 
-Trước transaction, importer phải kiểm tra:
+**CLI (không phải FastAPI public endpoint):**
 
-1. M05b approval artifact có owner, quyền sử dụng, snapshot SHA-256 và record count khớp `source_manifest`.
-2. Đủ bảng domain điểm cùng `source_id` (+ `attendance_event` khi snapshot `H15` có); không có cross-source join.
-3. Schema, primary/unique key, term/grade range, row/reject count và `data_quality_report` hợp lệ.
-4. Không có key/value bị cấm: MSSV, tên, ngày sinh, email, SĐT, token, protected group hoặc raw score; không nạp legacy synthetic đã liệt kê / marker `"synthetic"`.
+```text
+python -m app.dwh.cli import-attendance
+python -m app.dwh.cli import-semester
+python -m app.dwh.cli readiness
+```
 
-Mọi lỗi phải rollback toàn bộ: không partial write. Re-run cùng `source_id`/hash phải idempotent; snapshot khác phải qua approval mới, không overwrite snapshot cũ im lặng.
+Trước transaction, `import_gate` kiểm tra:
+
+1. Approval artifact (M05b/H15) có owner, quyền sử dụng, snapshot SHA-256 và record count khớp bytes nguồn.
+2. Domain package M06 đủ bảng theo role (`primary` / `attendance`); cùng `source_id`; không cross-source join. Attendance tạo stub `student_dimension` dưới `mvp-attendance-over-time` trước khi insert events.
+3. Schema manifest + `data_quality_report` (row/reject count) hợp lệ.
+4. Domain payload không có key PII/token; không nạp marker `"synthetic"` / source ngoài allowlist.
+
+Mọi lỗi → zero write (không mở transaction ghi, hoặc rollback). Re-run cùng `source_id`+hash → `idempotent_skip`; hash khác trên cùng `source_id` → reject (không overwrite im lặng).
 
 ## 5. Verify và handoff
 

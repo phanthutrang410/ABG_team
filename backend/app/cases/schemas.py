@@ -21,7 +21,7 @@ class TransitionRequest(BaseModel):
     )
     reason_code: Optional[str] = None
     review_at: Optional[datetime] = None
-    # Input-only for assign; never echoed on public responses.
+    # Ignored on assign — H03 resolves advisor_ref from H08 only; kept for OpenAPI compat.
     advisor_ref: Optional[str] = None
     monitoring_until: Optional[datetime] = None
 
@@ -51,3 +51,6 @@ class CaseCreateRequest(BaseModel):
 
     case_id: str = Field(..., min_length=1)
     state: str = Field(default="new_signal")
+    # Internal routing identity for H08 assign resolve (never on TransitionResponse).
+    student_ref: Optional[str] = None
+    source_id: Optional[str] = None

@@ -41,6 +41,8 @@ class CaseStore:
         *,
         state: str = "new_signal",
         advisor_ref: Optional[str] = None,
+        student_ref: Optional[str] = None,
+        source_id: Optional[str] = None,
     ) -> CaseSnapshot:
         if self.get(case_id) is not None:
             raise TransitionError(
@@ -51,6 +53,8 @@ class CaseStore:
             case_id=case_id,
             state=parse_state(state),
             advisor_ref=advisor_ref,
+            student_ref=student_ref,
+            source_id=source_id,
         )
         return self.put(snapshot)
 

@@ -1,4 +1,4 @@
-"""MVP `dwh` persistence models (H19). Empty schema only — no seed/import (H20)."""
+"""MVP `dwh` persistence — H19 schema + H20 import + H08 read adapter."""
 
 from app.dwh.models import Base, DWH_TABLE_NAMES
 
