@@ -3,7 +3,7 @@
 > **Owner:** Hoàng
 > **Trạng thái:** Planned wave sau release gate hiện tại; không tự động block `D4r` / `V05` / `H09`.
 > **Nguồn chuẩn:** [Decision #22](04-decisions.md) · [Target architecture](../04-engineering/13-weekly-snapshot-global-agent-architecture.md) · [PRD](../02-product/04-prd.md) · [Process](../02-product/03-process.md) · [Ethics](../02-product/05-ethics.md) · [BRD](../02-product/08-brd.md).
-> **Ranh giới owner:** Hoàng sở hữu contract, backend/API, persistence, security scope và deploy. Frontend `G07–G09` vẫn thuộc Giang; adversarial/e2e `T05` thuộc Thu Trang trừ khi Sprint đổi owner rõ ràng.
+> **Ranh giới owner:** Hoàng sở hữu contract, backend/API, persistence, security scope và deploy. Frontend `G07–G09` thuộc **Khánh Duy** (decision #24); adversarial/e2e `T05` thuộc Thu Trang trừ khi Sprint đổi owner rõ ràng.
 
 Tài liệu này là task brief chi tiết cho các row mới trong [Sprint §3–4](03-sprint.md). `H28` chỉ chứng minh kiến trúc/decision đã được viết; nó **không** có nghĩa weekly feed, OpenAI runtime hay Global Agent đã ship.
 
@@ -298,9 +298,9 @@ Evidence / Done when: runbook có exact start/stop/replay/rollback; redacted sch
 
 | Hoàng hoàn tất | Consumer được mở | Contract/evidence bàn giao |
 |:--|:--|:--|
-| `H36` | Giang `G07` | Authenticated layout identity/scope contract + negative tests |
-| `H34a` + `H34b` + `H36` | Giang `G08` | Weekly report/briefing OpenAPI + ok/empty/stale/failed/baseline fixtures |
-| `H35` + `H36` | Giang `G09` | Advisor draft v2 + mapping-repair/no-send fixtures |
+| `H36` | Khánh Duy `G07` | Authenticated layout identity/scope contract + negative tests |
+| `H34a` + `H34b` + `H36` | Khánh Duy `G08` | Weekly report/briefing OpenAPI + ok/empty/stale/failed/baseline fixtures |
+| `H35` + `H36` | Khánh Duy `G09` | Advisor draft v2 + mapping-repair/no-send fixtures |
 | `H29` + `H34b` + `H37` | Thu Trang `T05` | Mocked provider/tool runtime, capability matrix và forbidden-effect hooks |
 | `H31` + `H34b` + `H35` + `H37` + `H38` | Hoàng `D6` | Release candidate workflow + full test/evidence set; `T05` là cross-lane QA bổ sung khi được board hóa |
 

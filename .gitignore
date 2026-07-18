@@ -3,6 +3,8 @@
 .env.*
 !.env.example
 frontend/.env.local
+.vercel/
+frontend/.vercel/
 
 # Reference clone (local only — do not commit)
 reference-Learning-Analytics-AI/

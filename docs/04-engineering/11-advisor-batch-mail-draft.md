@@ -1,6 +1,6 @@
 # Advisor-batch mail draft — nghiên cứu & contract mỏng
 
-> **Status:** **H22 Build Done** · Research lock (decision #20) · Owner research: Hoàng (`H21`) · API: Hoàng (`H22`) · FE: Giang (`G06`)
+> **Status:** **H22 Build Done** · Research lock (decision #20) · Owner research: Hoàng (`H21`) · API: Hoàng (`H22`) · FE: **Khánh Duy** (`G06`, decision #24)
 > **HTTP:** `GET /advisor-handoff-drafts` → `AdvisorHandoffDraftListResponse` (draft-only; **no** send endpoint)
 > **Nguồn:** [Process](../02-product/03-process.md) bước 9–11 · [PRD](../02-product/04-prd.md) FR-07 / FR-12 · [Ethics](../02-product/05-ethics.md) §4/§8 · [EPU fields](03-epu-reference-data-fields.md) §7 · H11a `neutral_draft`.
 > **Global Agent target:** Agent chỉ cung cấp action điều hướng tới `/notify`; grouping/eligibility/draft preview vẫn do application service deterministic thực hiện, không có `send_mail` tool. Xem [doc 13 §§10,12](13-weekly-snapshot-global-agent-architecture.md).
