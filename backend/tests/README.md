@@ -38,7 +38,7 @@ $env:TEST_DATABASE_URL="postgresql+psycopg://silentshield:silentshield@localhost
 backend/.venv/Scripts/python.exe -m pytest -q backend/tests -m "not slow and not eval"
 
 # Một tệp
-backend/.venv/Scripts/python.exe -m pytest -q backend/tests/test_h03_case_workflow.py
+backend/.venv/Scripts/python.exe -m pytest -q backend/tests/test_h03_care_workflow.py
 
 # Một test
 backend/.venv/Scripts/python.exe -m pytest -q backend/tests/test_public_route_policy.py::test_critical_public_routes_keep_their_documented_methods

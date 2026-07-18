@@ -37,6 +37,8 @@ frontend/.playwright/
 tests/system/test-results/
 tests/system/playwright-report/
 tests/system/blob-report/
+tests/system/release-test-results/
+tests/system/release-playwright-report/
 
 # OS / IDE
 .DS_Store

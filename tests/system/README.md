@@ -6,8 +6,11 @@ Bộ test này chạy qua PostgreSQL, FastAPI và Next.js thật. Không dùng `
 
 - `/health` xác nhận backend kết nối được database.
 - `/review-cases` xác nhận dữ liệu đã import đi qua public API và không lộ trường bị cấm.
+- Ngưỡng, tác động tổng hợp và fairness được đọc từ backend thật và đóng an toàn khi thiếu điều kiện công bố.
+- Agent thật từ chối yêu cầu lộ điểm mà không phụ thuộc model bên ngoài.
 - Đăng nhập được thực hiện trên trình duyệt thật.
 - Trang Phân tích phải hiển thị response nhận trực tiếp từ backend.
+- Workspace GVCN không tự sinh fixture khi API phân quyền phía server chưa sẵn sàng.
 
 ## Chuẩn bị
 
@@ -51,3 +54,16 @@ Có thể đặt `SYSTEM_TEST_PYTHON` để chọn Python environment khác. Env
 3. Không đưa PII, secret hoặc raw score vào dữ liệu test và báo cáo.
 4. Chỉ kiểm tra contract công khai và hành vi người dùng ổn định.
 5. Lỗi ở một runtime phải làm toàn bộ system test thất bại; không fallback sang fixture.
+
+## Kiểm tra bản online
+
+System test ở trên chỉ chứng minh ba runtime local kết nối đúng. Trước checkpoint 48h, chạy thêm cổng online:
+
+```powershell
+.\tests\system\release\run.ps1 `
+  -BaseUrl "https://<frontend>" `
+  -ApiBaseUrl "https://<backend>" `
+  -RepositoryUrl "https://github.com/<owner>/<repo>"
+```
+
+Xem [hướng dẫn release](release/README.md) và [checklist checkpoint 48h](release/CHECKLIST-48H.md). Cổng mặc định yêu cầu AI online trả `status=ok`; `-AllowUnavailableAi` chỉ dùng chẩn đoán contract và không đủ làm bằng chứng checkpoint.

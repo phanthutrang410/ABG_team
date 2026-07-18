@@ -61,7 +61,8 @@ Khi đặt `PLAYWRIGHT_BASE_URL`, Playwright không tự bật frontend. Ngườ
 | `advisor-routing.test.mts` | Quy tắc điều hướng và cờ local demo |
 | `e2e/auth-routing.spec.ts` | Đăng nhập, chọn vai, route guard và tài khoản trên layout |
 | `e2e/management-states.spec.ts` | Danh sách, stale, error/retry, fairness và tìm kiếm |
-| `e2e/case-workflow.spec.ts` | Hành động hợp lệ, mapping repair và giới hạn payload agent |
+| `e2e/case-workflow.spec.ts` | Hành động hợp lệ, mapping repair và refusal của agent |
+| `e2e/ai-explainability.spec.ts` | Giải thích có căn cứ, tác động ngưỡng tổng hợp và trợ lý điều hướng theo dữ liệu hiển thị |
 | `e2e/notify-drafts.spec.ts` | Bản nháp cần duyệt, không gửi tự động và trạng thái lỗi |
 
 ## Quy tắc viết test
@@ -73,6 +74,7 @@ Khi đặt `PLAYWRIGHT_BASE_URL`, Playwright không tự bật frontend. Ngườ
 5. Luôn kiểm tra các nhánh `empty`, `stale`, `error` hoặc `insufficient_data` khi thêm một consumer API mới.
 6. Với thao tác thay đổi trạng thái, kiểm tra cả nút được phép, nút bị cấm và payload gửi lên server.
 7. Không dùng `test.skip`, giảm assertion hoặc thêm timeout tùy ý để che lỗi không ổn định.
+8. Test agent phải phân biệt `ok`, `refused`, `insufficient_data`, `unavailable` và lỗi transport; không coi response đúng schema là bằng chứng dịch vụ AI đang hoạt động.
 
 Tài liệu tham chiếu chính thức: [Playwright Test](https://playwright.dev/docs/intro), [locators](https://playwright.dev/docs/locators), [mock API](https://playwright.dev/docs/mock), [cấu hình](https://playwright.dev/docs/test-configuration) và [CI](https://playwright.dev/docs/ci).
 

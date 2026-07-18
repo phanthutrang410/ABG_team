@@ -7,7 +7,10 @@
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
-    "report": "playwright show-report"
+    "test:release": "playwright test --config release.config.ts",
+    "test:release:headed": "playwright test --config release.config.ts --headed",
+    "report": "playwright show-report",
+    "report:release": "playwright show-report release-playwright-report"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

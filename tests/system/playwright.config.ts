@@ -25,7 +25,7 @@ const quote = (value: string) => `"${value.replaceAll('"', '\\"')}"`;
 
 export default defineConfig({
   testDir: ".",
-  testMatch: "*.spec.ts",
+  testMatch: "system.spec.ts",
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
