@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CaseStateBadge } from "@/components/badges";
 import { useSetTopbarInfo } from "@/components/AppShell";
+import { AdvisorUnavailable } from "@/components/AdvisorUnavailable";
 import {
   advisorDemoStorageKey,
   allowedAdvisorDemoActions,
@@ -11,6 +12,7 @@ import {
   type AdvisorDemoAction,
   type AdvisorDemoCase,
 } from "@/lib/advisor-demo";
+import { isAdvisorLocalDemoEnabled } from "@/lib/advisor-routing";
 import { FACTOR_LABEL } from "@/lib/factors";
 import { resolveLimitations } from "@/lib/limitations";
 
@@ -32,6 +34,14 @@ const FILTERS: { id: Filter; label: string }[] = [
 ];
 
 export function AdvisorWorkspace({ accountId }: { accountId: string }) {
+  if (!isAdvisorLocalDemoEnabled()) {
+    return <AdvisorUnavailable surface="Hàng đợi case GVCN" />;
+  }
+
+  return <AdvisorLocalDemoWorkspace accountId={accountId} />;
+}
+
+function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
   const [variant, setVariant] = useState(0);
   const [cases, setCases] = useState<AdvisorDemoCase[]>(() =>
     generateAdvisorDemoCases(accountId, 0, INITIAL_DEMO_NOW),

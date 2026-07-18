@@ -24,7 +24,7 @@ session_id,member,tool,started_at,ended_at,task_id,purpose,result,artifacts,comm
 | Cột | Ý nghĩa |
 |---|---|
 | `session_id` | Định dạng gợi ý: `YYYYMMDD-<TaskID>-<tên>-<tool>-<số thứ tự>` |
-| `member` | Tên trên board (Hoàng, Khánh Duy, Giang, Thu Trang, giang, Văn Hải) |
+| `member` | Tên trên board (Hoàng, Khánh Duy, Giang, Thu Trang, giang, Văn Hải). Lane hiện tại (decision #24): Duy=FE, Giang=ML; Hạ Giang=`giang` UAT |
 | `tool` | Claude Code / Claude.ai / ChatGPT / Cursor / Codex... |
 | `started_at` / `ended_at` | Giờ bắt đầu/kết thúc (ISO, UTC+7) |
 | `task_id` | ID task trên board sprint (VD: H05, M02, V07) |

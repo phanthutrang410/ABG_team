@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AdvisorDemoBanner } from "@/components/AdvisorDemoBanner";
+import { AdvisorUnavailable } from "@/components/AdvisorUnavailable";
 import { CaseStateBadge } from "@/components/badges";
 import { useSetTopbarInfo } from "@/components/AppShell";
 import { buildAdvisorFollowUps, type AdvisorFollowUpKind } from "@/lib/advisor-demo";
+import { isAdvisorLocalDemoEnabled } from "@/lib/advisor-routing";
 import { useAdvisorDemoSnapshot } from "@/lib/use-advisor-demo";
 
 type ScheduleFilter = "all" | "overdue" | AdvisorFollowUpKind;
@@ -13,6 +15,14 @@ const DEMO_TODAY = new Date("2026-07-18T12:00:00+07:00");
 const SOON_LIMIT = new Date("2026-07-26T00:00:00+07:00");
 
 export function AdvisorFollowUpsWorkspace({ accountId }: { accountId: string }) {
+  if (!isAdvisorLocalDemoEnabled()) {
+    return <AdvisorUnavailable surface="Lịch theo dõi" />;
+  }
+
+  return <AdvisorFollowUpsLocalDemo accountId={accountId} />;
+}
+
+function AdvisorFollowUpsLocalDemo({ accountId }: { accountId: string }) {
   const { cases } = useAdvisorDemoSnapshot(accountId);
   const followUps = useMemo(() => buildAdvisorFollowUps(cases), [cases]);
   const [filter, setFilter] = useState<ScheduleFilter>("all");

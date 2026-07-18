@@ -86,7 +86,7 @@ export function ReportModal({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Báo cáo tổng thể — Sinh viên trong diện cần theo dõi"
+        aria-label="Báo cáo tổng thể: Sinh viên trong diện cần theo dõi"
         className="ss-report-sheet mx-auto max-w-5xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
@@ -119,24 +119,24 @@ export function ReportModal({
                 EduSignal · Silent Shield
               </p>
               <h2 className="text-xl md:text-2xl font-bold text-slate-800 mt-1">
-                Báo cáo tổng thể — Sinh viên trong diện cần theo dõi
+                Báo cáo tổng thể: Sinh viên trong diện cần theo dõi
               </h2>
               <p className="text-sm text-slate-500 mt-1">
-                Hệ thống chỉ gợi ý mức ưu tiên rà soát — mọi quyết định do con người thực hiện.
+                Hệ thống chỉ gợi ý mức ưu tiên rà soát. Mọi quyết định do con người thực hiện.
               </p>
             </div>
             {latest && (
               <dl className="shrink-0 text-xs text-slate-500 space-y-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
                 <div className="flex gap-2">
-                  <dt className="font-semibold text-slate-600">Snapshot:</dt>
+                  <dt className="font-semibold text-slate-600">Cập nhật:</dt>
                   <dd className="tabular-nums">{formatSnapshot(latest.calculated_at)}</dd>
                 </div>
                 <div className="flex gap-2">
-                  <dt className="font-semibold text-slate-600">Dataset:</dt>
+                  <dt className="font-semibold text-slate-600">Bộ dữ liệu:</dt>
                   <dd>{latest.dataset_version}</dd>
                 </div>
                 <div className="flex gap-2">
-                  <dt className="font-semibold text-slate-600">Model:</dt>
+                  <dt className="font-semibold text-slate-600">Phiên bản phân tích:</dt>
                   <dd>{latest.model_version}</dd>
                 </div>
               </dl>
@@ -219,11 +219,11 @@ export function ReportModal({
           {/* Phạm vi & cam kết — bắt buộc theo plan.md §3.2 / RULES */}
           <footer className="border-t border-slate-100 pt-4 space-y-1.5 text-[11.5px] text-slate-400 leading-relaxed">
             <p>
-              Danh sách gồm sinh viên có tín hiệu từ nguồn dữ liệu đã duyệt — danh sách toàn bộ sinh viên toàn
-              trường cần API bổ sung (design spec §9). Case đã loại (dismissed) không đưa vào báo cáo.
+              Danh sách gồm sinh viên có tín hiệu từ nguồn dữ liệu đã duyệt, không phải danh sách toàn bộ sinh viên của trường.
+              Những case đã loại không được đưa vào báo cáo.
             </p>
             <p>
-              Mã SV là mã định danh ẩn danh; báo cáo không chứa điểm số nội bộ của model hay thông tin cá nhân.
+              Mã SV là mã định danh được bảo vệ; báo cáo không chứa điểm số nội bộ của mô hình hay thông tin cá nhân.
               &ldquo;Mới&rdquo; = tín hiệu ở trạng thái Tín hiệu mới trong kỳ dữ liệu này.
             </p>
           </footer>

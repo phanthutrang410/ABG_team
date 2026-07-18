@@ -245,13 +245,8 @@ export type DemoAccount = {
 };
 
 export const ROLE_LABEL: Record<Role, string> = {
-  ban_quan_ly: "Ban quản lý — giám sát học tập",
+  ban_quan_ly: "Ban quản lý học tập",
   gvcn: "Giảng viên chủ nhiệm",
-};
-
-export const ROLE_ICON: Record<Role, string> = {
-  ban_quan_ly: "👔",
-  gvcn: "🧑‍🏫",
 };
 
 /* ---------- Nhãn hiển thị (đã dùng nhất quán trong docs/prototype trước) ---------- */

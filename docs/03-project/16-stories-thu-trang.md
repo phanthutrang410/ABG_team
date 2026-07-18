@@ -12,6 +12,7 @@ Board tổng: [Sprint](03-sprint.md) · Evidence: [Release evidence](07-release-
 | Gate / deadline | P2 · ~22:45 (sau cửa sổ fix ≥45–60 phút từ V07+A05) |
 | Owner | **Thu Trang** (chuyển từ Văn Hải · 18/7) |
 | Depends | D3 ✓, V07, A05 → **D4r xanh**, rồi mới nộp |
+| Status | **Done 18/7 tối** — Live `https://abg-team.vercel.app` · GitHub `https://github.com/phanthutrang410/ABG_team` · receipt ngoài repo → Hoàng/`H16` |
 | Gửi sau nộp | Hoàng (`H16` evidence) · copy team |
 
 ### Việc làm — từng bước

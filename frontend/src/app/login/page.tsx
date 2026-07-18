@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { DEMO_ACCOUNTS, roleHome, useSession } from "@/lib/session";
-import { ROLE_ICON, ROLE_LABEL, type Role } from "@/lib/types";
+import { ROLE_LABEL, type Role } from "@/lib/types";
 
 /**
  * Đăng nhập DEMO: tài khoản + mật khẩu + captcha ảnh chống bot (ui-design-spec §3).
@@ -83,6 +83,13 @@ export default function LoginPage() {
     if (ready && account && activeRole) router.replace(roleHome(activeRole));
   }, [ready, account, activeRole, router]);
 
+  useEffect(() => {
+    // Nạp trước hai không gian làm việc để chuyển vai không giữ màn đăng nhập
+    // trong lúc Next.js tải route đích.
+    router.prefetch("/overview");
+    router.prefetch("/analysis");
+  }, [router]);
+
   function refreshCaptcha() {
     setCaptchaText(generateCaptchaText());
     setCaptchaInput("");
@@ -92,7 +99,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     if (captchaInput.trim().toUpperCase() !== captchaText) {
-      setError("Mã xác nhận chưa đúng — vui lòng thử lại.");
+      setError("Mã xác nhận chưa đúng. Vui lòng thử lại.");
       refreshCaptcha();
       return;
     }
@@ -103,12 +110,12 @@ export default function LoginPage() {
       return;
     }
     login(acc.id);
-    if (acc.roles.length === 1) router.push(roleHome(acc.roles[0]));
+    if (acc.roles.length === 1) router.replace(roleHome(acc.roles[0]));
   }
 
   function selectRole(role: Role) {
     chooseRole(role);
-    router.push(roleHome(role));
+    router.replace(roleHome(role));
   }
 
   return (
@@ -120,38 +127,49 @@ export default function LoginPage() {
       <div style={rightPanel}>
         <div style={{ width: "100%" }}>
           <div style={card}>
-            {account && !activeRole ? (
+            {/* Giữ màn chọn vai cho đến khi route đích thay thế hoàn toàn trang
+                hiện tại. Nếu activeRole cập nhật trước navigation, tuyệt đối
+                không rơi ngược về form đăng nhập. */}
+            {account ? (
               <div style={{ display: "grid", gap: 20 }}>
-                <div>
-                  <p style={{ margin: "0 0 0.35rem", color: "#64748b", fontSize: 14 }}>Chào {account.name}</p>
-                  <h1 style={{ margin: 0, fontSize: 30, color: "#0f172a" }}>Chọn vai để tiếp tục</h1>
+                <div style={{ textAlign: "center" }}>
+                  <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700, color: "#0f172a" }}>Chọn không gian làm việc</h1>
                   <p style={{ margin: "0.65rem 0 0", fontSize: 14.5, color: "#64748b", lineHeight: 1.55 }}>
-                    Đây là bước 2 của đăng nhập. Mỗi vai chỉ thấy các chức năng phù hợp với phạm vi được giao.
+                    Lựa chọn vai trò phù hợp để bắt đầu công việc của bạn.
                   </p>
                 </div>
 
                 <div style={{ display: "grid", gap: 10 }}>
                   {account.roles.map((role) => (
-                    <button key={role} type="button" onClick={() => selectRole(role)} style={roleButton}>
-                      <span style={{ fontSize: 23 }} aria-hidden>{ROLE_ICON[role]}</span>
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => selectRole(role)}
+                      style={roleButton}
+                      onMouseEnter={(e) => Object.assign(e.currentTarget.style, roleButtonHover)}
+                      onMouseLeave={(e) => Object.assign(e.currentTarget.style, roleButton)}
+                    >
+                      <span style={roleIconBox} aria-hidden><RoleIcon role={role} /></span>
                       <span style={{ display: "grid", gap: 2, textAlign: "left" }}>
                         <strong style={{ fontSize: 15.5, color: "#0f172a" }}>{ROLE_LABEL[role]}</strong>
                         <span style={{ fontSize: 12.5, color: "#64748b" }}>
-                          {role === "ban_quan_ly" ? "Tổng quan, phân tích và duyệt bàn giao" : "Case đã được phê duyệt và bàn giao"}
+                          {role === "ban_quan_ly" ? "Theo dõi, phân tích và phê duyệt bàn giao" : "Tiếp nhận, theo dõi và hỗ trợ sinh viên"}
                         </span>
                       </span>
-                      <span style={{ marginLeft: "auto", color: "#dc2626" }} aria-hidden>→</span>
+                      <span style={roleArrow} aria-hidden><ArrowRightIcon /></span>
                     </button>
                   ))}
                 </div>
 
-                <button type="button" onClick={logout} style={linkBtn}>← Quay lại đăng nhập</button>
+                <button type="button" onClick={logout} style={backButton}>
+                  <ArrowLeftIcon /> Sử dụng tài khoản khác
+                </button>
               </div>
             ) : (
               <>
-                <h1 style={{ margin: "0 0 0.5rem", fontSize: 32, color: "#0f172a" }}>Đăng nhập</h1>
-                <p style={{ margin: "0 0 2rem", fontSize: 15.5, color: "#64748b" }}>
-                  Hệ thống hỗ trợ quan tâm sinh viên — tính năng hiển thị theo quyền của bạn.
+                <h1 style={{ margin: "0 0 0.5rem", fontSize: 32, fontWeight: 700, color: "#0f172a", textAlign: "center" }}>Đăng nhập</h1>
+                <p style={{ margin: "0 0 2rem", fontSize: 15.5, color: "#64748b", lineHeight: 1.55, textAlign: "center" }}>
+                  Hệ thống hỗ trợ theo dõi và quan tâm sinh viên. Các chức năng được hiển thị theo vai trò của bạn.
                 </p>
 
                 <form onSubmit={submit} style={{ display: "grid", gap: 20 }}>
@@ -189,7 +207,7 @@ export default function LoginPage() {
                 </div>
               </label>
               <label style={lbl}>
-                Mã xác nhận (chống bot)
+                Mã xác nhận
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <canvas ref={canvasRef} width={190} height={58} style={captchaCanvas} aria-hidden />
                   <button type="button" onClick={refreshCaptcha} title="Đổi mã khác" style={ghostBtn}>
@@ -229,7 +247,7 @@ export default function LoginPage() {
               <button type="button" onClick={() => setForgot((f) => !f)} style={linkBtn}>Quên mật khẩu?</button>
               {forgot && (
                 <p style={{ margin: 0, padding: "8px 12px", borderRadius: 8, background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 13, color: "#475569" }}>
-                  Liên hệ quản trị hệ thống của trường để đặt lại mật khẩu. (Demo — không gửi email thật.)
+                  Liên hệ quản trị hệ thống của trường để được cấp lại mật khẩu.
                 </p>
               )}
                 </form>
@@ -285,6 +303,31 @@ function ArrowRightIcon() {
   );
 }
 
+function ArrowLeftIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
+  );
+}
+
+function RoleIcon({ role }: { role: Role }) {
+  if (role === "ban_quan_ly") {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="3" />
+        <path d="M7 16v-3M12 16V8M17 16v-5" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3.5 20a5.5 5.5 0 0111 0M15.5 12.5l2 2 3.5-4" />
+    </svg>
+  );
+}
+
 const pageWrap: CSSProperties = { minHeight: "100vh", display: "flex", background: "#fff" };
 const leftPanel: CSSProperties = {
   flex: "0 0 50%",
@@ -329,4 +372,8 @@ const primaryBtn: CSSProperties = {
 const primaryBtnHover: CSSProperties = { ...primaryBtn, background: "#b91c1c" };
 const ghostBtn: CSSProperties = { padding: "0 18px", borderRadius: 10, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer", color: "#dc2626", display: "flex", alignItems: "center" };
 const linkBtn: CSSProperties = { background: "none", border: "none", color: "#dc2626", fontSize: 15, cursor: "pointer", justifySelf: "start", padding: 0 };
-const roleButton: CSSProperties = { width: "100%", display: "flex", alignItems: "center", gap: 13, padding: "15px 16px", borderRadius: 12, border: "1px solid #e2e8f0", background: "#fff", cursor: "pointer" };
+const roleButton: CSSProperties = { width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "16px", borderRadius: 12, border: "1px solid #e2e8f0", background: "#fff", cursor: "pointer", boxShadow: "0 1px 2px rgba(15, 23, 42, 0.03)", transition: "border-color 0.15s, box-shadow 0.15s, transform 0.15s" };
+const roleButtonHover: CSSProperties = { ...roleButton, borderColor: "#fca5a5", boxShadow: "0 6px 16px rgba(220, 38, 38, 0.08)", transform: "translateY(-1px)" };
+const roleIconBox: CSSProperties = { width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, borderRadius: 11, background: "#fef2f2", color: "#dc2626", border: "1px solid #fee2e2" };
+const roleArrow: CSSProperties = { marginLeft: "auto", display: "flex", color: "#dc2626", flexShrink: 0 };
+const backButton: CSSProperties = { display: "inline-flex", alignItems: "center", gap: 8, background: "none", border: "none", color: "#dc2626", fontSize: 14.5, fontWeight: 500, cursor: "pointer", justifySelf: "start", padding: 0 };

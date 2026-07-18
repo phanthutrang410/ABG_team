@@ -2,21 +2,23 @@
 
 > Nguồn chuẩn: [Quy chế VAIC](../01-requirements/01-vaic-rules.md) · [PRD MVP](../02-product/04-prd.md) · [Process](../02-product/03-process.md) · [RULES.md](../../RULES.md).
 >
-> **Điều chỉnh phân công 18/7:** Hoàng là owner duy nhất hoàn thiện tài liệu/contract nguồn chuẩn. Build tập trung vào Hoàng, Khánh Duy, **Giang** (FE) và Thu Trang. **Hạ Giang** (board ID `giang`) và Văn Hải nhận task từ P2: QA/UAT/claim/slide skeleton và release smoke — không sửa canonical docs/code. **18/7 chiều:** `V05` nộp CP2 chuyển **Thu Trang**; Hải giữ `V07` (checklist chi tiết).
+> **Điều chỉnh phân công 18/7:** Hoàng là owner duy nhất hoàn thiện tài liệu/contract nguồn chuẩn. Build tập trung vào Hoàng, Khánh Duy, Giang và Thu Trang. **Hạ Giang** (board ID `giang`) và Văn Hải nhận task từ P2: QA/UAT/claim/slide skeleton và release smoke — không sửa canonical docs/code. **18/7 chiều:** `V05` nộp CP2 chuyển **Thu Trang**; Hải giữ `V07` (checklist chi tiết).
+>
+> **Đảo lane 18/7 tối (decision #24):** **Khánh Duy** = Frontend; **Giang** (Nguyễn Trường Giang) = Data/ML / model / predict. Task ID không đổi; Owner task mở theo lane mới. **Hạ Giang** không đổi.
 >
 > **Chặn phạm vi hybrid (forecasting):** Freeze hoàn toàn `M07`/`H14`/`M08`/`H17`/`T04` tới sau submission. Điểm danh theo thời gian **thuộc MVP** (sau `H15`); thiếu nguồn → `insufficient_data`; **không** thay bằng synthetic để claim E2E.
 >
 > **Realign chốt ~05:45 18/7:** Direction giữ nguyên (prototype care/review, không claim dự báo dropout đã chứng minh). Wave update: `H06a-r`/`H11a-r` Done; `H06b` harden landed; `D4a` Live shell Done; `G05`/`T03` unblocked. Chi tiết §1.2 + board §3.
 
-**Quy ước tên:** **Giang** = Nguyễn Trường Giang (frontend). **Hạ Giang** = Trần Hạ Giang (UAT / claim-copy / slide skeleton; board ID `giang`). Không viết tắt “giang” khi phân công miệng — luôn dùng **Hạ Giang** vs **Giang**. ID task ổn định; cột Owner là nguồn phân công.
+**Quy ước tên:** **Giang** = Nguyễn Trường Giang (**ML / model / predict**). **Khánh Duy** = **Frontend**. **Hạ Giang** = Trần Hạ Giang (UAT / claim-copy / slide skeleton; board ID `giang`). Không viết tắt “giang” khi phân công miệng — luôn dùng **Hạ Giang** vs **Giang**. ID task ổn định; cột Owner là nguồn phân công.
 
 | Thành viên | Lane đang chịu trách nhiệm | Không chịu trách nhiệm |
 |:--|:--|:--|
-| Hoàng | Tất cả tài liệu/contract nguồn chuẩn; backend/API; deploy; tài liệu release | Không tự viết model/fusion của Duy |
-| Khánh Duy | Data/ML, source validation, baseline semester model | Không hoàn thiện Markdown contract/PRD; không làm hybrid tới sau submission |
-| Giang | Frontend integration và UI | Không tự chốt copy/contract |
+| Hoàng | Tất cả tài liệu/contract nguồn chuẩn; backend/API; deploy; tài liệu release | Không tự viết model/fusion của Giang |
+| Khánh Duy | Frontend integration và UI (`G06` Notify, attendance UI, `G07`–`G09`) | Không hoàn thiện Markdown contract/PRD; không tự chốt copy/contract |
+| Giang | Data/ML, source validation, baseline/model/predict (open `M07`/`M08` khi unfreeze) | Không tự chốt copy/contract; không làm hybrid tới sau submission |
 | Thu Trang | Agent adapter, grounding/refusal tests; **nộp Checkpoint 2 (`V05`)** | Không tự tính/sửa mức ưu tiên; không nộp CP2 trước `D4r` |
-| Hạ Giang (`giang`) | UAT, claim-copy review, slide + asset skeleton/mô tả | Không sửa canonical docs hoặc code; không nhầm với Giang (FE) |
+| Hạ Giang (`giang`) | UAT, claim-copy review, slide + asset skeleton/mô tả | Không sửa canonical docs hoặc code; không nhầm với Giang (ML) |
 | Văn Hải | QA release (`V07`), script/video, nộp cổng cuối (`V06`), AI-log rà | Không sửa canonical docs, deploy hoặc code; **không** nộp CP2 (`V05` → Thu Trang) |
 
 ## 1. Cổng BTC và gate nội bộ
@@ -33,7 +35,7 @@
 | P0 | 17/7 11:00–15:00 | Scaffold | Health, FE shell | [x] (M01 Done — PR #16) |
 | P0.5 | kế hoạch 17/7 22:30–18/7 00:30 | Contract lock | `H05a` + `M04` Done; schema/code chỉ theo contract | **[x] Done** — `H05a` + `M04` + `H10` (mốc cũ đã trễ) |
 | P1 | recovery 18/7 sáng → CP1 | Vertical slice | Baseline điểm theo kỳ + điểm danh theo thời gian + CP1 | Mở — `M05b`/`H15` Done; còn `M06`… |
-| P2 | 18/7 11:00–23:00 | Rubric + live | UI/API/test + QA→fix→re-smoke + CP2 | **D4b Done** — còn V07+A05→D4r→V05 |
+| P2 | 18/7 11:00–23:00 | Rubric + live | UI/API/test + QA→fix→re-smoke + CP2 | **V05 Done** — còn H16/H09/P3 |
 | P3 | 18/7 23:00–19/7 11:00 | Release | Docs cuối, slide/video, AI log, form nộp | Chưa |
 
 ### 1.1 Recovery P0.5 → P1 (chốt lúc ~02:03 +07)
@@ -65,7 +67,7 @@ Baseline khóa sau review progress/direction. **Không đổi** product directio
 
 **Bổ sung board:** Critical path Data hoàn tất tới `M02` (sau `H20`+`H08` **Done**) — Profile `M01`+`H18` **Done**; `M05a`/`H06c`/`M05b`/`H15`/`M06`/`H20`/`H08`/`M02`/`M03`/`H02`/`H04`/`H13` **Done** (decision #18). `H06b` = **Done — transition core** + deploy-blocker harden. `T02` = core/library Done; runtime FR-08 theo `H23`–`H26`. Stretch FR-12: `H21` Done → `H22`/`G06`. `V08` defer (decision #19).
 
-**Owner ngay:** Hoàng — **`D4b`/`H11b`/`H22`/`H27` Done** (Vercel candidate `https://abg-team.vercel.app`); chờ `V07`+`A05` → `D4r`. Giang — **G05–G04 Done** (PR #23); stretch **`G06` unblocked** (sau H22). Thu Trang — T01–T03 + T02 core Done; **`V05` nộp CP2** sau D4r (story [16](16-stories-thu-trang.md)). Văn Hải — **`V07` mở** — checklist từng bước + output [09](09-stories-van-hai.md); `V08` defer. **Hạ Giang** — full **A05** UAT trên Live; slide skeleton. Khánh Duy — M07/M08 freeze.
+**Owner ngay:** Hoàng — **`H16` mở** (sau V05 Done). **Thu Trang** — `V05` **Done** (CP2 đã nộp). **Khánh Duy** (FE) — `G06`/attendance UI. **Giang** (ML) — freeze. Văn Hải — V02/D2/V08. **Hạ Giang** — D1 slide theo Live URL đã nộp.
 
 ## 2. Boundary bắt buộc cho ML, agent và hybrid
 
@@ -147,41 +149,45 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | D3 | GitHub public + PII/secret scan | — | [x] Done — tree sạch; **residual history accept CP2**; trước final: clean submission repo hoặc purge có phê duyệt |
 | D4a | Deploy infrastructure / Live shell (health + rollback sẵn) | H07, D3 | [x] **Done** — Live shell: API http://52.74.255.88:8000/health · FE http://52.74.255.88:3000 · EC2 i-0b0576945d080cb3f (**NOT** D4b) |
 | D4b | Product smoke list→case trên Live URL | D4a, H02, G02 | [x] **Done** — 2026-07-18 ~13:05 +07: health `database:true`; `GET /review-cases` state=ok n=50; detail `rc-s-00518c9485a9` band=`can_ra_soat`; FE `/login` `/dashboard` 200; no forbidden fields; images `:d4b` + Postgres import |
-| D4r | Fix từ QA → redeploy → re-smoke | D4b, V07, A05 | [ ] BLOCKED → V07, **A05** · D4b Done |
-| H16 | Acceptance matrix + release evidence | A05, V07, V05 | [ ] BLOCKED → A05, V07, V05 |
-| H09 | README + verify/known-limit note cuối | H02, D4r, H16 | [ ] BLOCKED → D4r, H16 · H02 Done |
+| D4r | Fix từ QA → redeploy → re-smoke | D4b, V07, A05 | [x] **Done** — Vercel Live URL; API `:d4r`; advisor+explanation envelopes; evidence [07](07-release-evidence.md) |
+| H16 | Acceptance matrix + release evidence | A05, V07, V05 | [ ] **TODO — unblocked** · V05 Done · A05+V07 Done ([18](18-v07-a05-smoke-uat-2026-07-18.md)) |
+| H09 | README + verify/known-limit note cuối | H02, D4r, H16 | [ ] BLOCKED → H16 · D4r Done · H02 Done |
 | D5 | AI collaboration log từ V08 | V08 | [ ] BLOCKED → V08 · V08 **defer** gần CP2/D5 |
 | H15 | Attendance source approval + amendment (**MVP**) | H10 + approval artifact | [x] **Done** — decision #18; fixture `mvp-attendance-over-time`; [12-h15…](12-h15-attendance-approval-prep.md) |
 | H17 | Post-MVP hybrid public API/envelope (forecast/fusion) | H14, M08 | [ ] BLOCKED → H14, M08 · **FREEZE** |
 
-### Khánh Duy
+### Khánh Duy (FE — decision #24)
+
+> Lane hiện tại: **Frontend**. Task `M*` Done bên dưới là lịch sử (làm khi còn lane ML); open ML → **Giang**.
 
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
-| M01 | Quarantine/remove legacy ML synthetic (reopen) | — | [x] **Done** — PR #16 (`1046ffe`); guard `tests/test_m01_legacy_quarantine.py`; mở `H18` |
-| M04 | Handoff kỹ thuật Data/ML cho Hoàng | — | [x] Done — [handoff](10-m04-data-ml-handoff.md); khóa bởi H10 |
-| H06c | FairnessReport schema + fail-closed fixture | H10 | [x] **Done** — PR #17; fail-closed fixture |
-| M05a | Build semester source gate (code/tests) | H10 | [x] **Done** — PR #17; `app/ml/source_gate` + tests |
-| M05b | Approved source available (artifact duyệt) | M05a + approval | [x] **Done** — [14-m05b…](14-m05b-semester-approval.md); team approver (decision #18) |
-| M06 | Fixture 4 bảng domain + manifests + quality tests | M05b | [x] **Done** — `app/ml/domain` transform + quality report; attendance manifest/DQR committed; `tests/test_m06_domain_fixture.py` (46); mở `H20` |
-| M02 | Baseline semester ML | M06, H06a, H08 | [x] **Done** — `app/ml/scoring` (trend/volatility/attendance-trend + model_score/band/factors); `tests/test_m02_baseline_scoring.py` (28); mở `H02` |
-| M07 | Nghiên cứu hybrid (research-only) | M02, H02, H13 | [ ] **FREEZE** tới sau submission |
-| M03 | Fairness gate FPR/ΔFPR/N | M02, H06c | [x] **Done** — `app/ml/fairness/gate.py` fail-closed (catalog rỗng → `insufficient_data`); `tests/test_m03_fairness_gate.py` (15) |
-| M08 | Attendance forecast + gated fusion (Post-MVP) | H15, M02, H14 | [ ] **FREEZE** tới sau submission |
+| G01 | FE shell + list mock | — | [x] (mock tạm; G05 phải thay) · historical FE trước #24 |
+| G05 | Thay mock bằng public DTO/fixture đã validate | H11a | [x] **Done** — types/fixtures; xóa mock-review-list; AI-log G05; PR #23 path · historical |
+| G02 | Dashboard → cohort → case dùng API | G05, H02 | [x] **Done** — `lib/api.ts` → `/review-cases`; fail-closed; AI-log G02 · historical |
+| G03 | Care UI review/handoff | H03, H12a | [x] **Done** — `CareActions.tsx` Process §4; AI-log G03 · historical |
+| G04 | Fairness/privacy/threshold panel | H04, H12a | [x] **Done** — login/role + Fairness/Threshold; AI-log G04; PR #23 · historical |
+| G06 | FE filter theo advisor + Copy/`mailto:` draft lô | H22, G05 | [ ] **TODO — owner Duy** · unblocked (H22+G05 Done); stretch FR-12 |
+| G07 | Authenticated layout + global Agent shell | H36 | [ ] **TODO — owner Duy** · unblocked (H36 Done); PR #35: `/analysis`→`/advisor#cases` + fail-closed default (local demo flag only) — **chưa** Done: cần wire scoped API + auth shell thật, không coi localStorage demo là Done |
+| G08 | Weekly briefing/report UI | H34b, G07 | [ ] BLOCKED → G07 · **owner Duy** |
+| G09 | `/notify` advisor draft FE | H35, G07 | [ ] BLOCKED → G07 · **owner Duy** |
 
-### Giang
+### Giang (ML — decision #24)
+
+> Lane hiện tại: **Data/ML / model / predict**. Task `G*` Done là lịch sử FE trước #24; open FE → **Khánh Duy**.
 
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
-| G01 | FE shell + list mock | — | [x] (mock tạm; G05 phải thay) |
-| G05 | Thay mock bằng public DTO/fixture đã validate | H11a | [x] **Done** — types/fixtures; xóa mock-review-list; AI-log G05; PR #23 path |
-| G02 | Dashboard → cohort → case dùng API | G05, H02 | [x] **Done** — `lib/api.ts` → `/review-cases`; fail-closed `upstream_unavailable`; AI-log G02 |
-| G03 | Care UI review/handoff | H03, H12a | [x] **Done** — `CareActions.tsx` Process §4; AI-log G03 |
-| G04 | Fairness/privacy/threshold panel | H04, H12a | [x] **Done** — login/role + Fairness/Threshold panels; AI-log G04; PR #23 |
-| G06 | FE filter theo advisor + Copy/`mailto:` draft lô | H22, G05 | [ ] **TODO** — unblocked (H22+G05 Done); stretch FR-12; không block D4b |
-| G07 | Authenticated layout + global Agent shell | H36 | [ ] **TODO — unblocked** (H36 Done) |
-| G08 | Weekly briefing/report UI | H34b, G07 | [ ] BLOCKED → G07 · (H34b Done) |
-| G09 | `/notify` advisor draft FE | H35, G07 | [ ] BLOCKED → G07 · (H35 Done) |
+| M01 | Quarantine/remove legacy ML synthetic (reopen) | — | [x] **Done** — PR #16 · historical (Duy khi còn ML) |
+| M04 | Handoff kỹ thuật Data/ML cho Hoàng | — | [x] Done — [handoff](10-m04-data-ml-handoff.md) · historical |
+| H06c | FairnessReport schema + fail-closed fixture | H10 | [x] **Done** — PR #17 · historical |
+| M05a | Build semester source gate (code/tests) | H10 | [x] **Done** — PR #17 · historical |
+| M05b | Approved source available (artifact duyệt) | M05a + approval | [x] **Done** — [14-m05b…](14-m05b-semester-approval.md) · historical |
+| M06 | Fixture 4 bảng domain + manifests + quality tests | M05b | [x] **Done** — `app/ml/domain` · historical |
+| M02 | Baseline semester ML | M06, H06a, H08 | [x] **Done** — `app/ml/scoring` · historical |
+| M07 | Nghiên cứu hybrid (research-only) | M02, H02, H13 | [ ] **FREEZE** · **owner Giang** tới sau submission |
+| M03 | Fairness gate FPR/ΔFPR/N | M02, H06c | [x] **Done** — fairness gate · historical |
+| M08 | Attendance forecast + gated fusion (Post-MVP) | H15, M02, H14 | [ ] **FREEZE** · **owner Giang** tới sau submission |
 
 ### Thu Trang
 
@@ -192,20 +198,20 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | T02 | Agent grounded explanation core/library | T01, H02, H12a | [x] **Done — core/library only**: FPT text adapter + mocked grounding tests; context service/HTTP/provider runtime và FR-08 E2E theo `H23`–`H26` |
 | T04 | Agent adapter hybrid (Post-MVP) | H17 | [ ] **FREEZE** tới sau submission |
 | T05 | Agent tool/RBAC/adversarial e2e matrix | H29, H34b, H37, G07 | [ ] BLOCKED → G07 · (H29/H34b/H37 Done) |
-| V05 | Nộp Checkpoint 2 (Live URL + GitHub → BTC) | D3, D4r, V07 | [ ] BLOCKED → D4r, V07 · **owner chuyển từ Văn Hải → Thu Trang** (18/7); story [16](16-stories-thu-trang.md) |
+| V05 | Nộp Checkpoint 2 (Live URL + GitHub → BTC) | D3, D4r, V07 | [x] **Done** — Thu Trang nộp CP2 18/7 tối · Live=`https://abg-team.vercel.app` · GitHub `phanthutrang410/ABG_team` · receipt ngoài repo |
 
 ### Hạ Giang (`giang`)
 
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
-| A05 | UAT / claim-copy review → gap cho Hoàng | H02, G02, H03, G03, M03, H04, G04, H26, D4b, H12a | [ ] **TODO** — unblocked (deps Done kể cả D4b); full UAT trên Live; **bắt buộc trước D4r** |
+| A05 | UAT / claim-copy review → gap cho Hoàng | H02, G02, H03, G03, M03, H04, G04, H26, D4b, H12a | [x] **Done** — [18](18-v07-a05-smoke-uat-2026-07-18.md); gaps feed D4r |
 | D1 | Asset slide + mô tả dự án nộp | V02, H12b, H16, D4r | [ ] BLOCKED → V02… · **skeleton slide/claim matrix chạy ngay** (chưa screenshot thiếu evidence) |
 
 ### Văn Hải
 
 | ID | Task | Depends | Status |
 |:--|:--|:--|:--|
-| V07 | QA release + smoke độc lập (lần 1) | D3, D4b | [ ] **TODO** — unblocked; **checklist + output template** [09](09-stories-van-hai.md); defect → D4r; **không** nộp CP2 |
+| V07 | QA release + smoke độc lập (lần 1) | D3, D4b | [x] **Done — PASS WITH MAJORS** · [18](18-v07-a05-smoke-uat-2026-07-18.md); defect → D4r |
 | V02 | Script demo 4′ + Q&A 2′, rehearsal | D4r, G02, H26, G03, G04, H12a | [ ] BLOCKED → D4r… · case-local Agent chỉ claim theo Live evidence; Global Agent/weekly briefing cần G07+ và chưa ship |
 | D2 | Video ≤5 phút đúng Live URL | D1, D4r | [ ] BLOCKED → D1, D4r |
 | V08 | Rà AI log → gap cho Hoàng | H05b | [ ] **DEFER** gần CP2 / trước D5 — log một thể (decision #19); không làm ngay |
@@ -217,7 +223,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 
 **Lane:** docs/contract nguồn chuẩn, backend/API, deploy, release evidence.
 **Read first:** PRD §§4–8, Ethics, Process §4, decisions, [EPU contract](../04-engineering/04-epu-data-integration-contract.md), [Data-ML](../04-engineering/08-data-ml-scoring-fairness-contract.md).
-**Không làm:** tự viết model/fusion của Duy.
+**Không làm:** tự viết model/fusion của Giang.
 **Next wave:** target architecture [doc 13](../04-engineering/13-weekly-snapshot-global-agent-architecture.md); full Task Brief `H28/H28a/H29–H38/D6` tại [Stories — Hoàng](17-stories-hoang-weekly-agent.md).
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
@@ -267,7 +273,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | D3 | P2 · ~20:30 | GitHub public, PII/secret scan | **Done** tree + [scan notes](10-d3-github-pii-secret-scan.md); residual history **accept CP2**; trước final: clean submission repo hoặc purge có phê duyệt |
 | D4a | P2 · sớm sau H07+D3 | Live shell: deploy infra, health, rollback sẵn | **Done** — Live shell: API http://52.74.255.88:8000/health · FE http://52.74.255.88:3000 · EC2 i-0b0576945d080cb3f (**NOT** D4b) |
 | D4b | P2 · sau H02+G02 | Product smoke list→case ẩn danh trên Live | **Done** 2026-07-18 ~13:05 +07: health `database:true`; list state=ok n=50; detail `rc-s-00518c9485a9` / `can_ra_soat`; FE login+dashboard 200; CORS OK; no PII/score leak; [evidence](07-release-evidence.md) §2 |
-| D4r | P2 · sau V07+A05 | Owner fix → redeploy → re-smoke | **A05 bắt buộc** cùng V07 trước D4r; cửa sổ fix ≥45–60 phút trước V05; D4b Done |
+| D4r | P2 · sau V07+A05 | Owner fix → redeploy → re-smoke | **Done** — Vercel=`https://abg-team.vercel.app`; API `:d4r` `sha256:2b01b24a…`; advisor 200; explanation `unavailable` fail-closed; bulk export ẩn |
 | H16 | P3 · sau V05 | Acceptance matrix + release evidence | Phụ thuộc **A05 + V07 + V05**; mỗi FR/CP2 item có evidence hoặc limitation |
 | H09 | P3 · 09:00 | README + verify/known-limit | Khớp deploy và scope thật |
 | D5 | P3 · 10:00 | AI collaboration log từ V08 | Gap có owner; sạch PII/secret |
@@ -278,53 +284,58 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 
 ---
 
-## 5. Khánh Duy — chi tiết task
+## 5. Khánh Duy — chi tiết task (FE — decision #24)
 
-**Lane:** Data/ML, source validation, baseline semester.
-**Read first:** PRD §§4,7–8; signal catalog; Ethics §§5–6; [EPU contract](../04-engineering/04-epu-data-integration-contract.md); [Data-ML](../04-engineering/08-data-ml-scoring-fairness-contract.md); ML tests gần nhất.
-**Không làm:** hoàn thiện Markdown contract/PRD; dùng legacy synthetic đã liệt kê; hybrid/`M07`/`M08` tới sau submission; đưa `is_dropout_outcome`/group attr vào scoring.
+**Lane:** Frontend integration và UI (**không** nhầm Hạ Giang).
+**Read first:** PRD §5; Ethics; H11a-r (không bắt đầu trên H11a cũ).
+**Không làm:** tự chốt copy/contract; raw score; “Điểm rủi ro”; synthetic/legacy attendance mock sau G05.
+**Lịch sử:** Task `M*` Done trong board §3 là công việc ML trước #24 (xem §6 / evidence).
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
-| M01 | P0→P1 | Quarantine/remove legacy ML synthetic: attendance tuần, synth socioeconomic/ethnicity, raw risk path trong `early_warning` | **Done** PR #16: module/CSV/generator gỡ; `tests/test_m01_legacy_quarantine.py`; mở `H18` |
-| M04 | Recovery · ASAP 03:30 | Handoff Data/ML: semester + attendance-over-time baseline, source/quality gate, threshold/FPR, giới hạn forecast/fusion | **Done:** [10-m04…](10-m04-data-ml-handoff.md); **không** đồng nghĩa dữ liệu đã được duyệt |
-| H06c | P1 · sau H10 | `FairnessReport` schema + fail-closed fixture | **Done** PR #17 |
-| M05a | P1 · sau H10 | **Build** source gate: register, hash/count, PII exclusion, fail-closed khi thiếu approval | **Done** PR #17 |
-| M05b | P1 · sau M05a | **Approved source available** | **Done** [14-m05b…](14-m05b-semester-approval.md); team approver (decision #18) |
-| M06 | P1 · sau M05b | Fixture: bảng domain điểm + ttendance_event (H15) + source_manifest + data_quality_report | **Done:** pp/ml/domain (models/transform/attendance) — deterministic, pseudonymous, fail-closed PII/token, không cross-join, is_dropout_outcome chỉ evaluation; field khớp cột dwh (H20/H08); attendance source_manifest/data_quality_report + semester domain under data/approved/ (WIP path; raw V59 ngoài git); 	ests/test_m06_domain_fixture.py (46). Không commit raw/PII |
-| M02 | P1 · baseline | Baseline ML: trend/volatility điểm + chuyên cần theo thời gian (khi có) + factors + coverage | **Done:** ackend/app/ml/scoring/{models,estimator}.py — OLS grade_trend_slope/grade_volatility/ttendance_trend_slope (pure, no DB), compute_model_score/and_for_score (uncalibrated 	hr-epu-0.1-uncalibrated wiring threshold), contributing_factors (machine codes only); không dùng is_dropout_outcome; không cross-join nhánh; ackend/tests/test_m02_baseline_scoring.py (28 tests: determinism, boundary field-forbid, monotonic sweep, band mapping, factor-materiality property) |
-| M07 | **FREEZE** | Nghiên cứu forecast/fusion | Không tranh slot MVP; chỉ sau submission |
-| M03 | P2 | Fairness gate FPR/ΔFPR/N hoặc `insufficient_data` | **Done:** `backend/app/ml/fairness/gate.py` — `APPROVED_AUDIT_ATTRIBUTES` catalog rỗng ⇒ `build_fairness_report` luôn `insufficient_data(no_approved_audit_attribute)` trên MVP path; formula FPR/TPR/selection_rate + small-N (`n_label_neg<10`) + ΔFPR + flag đã build/test cho nhánh `ok` tương lai (audit attribute monkeypatch trong test — không phải dữ liệu MVP); `backend/tests/test_m03_fairness_gate.py` (15 tests) |
-| M08 | **FREEZE** | Attendance forecasting + gated fusion | Post-MVP; không làm tới sau submission |
+| G01 | P0 | FE shell + list mock tạm | Smoke — **Done** (mock phải bị G05 thay) · historical |
+| G05 | P1 · sau H11a-r | Thay hẳn mock synthetic/K-12 bằng public DTO + fixture đã validate | **Done** — types/fixtures/limitations; xóa mock-review-list; AI-log G05 · historical |
+| G02 | P1 · sau H02 | Dashboard → cohort → case dùng API | **Done** — `lib/api.ts` live `/review-cases`; fail-closed; AI-log G02 · historical |
+| G03 | P2 · sau H12a | Care UI theo Process states + defer = giữ Pending | **Done** — `CareActions.tsx`; AI-log G03 · historical |
+| G04 | P2 · sau H12a | Fairness/privacy/threshold panel | **Done** — login/role + Fairness/Threshold; AI-log G04; PR #23 · historical |
+| G06 | P2 stretch · sau H22 | Filter theo advisor + Copy/`mailto:` bản nháp lô | FR-12; draft-only; **TODO — owner Duy**; H22 Live còn thiếu tới D4r |
+| G07 | Next wave · sau H36 | Authenticated layout + global Agent shell | **TODO — owner Duy** · PR #35 chỉ gate redirect + unavailable default; chưa ship auth shell / scoped API consumer |
+| G08 | Next wave · sau G07 | Weekly briefing/report UI | BLOCKED → G07 · **owner Duy** |
+| G09 | Next wave · sau G07 | `/notify` advisor draft FE (H35) | BLOCKED → G07 · **owner Duy** |
+
+**Verify:** lint, production build, behavior smoke. Chỉ public DTO.
+
+---
+
+## 6. Giang — chi tiết task (ML — decision #24)
+
+**Lane:** Data/ML, source validation, baseline/model/predict (**Giang** = Nguyễn Trường Giang).
+**Read first:** PRD §§4,7–8; signal catalog; Ethics §§5–6; [EPU contract](../04-engineering/04-epu-data-integration-contract.md); [Data-ML](../04-engineering/08-data-ml-scoring-fairness-contract.md); ML tests gần nhất.
+**Không làm:** hoàn thiện Markdown contract/PRD; dùng legacy synthetic đã liệt kê; hybrid/`M07`/`M08` tới sau submission; đưa `is_dropout_outcome`/group attr vào scoring.
+**Lịch sử:** Task `M*` Done bên dưới / board §3 phần lớn làm bởi Khánh Duy trước #24.
+
+| ID | Gate · deadline | Outcome | DoD / evidence |
+|:--|:--|:--|:--|
+| M01 | P0→P1 | Quarantine/remove legacy ML synthetic | **Done** PR #16 · historical |
+| M04 | Recovery · ASAP 03:30 | Handoff Data/ML | **Done:** [10-m04…](10-m04-data-ml-handoff.md) · historical |
+| H06c | P1 · sau H10 | `FairnessReport` schema + fail-closed fixture | **Done** PR #17 · historical |
+| M05a | P1 · sau H10 | **Build** source gate | **Done** PR #17 · historical |
+| M05b | P1 · sau M05a | **Approved source available** | **Done** [14-m05b…](14-m05b-semester-approval.md) · historical |
+| M06 | P1 · sau M05b | Fixture domain + attendance | **Done** · historical |
+| M02 | P1 · baseline | Baseline ML scoring | **Done** · historical |
+| M07 | **FREEZE** · **owner Giang** | Nghiên cứu forecast/fusion | Không tranh slot MVP; chỉ sau submission |
+| M03 | P2 | Fairness gate FPR/ΔFPR/N hoặc `insufficient_data` | **Done** · historical |
+| M08 | **FREEZE** · **owner Giang** | Attendance forecasting + gated fusion | Post-MVP; không làm tới sau submission |
 
 ### M07 — yêu cầu handoff hybrid (sau submission)
 
-Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecast attendance: data readiness, window, timestamp order, horizon, label cutoff/no leakage, missingness, nghỉ có phép, gated/late fusion. Chỉ đề xuất:
+Chỉ chạy sau submission / khi unfreeze (**owner Giang**). So sánh semester feature vs forecast attendance: data readiness, window, timestamp order, horizon, label cutoff/no leakage, missingness, nghỉ có phép, gated/late fusion. Chỉ đề xuất:
 
 - `TermEvidence` và `AttendanceForecastEvidence` tách riêng; coverage, freshness, provenance, `model_version`, `calculated_at`, ready/`insufficient_data`.
 - Fusion chỉ khi cả hai branch qua gate; absence không zero-impute, không đổi priority.
 - Public/agent chỉ `review_priority_band`, factors/evidence, limitations.
 
 **Verify:** determinism, missing/stale, formula/denominator, PII/source gate.
-
----
-
-## 6. Giang — chi tiết task
-
-**Lane:** Frontend integration và UI (**Giang** = Nguyễn Trường Giang — không nhầm Hạ Giang).
-**Read first:** PRD §5; Ethics; H11a-r (không bắt đầu trên H11a cũ).
-**Không làm:** tự chốt copy/contract; raw score; “Điểm rủi ro”; synthetic/legacy attendance mock sau G05.
-
-| ID | Gate · deadline | Outcome | DoD / evidence |
-|:--|:--|:--|:--|
-| G01 | P0 | FE shell + list mock tạm | Smoke — **Done** (mock phải bị G05 thay) |
-| G05 | P1 · sau H11a-r | Thay hẳn mock synthetic/K-12 bằng public DTO + fixture đã validate | **Done** — types/fixtures/limitations; xóa mock-review-list; AI-log G05 |
-| G02 | P1 · sau H02 | Dashboard → cohort → case dùng API | **Done** — `lib/api.ts` live `/review-cases`; fail-closed; AI-log G02 |
-| G03 | P2 · sau H12a | Care UI theo Process states + defer = giữ Pending | **Done** — `CareActions.tsx`; AI-log G03 |
-| G04 | P2 · sau H12a | Fairness/privacy/threshold panel | **Done** — login/role + Fairness/Threshold; AI-log G04; PR #23 |
-| G06 | P2 stretch · sau H22 | Filter theo advisor + Copy/`mailto:` bản nháp lô | FR-12; draft-only; **TODO** unblocked (H22 Done); không block D4b (D4b Done) |
-
-**Verify:** lint, production build, behavior smoke. Chỉ public DTO.
 
 ---
 
@@ -340,7 +351,7 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 | T01 | P1 · **Done** | Agent stub từ fixture | **Done:** stub deterministic (guardrails-first → context-status fail-closed → grounded assembly); 12/12 adversarial + determinism + grounding tests xanh; evidence `backend/app/agent/stub.py`, `guardrails.py`, `backend/tests/agent/test_agent_stub.py` |
 | T02 | P2 · **Done core/library** | Grounded explanation adapter từ safe context | **Done:** FPT text adapter + mocked grounding; chỉ band/factors/coverage/limits. **Không** claim server context/HTTP/runtime E2E — theo `H23`–`H26` |
 | T04 | **FREEZE** | Agent adapter hybrid | Chỉ sau submission + H17 |
-| V05 | P2 · ~22:45 · sau D4r | Nộp Checkpoint 2 | **Owner Thu Trang** (18/7): chỉ sau `D4r` xanh; BTC nhận Live URL + GitHub; xác nhận → Hoàng/`H16`; [16-stories-thu-trang.md](16-stories-thu-trang.md) |
+| V05 | P2 · ~22:45 · sau D4r | Nộp Checkpoint 2 | **Done** — Thu Trang nộp BTC Live=`https://abg-team.vercel.app` + GitHub; receipt ngoài repo → Hoàng/`H16` |
 
 **Verify:** grounding/refusal/adversarial mocked tests. V05: form BTC + receipt ngoài repo.
 
@@ -348,12 +359,12 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 
 ## 8. Hạ Giang (`giang`) — chi tiết task
 
-**Owner:** Trần Hạ Giang — UAT / claim-copy / slide skeleton. **Không** nhầm với Giang (FE).
+**Owner:** Trần Hạ Giang — UAT / claim-copy / slide skeleton. **Không** nhầm với Giang (Nguyễn Trường Giang = ML).
 **Bắt đầu skeleton ngay; full UAT từ P2/Live.** Story: [08-stories-giang.md](08-stories-giang.md).
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
-| A05 | P2 · song song V07; **bắt buộc trước D4r** | UAT/claim-copy review | **Unblocked** sau D4b; full UAT trên Live; gap → Hoàng/`D4r`; không sửa docs/code |
+| A05 | P2 · song song V07; **bắt buộc trước D4r** | UAT/claim-copy review | **Done** — [18](18-v07-a05-smoke-uat-2026-07-18.md); gap → Hoàng/`D4r` |
 | D1 | P3 · 09:00 | Asset slide + mô tả | Skeleton/claim matrix **ngay**; finalize URL/screenshot sau D4r + H12b/H16 |
 
 **A05:** list→case→review/handoff trên Live URL; rà care/privacy/fairness/claim; gửi Hoàng + **bắt buộc feed `D4r`**.
@@ -368,7 +379,7 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 
 | ID | Gate · deadline | Outcome | DoD / evidence |
 |:--|:--|:--|:--|
-| V07 | P2 · sau D4b | QA release + smoke độc lập lần 1 | **Unblocked**; làm theo checklist từng bước + gửi **output template** trong [09](09-stories-van-hai.md); incognito; defect → `D4r`; không tự sửa; không nộp CP2 |
+| V07 | P2 · sau D4b | QA release + smoke độc lập lần 1 | **Done — PASS WITH MAJORS** · [18](18-v07-a05-smoke-uat-2026-07-18.md); defect → `D4r` |
 | V02 | P3 · 08:00 | Script 4′ + Q&A 2′, rehearsal | Script skeleton sớm; Live sau `D4r` |
 | D2 | P3 · 09:30 | Video ≤5 phút | Đúng Live URL sau `D4r` |
 | V08 | **DEFER** · gần CP2 / trước D5 | Rà AI log một thể | Depends `H05b`; thu thập manifest + link **một lần**; gap → Hoàng/`D5`; CP2 không phụ thuộc V08 |
@@ -383,7 +394,7 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 | Realign §1.2 | Board này là SoT execution; không giữ snapshot “H11a mở G05/T03” cũ |
 | H06a/H11a semantic | `H06a-r` + `H11a-r` **Done**; `G05`/`T03` **Done** |
 | H06b ≠ deploy-ready (lịch sử) | Transition-core Done; deploy-blocker harden landed (seed-only create / server actor / no public `advisor_ref`) |
-| Critical path song song | Data/API/FE critical path tới **D4b Done**; còn `V07`+`A05`→`D4r`→`V05` |
+| Critical path song song | Data/API/FE tới **V05 Done**; còn `H16`/`H09`/P3 release |
 | Source gate ≠ approved data | `M05b`/`H15` Done (decision #18); Live import LF hashes `73274079…` / `78d7153f…` |
 | D3 residual history | Accept CP2; quyết định clean submission trước final |
 | Release dồn muộn | Slide/script skeleton **ngay**; `V08` AI log **một thể** gần CP2/D5 (decision #19) |
@@ -391,13 +402,13 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 | Agent runtime overclaim | `H23`–`H26` = backend HTTP mocked-FPT history; repo có case-local `AgentPanel`, nhưng **không** claim Global Agent / weekly briefing / production RBAC / live OpenAI; target theo `H28+` |
 | Hybrid | FREEZE `M07`/`H14`/`M08`/`H17`/`T04` tới sau submission |
 | FE scoping gap (G02) | `ReviewCase` public thiếu `cohort`/`department`/`class_code` — FE chưa scoping khoa/lớp; **decision cần Hoàng chốt** (mở rộng allowlist H11a hoặc chấp nhận giới hạn MVP); không tự thêm field |
-| Giang vs Hạ Giang | Giang = FE; Hạ Giang = UAT/slide/claim |
+| Giang vs Hạ Giang | Giang = Nguyễn Trường Giang = **ML**; Khánh Duy = **FE**; Hạ Giang = UAT/slide (decision #24) |
 | QA defects | V07 **và** A05 → owner fix → `D4r` → **`V05` (Thu Trang)** |
 | V05 owner | **Thu Trang** nộp CP2; Hải giữ V07 / V02 / D2 / V08 / V06 |
-| Vercel candidate (`H27`) | Hoàng deploy frontend; chỉ thay Live URL nộp sau HTTPS-safe API smoke và V07+A05 re-smoke trên đúng URL |
+| Vercel candidate (`H27`) | Hoàng deploy FE; **D4r flip Live URL nộp = Vercel** sau re-smoke |
 
-1. **Ngay:** Văn Hải — **V07** theo checklist + output [09](09-stories-van-hai.md). **Hạ Giang** — **A05** UAT trên Live. Giang — stretch `G06` nếu còn slot. Hoàng — chờ V07+A05 → `D4r`. **Thu Trang** — chờ D4r rồi **V05** nộp CP2 ([16](16-stories-thu-trang.md)).
-2. Critical path CP2: `D4b` ✓ → `V07`+`A05`→`D4r`→**`V05` (Thu Trang)**. Stretch mail: `H22`✓ → `G06` (FR-12).
-3. Semester + attendance đã duyệt + **Live DB import**; `H20`/`H08`/`H02`/`H04`/`H13`/`G05`–`G04` Done. Legacy synthetic cấm vẫn fail-closed.
-4. `D4a`/`D4b` **Done**; `D4r` chỉ sau V07 **và** A05.
+1. **Ngay:** Hoàng — **`H16`** evidence CP2. Văn Hải — V02/D2. **Hạ Giang** — D1 slide trên Live đã nộp. **Khánh Duy** — FE/`G06`. **Giang** — ML freeze.
+2. Critical path CP2: `D4b` ✓ → `V07`✓+`A05`✓ → `D4r`✓ → **`V05`✓ (Thu Trang)**. Stretch mail: H22 Live + G06 (**Duy**).
+3. Attendance Live: known-limit `attendance_source_unapproved` trừ khi Duy/Giang kịp.
+4. `V07`/`A05`/`D4r`/`V05` **Done**; decision **#24** Duy↔Giang; tiếp `H16`/`H09`/P3.
 5. Trước handoff: verify phù hợp; trước final: `scripts/verify.ps1`, `git diff --check`, `git status --short`.

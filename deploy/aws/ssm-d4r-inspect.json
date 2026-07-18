@@ -1,0 +1,7 @@
+{
+  "commands": [
+    "docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'",
+    "docker inspect silent-shield-api --format '{{range .Config.Env}}{{println .}}{{end}}' | sed -E 's/(PASSWORD|SECRET|KEY|TOKEN|DATABASE_URL|OPENAI_API_KEY|FPT_API_KEY)=.*/\\1=***REDACTED***/'",
+    "docker inspect silent-shield-api --format 'Image={{.Config.Image}} Restart={{.HostConfig.RestartPolicy.Name}} NetworkMode={{.HostConfig.NetworkMode}}'"
+  ]
+}

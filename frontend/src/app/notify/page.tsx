@@ -120,7 +120,7 @@ function Body() {
           Soạn mail cho giảng viên phụ trách
         </h1>
         <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
-          Lọc sinh viên cần theo dõi theo từng giảng viên và xem bản nháp mail bàn giao. Hệ thống chỉ soạn nháp —<br className="hidden xl:block" /> Ban quản lý duyệt và tự gửi ngoài hệ thống.
+          Lọc sinh viên cần theo dõi theo từng giảng viên và xem bản nháp mail bàn giao.<br className="hidden xl:block" /> Hệ thống chỉ soạn nội dung; Ban quản lý duyệt và tự gửi ngoài hệ thống.
         </p>
       </header>
 
@@ -177,7 +177,7 @@ function Body() {
           <input
             value={q}
             onChange={(event) => setQ(event.target.value)}
-            placeholder="Tìm theo mã giảng viên (pseudonym)"
+            placeholder="Tìm theo mã giảng viên"
             aria-label="Tìm theo mã giảng viên, mã sinh viên hoặc yếu tố đóng góp"
             className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-red-300 focus:ring-2 focus:ring-red-100"
           />
@@ -227,7 +227,7 @@ function Body() {
       <div className="flex items-start gap-4 rounded-xl border border-slate-200 bg-slate-50/70 px-5 py-4 text-xs leading-5 text-slate-400">
         <span className="mt-0.5 shrink-0 text-slate-500" aria-hidden><InfoIcon /></span>
         <p>
-          Danh sách nhóm theo mã giảng viên phụ trách (pseudonym) từ dữ liệu đã duyệt — chỉ gồm case ở trạng thái Đã duyệt / Đã bàn giao.<br />
+          Danh sách được nhóm theo mã giảng viên phụ trách từ dữ liệu đã duyệt, chỉ gồm case ở trạng thái Đã duyệt hoặc Đã bàn giao.<br />
           Bản nháp không chứa điểm số nội bộ, email, số điện thoại hay họ tên thật.
         </p>
       </div>
@@ -359,7 +359,7 @@ function DraftPanel({ bundle }: { bundle: AdvisorHandoffDraftBundle }) {
         </a>
       </div>
       <p className="text-[11px] text-slate-400 mt-2">
-        &ldquo;Mở trong mail&rdquo; chỉ tạo thư nháp trong ứng dụng của bạn — người nhận do bạn tự điền.
+        &ldquo;Mở trong mail&rdquo; chỉ tạo thư nháp trong ứng dụng của bạn. Bạn chủ động điền người nhận.
       </p>
     </div>
   );
@@ -379,7 +379,7 @@ function MappingRepairCard({ bucket }: { bucket: { case_count: number; cases: Ha
         <div>
           <p className="text-sm font-semibold text-slate-700">Chưa gán được giảng viên phụ trách</p>
           <p className="text-xs text-slate-400">
-            {bucket.case_count} case đã duyệt nhưng thiếu ánh xạ giảng viên — chưa thể soạn mail bàn giao.
+            {bucket.case_count} case đã duyệt nhưng chưa xác định được giảng viên phụ trách, nên chưa thể soạn mail bàn giao.
           </p>
         </div>
       </div>
@@ -407,7 +407,7 @@ function MappingRepairCard({ bucket }: { bucket: { case_count: number; cases: Ha
 
 function EmptyCard() {
   return (
-    <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-8 py-7 text-center shadow-sm sm:min-h-[318px]">
+    <div className="flex min-h-[300px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-red-100 bg-gradient-to-br from-red-50/90 via-rose-50/60 to-white px-8 py-7 text-center shadow-sm shadow-red-950/5 ring-1 ring-white/70 sm:min-h-[318px]">
       <Image
         src="/assets/branding/notify-empty-envelope.png"
         alt="Minh họa phong bì chứa bản nháp mail"
@@ -416,12 +416,12 @@ function EmptyCard() {
         priority
         className="mb-1 h-[148px] w-[148px] object-contain sm:h-[162px] sm:w-[162px]"
       />
-      <h3 className="text-lg font-semibold text-slate-800">Chưa có danh sách bàn giao</h3>
-      <p className="mt-1 text-sm text-slate-500">
+      <h3 className="text-lg font-semibold tracking-tight text-slate-900">Chưa có danh sách bàn giao</h3>
+      <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
         Khi Ban quản lý phê duyệt và bàn giao case cho giảng viên, bản nháp mail sẽ xuất hiện ở đây.
       </p>
-      <div className="mt-4 inline-flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm text-slate-600 shadow-sm">
-        <span className="text-red-500" aria-hidden><BulbIcon /></span>
+      <div className="mt-4 inline-flex items-center gap-3 rounded-xl border border-red-100 bg-white/90 px-5 py-2.5 text-sm text-slate-600 shadow-sm shadow-red-950/5 backdrop-blur-sm">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-red-500" aria-hidden><BulbIcon /></span>
         Hãy chọn bộ lọc hoặc tạo bản nháp để bắt đầu.
       </div>
     </div>

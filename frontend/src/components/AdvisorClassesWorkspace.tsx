@@ -3,14 +3,24 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AdvisorDemoBanner } from "@/components/AdvisorDemoBanner";
+import { AdvisorUnavailable } from "@/components/AdvisorUnavailable";
 import { CaseStateBadge } from "@/components/badges";
 import { useSetTopbarInfo } from "@/components/AppShell";
 import { generateAdvisorDemoClasses } from "@/lib/advisor-demo";
+import { isAdvisorLocalDemoEnabled } from "@/lib/advisor-routing";
 import { useAdvisorDemoSnapshot } from "@/lib/use-advisor-demo";
 
 type RosterFilter = "all" | "with_case" | "without_case";
 
 export function AdvisorClassesWorkspace({ accountId }: { accountId: string }) {
+  if (!isAdvisorLocalDemoEnabled()) {
+    return <AdvisorUnavailable surface="Lớp & sinh viên" />;
+  }
+
+  return <AdvisorClassesLocalDemo accountId={accountId} />;
+}
+
+function AdvisorClassesLocalDemo({ accountId }: { accountId: string }) {
   const { cases, variant } = useAdvisorDemoSnapshot(accountId);
   const classes = useMemo(
     () => generateAdvisorDemoClasses(accountId, variant, cases),

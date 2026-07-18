@@ -20,10 +20,10 @@
 |:--|:--|:--|:--|:--|
 | Live URL hoạt động (smoke lần 1) | Hoàng | D4a → **D4b** | **D4b product 2026-07-18 ~13:05 +07:** FE `http://52.74.255.88:3000` · API `http://52.74.255.88:8000` · health `{"status":"ok","service":"silent-shield","database":true}` · `GET /review-cases` state=`ok` n=50 · detail `rc-s-00518c9485a9` band=`can_ra_soat` student_ref=`s-00518c9485a9` · FE `/login` `/dashboard` `/select-role` 200 · CORS ACAO=`http://52.74.255.88:3000` · no `model_score`/PII/`advisor_ref` · images `:d4b` API `sha256:bab21546…` FE `sha256:70eb44b5…` · Postgres + approved import (sem `73274079…` / att `78d7153f…`) · runbook [06-deploy-runbook.md](../04-engineering/06-deploy-runbook.md) | [x] shell / [x] **D4b** |
 | Vercel FE candidate (H27) | Hoàng | H27 | **Done 2026-07-18 ~16:40 +07:** `https://abg-team.vercel.app` · Root `frontend` · same-origin rewrite → API `http://52.74.255.88:8000` · `GET /health` ok database=true · `GET /review-cases` state=ok n=50 · detail `rc-s-00518c9485a9` ok · prod dpl `dpl_2JkMB2LzgiSjJrSPYmYNBRcg6e32` · PR [#26](https://github.com/phanthutrang410/ABG_team/pull/26) · **not** submission Live URL until V07+A05 re-smoke · runbook §11 | [x] |
-| Smoke test ẩn danh độc lập lần 1 | Văn Hải | V07 | Checklist + output: [09-stories-van-hai.md](09-stories-van-hai.md) | [ ] |
-| Fix → redeploy → re-smoke | Hoàng | D4r |  | [ ] |
+| Smoke test ẩn danh độc lập lần 1 | Văn Hải | V07 | **2026-07-18 ~21:30 +07 PASS WITH MAJORS** · [18-v07-a05-smoke-uat-2026-07-18.md](18-v07-a05-smoke-uat-2026-07-18.md) · health ok · review-cases n=50 · GitHub public · Vercel candidate ok · majors: EC2 FE stale `/overview|analysis|notify` 404; Live advisor 404; explanation 422; attendance_source_unapproved trên mọi case | [x] |
+| Fix → redeploy → re-smoke | Hoàng | D4r | **Done 2026-07-18 ~22:24 +07:** Live URL nộp = `https://abg-team.vercel.app` · API `:d4r` digest `sha256:2b01b24a233e374b655fab55bf8bf9be2ff886437c202a7a9b51e9d957f256a1` · health ok · `/review-cases` n=50 · `/advisor-handoff-drafts` 200 `empty` · explanation POST 200 `unavailable` (no OpenAI key — fail-closed) · fairness `insufficient_data` · FE routes `/login|/overview|/analysis|/notify` 200 · dpl `dpl_7EFasiFPqP4HUCwoqKUSaBkoaRGi` · bulk export ẩn · attendance known-limit · report [19](19-d4r-resmoke-2026-07-18.md) · V07 [18](18-v07-a05-smoke-uat-2026-07-18.md) | [x] |
 | GitHub public, PII/secret scan | Hoàng | D3 | [10-d3-github-pii-secret-scan.md](10-d3-github-pii-secret-scan.md) · https://github.com/phanthutrang410/ABG_team | [x] |
-| BTC nhận 2 URL | **Thu Trang** | V05 | Story [16-stories-thu-trang.md](16-stories-thu-trang.md) · chỉ sau D4r | [ ] |
+| BTC nhận 2 URL | **Thu Trang** | V05 | **Done 2026-07-18 tối +07:** Live `https://abg-team.vercel.app` · GitHub `https://github.com/phanthutrang410/ABG_team` · form BTC đã nộp · receipt ngoài repo (owner custody) · story [16](16-stories-thu-trang.md) | [x] |
 | Hoàng hoàn thiện evidence CP2 | Hoàng | H16 (sau V07, V05) |  | [ ] |
 
 ## 3. Đóng cổng nộp cuối: 19/7 11:00
@@ -89,7 +89,7 @@
 | Advisor / turns / export / ops | Hoàng | H35/H37/H38/D6 | `test_h35_*`, `test_h37_*`, `test_h38_*`, `test_d6_*` | [x] |
 | Backend suite | Hoàng | wave | `pytest -m "not slow and not eval"` → **548 passed, 1 skipped** · Ruff clean | [x] |
 | Combined linked namespace | — | H32 | Still `approval:pending-linked-namespace` — Mode B only | [ ] pending |
-| FE G07–G09 / T05 / Live EventBridge | Giang/Trang/ops | — | Not claimed on submission Live URL | [ ] N/A |
+| FE G07–G09 / T05 / Live EventBridge | **Khánh Duy**/Trang/ops | — | Not claimed on submission Live URL · owner FE sau #24 = Duy | [ ] N/A |
 
 ## 5d. Advisor handoff draft FR-12 (H22) — 18/7
 
@@ -99,7 +99,7 @@
 |:--|:--|:--|:--|:--|
 | `GET /advisor-handoff-drafts` | Hoàng | H22 | `backend/app/cases/advisor_draft_router.py` · contract [11](../04-engineering/11-advisor-batch-mail-draft.md) · `tests/test_h22_advisor_handoff_draft_api.py` (8) | [x] |
 | mapping_repair bucket + forbidden-field | Hoàng | H22 | No email/phone/mssv/model_score; `requires_human_approval=true`; no send route | [x] |
-| G06 FE Copy/`mailto:` | Giang | G06 | Unblocked after H22; not part of H22 DoD | [ ] |
+| G06 FE Copy/`mailto:` | **Khánh Duy** | G06 | Unblocked after H22; owner FE sau decision #24; not part of H22 DoD | [ ] |
 
 ## 6. Fill template (H05b)
 

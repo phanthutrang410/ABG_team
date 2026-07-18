@@ -1,0 +1,19 @@
+{
+  "commands": [
+    "set -euxo pipefail",
+    "REGION=ap-southeast-1",
+    "ACCOUNT=058264284502",
+    "IMAGE=${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/silent-shield-api:d4r",
+    "aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com",
+    "docker pull $IMAGE",
+    "docker inspect silent-shield-api --format '{{range .Config.Env}}{{println .}}{{end}}' > /tmp/silent-shield-api.env",
+    "docker rm -f silent-shield-api",
+    "docker run -d --name silent-shield-api --restart unless-stopped --network silent-shield-net -p 8000:8000 --env-file /tmp/silent-shield-api.env $IMAGE",
+    "rm -f /tmp/silent-shield-api.env",
+    "sleep 3",
+    "docker ps --filter name=silent-shield-api --format '{{.Names}} {{.Image}} {{.Status}}'",
+    "curl -sS http://127.0.0.1:8000/health",
+    "curl -sS -o /dev/null -w 'advisor_http=%{http_code}\\n' http://127.0.0.1:8000/advisor-handoff-drafts",
+    "curl -sS http://127.0.0.1:8000/openapi.json | python3 -c \"import sys,json; p=json.load(sys.stdin)['paths']; print('has_advisor', '/advisor-handoff-drafts' in p); print('has_explain', '/review-cases/{case_id}/explanation' in p); print('n_paths', len(p))\""
+  ]
+}
