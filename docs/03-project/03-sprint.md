@@ -65,7 +65,7 @@ Baseline khóa sau review progress/direction. **Không đổi** product directio
 
 **Bổ sung board:** Critical path Data hoàn tất tới `M02` (sau `H20`+`H08` **Done**) — Profile `M01`+`H18` **Done**; `M05a`/`H06c`/`M05b`/`H15`/`M06`/`H20`/`H08`/`M02`/`M03`/`H02`/`H04`/`H13` **Done** (decision #18). `H06b` = **Done — transition core** + deploy-blocker harden. `T02` = core/library Done; runtime FR-08 theo `H23`–`H26`. Stretch FR-12: `H21` Done → `H22`/`G06`. `V08` defer (decision #19).
 
-**Owner ngay:** Hoàng — **`D4b`/`H11b`/`H22` Done**; `H27` deploy Vercel mở, đồng thời chờ `V07`+`A05` → `D4r`. Giang — **G05–G04 Done** (PR #23); stretch **`G06` unblocked** (sau H22). Thu Trang — T01–T03 + T02 core Done. Văn Hải — **`V07` mở** (sau D4b); `V08` defer gần CP2/D5. **Hạ Giang** — full **A05** UAT trên Live; slide skeleton. Khánh Duy — M07/M08 freeze.
+**Owner ngay:** Hoàng — **`D4b`/`H11b`/`H22`/`H27` Done** (Vercel candidate `https://abg-team.vercel.app`); chờ `V07`+`A05` → `D4r`. Giang — **G05–G04 Done** (PR #23); stretch **`G06` unblocked** (sau H22). Thu Trang — T01–T03 + T02 core Done. Văn Hải — **`V07` mở** (sau D4b); `V08` defer gần CP2/D5. **Hạ Giang** — full **A05** UAT trên Live; slide skeleton. Khánh Duy — M07/M08 freeze.
 
 ## 2. Boundary bắt buộc cho ML, agent và hybrid
 
@@ -357,7 +357,7 @@ Chỉ chạy sau submission / khi unfreeze. So sánh semester feature vs forecas
 | QA defects | V07 **và** A05 → owner fix → `D4r` → mới V05 |
 | Vercel candidate (`H27`) | Hoàng deploy frontend; chỉ thay Live URL nộp sau HTTPS-safe API smoke và V07+A05 re-smoke trên đúng URL |
 
-1. **Ngay:** Văn Hải — **V07** smoke độc lập. **Hạ Giang** — **A05** UAT trên Live. Giang — stretch `G06` nếu còn slot. Hoàng — chạy `H27` và chờ V07+A05 → `D4r`.
+1. **Ngay:** Văn Hải — **V07** smoke độc lập. **Hạ Giang** — **A05** UAT trên Live. Giang — stretch `G06` nếu còn slot. Hoàng — chờ V07+A05 → `D4r` (H27 Vercel candidate sẵn sàng).
 2. Critical path CP2: `D4b` ✓ → `V07`+`A05`→`D4r`→`V05`. Stretch mail: `H22`✓ → `G06` (FR-12).
 3. Semester + attendance đã duyệt + **Live DB import**; `H20`/`H08`/`H02`/`H04`/`H13`/`G05`–`G04` Done. Legacy synthetic cấm vẫn fail-closed.
 4. `D4a`/`D4b` **Done**; `D4r` chỉ sau V07 **và** A05.
