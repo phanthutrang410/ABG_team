@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { DEMO_ACCOUNTS, roleHome, useSession } from "@/lib/session";
+import { isAdvisorLocalDemoEnabled } from "@/lib/advisor-routing";
+import { roleHome, useSession } from "@/lib/session";
 import { ROLE_LABEL, type Role } from "@/lib/types";
 
 /**
- * Đăng nhập DEMO: tài khoản + mật khẩu + captcha ảnh chống bot (ui-design-spec §3).
- * Xác thực client-side trên fixture — KHÔNG phải auth production (PRD §9).
- * Layout 2 cột theo mockup EduSignal 18/7: ảnh thương hiệu bên trái (ẩn dưới
- * 860px), form bên phải — ảnh nằm trong frontend/public/assets/branding/.
+ * Đăng nhập: POST /auth/login (cookie ``ss_session``, H39) là đường production.
+ * Captcha ảnh là UX chống bot phía client (ui-design-spec §3) — không thay auth server.
+ * Local demo fixture chỉ khi ``NEXT_PUBLIC_ADVISOR_LOCAL_DEMO=1`` (non-production).
  */
 
 const CAPTCHA_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // bỏ ký tự dễ nhầm: O/0, I/1
@@ -29,6 +29,7 @@ export default function LoginPage() {
   const [captchaInput, setCaptchaInput] = useState("");
   const [captchaText, setCaptchaText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [forgot, setForgot] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -84,8 +85,6 @@ export default function LoginPage() {
   }, [ready, account, activeRole, router]);
 
   useEffect(() => {
-    // Nạp trước hai không gian làm việc để chuyển vai không giữ màn đăng nhập
-    // trong lúc Next.js tải route đích.
     router.prefetch("/overview");
     router.prefetch("/analysis");
   }, [router]);
@@ -95,7 +94,7 @@ export default function LoginPage() {
     setCaptchaInput("");
   }
 
-  function submit(e: FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     if (captchaInput.trim().toUpperCase() !== captchaText) {
@@ -103,20 +102,27 @@ export default function LoginPage() {
       refreshCaptcha();
       return;
     }
-    const acc = DEMO_ACCOUNTS.find((a) => a.id === username.trim().toLowerCase());
-    if (!acc || acc.password !== password) {
-      setError("Tài khoản hoặc mật khẩu không đúng.");
-      refreshCaptcha();
-      return;
+    setSubmitting(true);
+    try {
+      const result = await login(username.trim(), password);
+      if (!result.ok) {
+        setError(result.message);
+        refreshCaptcha();
+        return;
+      }
+      if (result.activeRole) router.replace(roleHome(result.activeRole));
+    } finally {
+      setSubmitting(false);
     }
-    login(acc.id);
-    if (acc.roles.length === 1) router.replace(roleHome(acc.roles[0]));
   }
 
-  function selectRole(role: Role) {
-    chooseRole(role);
-    router.replace(roleHome(role));
+  async function selectRole(role: Role) {
+    const ok = await chooseRole(role);
+    if (ok) router.replace(roleHome(role));
+    else setError("Không chọn được vai trò. Vui lòng thử lại.");
   }
+
+  const showLocalDemoHint = isAdvisorLocalDemoEnabled();
 
   return (
     <main style={pageWrap}>
@@ -144,7 +150,7 @@ export default function LoginPage() {
                     <button
                       key={role}
                       type="button"
-                      onClick={() => selectRole(role)}
+                      onClick={() => void selectRole(role)}
                       style={roleButton}
                       onMouseEnter={(e) => Object.assign(e.currentTarget.style, roleButtonHover)}
                       onMouseLeave={(e) => Object.assign(e.currentTarget.style, roleButton)}
@@ -161,7 +167,7 @@ export default function LoginPage() {
                   ))}
                 </div>
 
-                <button type="button" onClick={logout} style={backButton}>
+                <button type="button" onClick={() => void logout()} style={backButton}>
                   <ArrowLeftIcon /> Sử dụng tài khoản khác
                 </button>
               </div>
@@ -172,7 +178,7 @@ export default function LoginPage() {
                   Hệ thống hỗ trợ theo dõi và quan tâm sinh viên. Các chức năng được hiển thị theo vai trò của bạn.
                 </p>
 
-                <form onSubmit={submit} style={{ display: "grid", gap: 20 }}>
+                <form onSubmit={(e) => void submit(e)} style={{ display: "grid", gap: 20 }}>
               <label style={lbl}>
                 Tài khoản
                 <div style={inputWrap}>
@@ -183,6 +189,7 @@ export default function LoginPage() {
                     placeholder="vd: quanly"
                     autoComplete="username"
                     required
+                    disabled={submitting}
                     style={inputWithIcon}
                     onFocus={(e) => Object.assign(e.currentTarget.style, inputWithIconFocus)}
                     onBlur={(e) => Object.assign(e.currentTarget.style, inputWithIcon)}
@@ -200,6 +207,7 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     autoComplete="current-password"
                     required
+                    disabled={submitting}
                     style={inputWithIcon}
                     onFocus={(e) => Object.assign(e.currentTarget.style, inputWithIconFocus)}
                     onBlur={(e) => Object.assign(e.currentTarget.style, inputWithIcon)}
@@ -210,7 +218,7 @@ export default function LoginPage() {
                 Mã xác nhận
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <canvas ref={canvasRef} width={190} height={58} style={captchaCanvas} aria-hidden />
-                  <button type="button" onClick={refreshCaptcha} title="Đổi mã khác" style={ghostBtn}>
+                  <button type="button" onClick={refreshCaptcha} title="Đổi mã khác" style={ghostBtn} disabled={submitting}>
                     <RefreshIcon />
                   </button>
                 </div>
@@ -222,6 +230,7 @@ export default function LoginPage() {
                     placeholder="Nhập mã trong ảnh"
                     autoComplete="off"
                     required
+                    disabled={submitting}
                     style={{ ...inputWithIcon, textTransform: "uppercase" }}
                     onFocus={(e) => Object.assign(e.currentTarget.style, inputWithIconFocus)}
                     onBlur={(e) => Object.assign(e.currentTarget.style, inputWithIcon)}
@@ -235,14 +244,21 @@ export default function LoginPage() {
                 </p>
               )}
 
+              {showLocalDemoHint && (
+                <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>
+                  Local demo: nếu API auth không sẵn sàng, tài khoản fixture quanly / gvcn / demo vẫn dùng được.
+                </p>
+              )}
+
               <button
                 type="submit"
-                style={primaryBtn}
-                onMouseEnter={(e) => Object.assign(e.currentTarget.style, primaryBtnHover)}
+                style={{ ...primaryBtn, opacity: submitting ? 0.7 : 1, cursor: submitting ? "wait" : "pointer" }}
+                disabled={submitting}
+                onMouseEnter={(e) => !submitting && Object.assign(e.currentTarget.style, primaryBtnHover)}
                 onMouseLeave={(e) => Object.assign(e.currentTarget.style, primaryBtn)}
               >
-                Đăng nhập
-                <ArrowRightIcon />
+                {submitting ? "Đang đăng nhập…" : "Đăng nhập"}
+                {!submitting && <ArrowRightIcon />}
               </button>
               <button type="button" onClick={() => setForgot((f) => !f)} style={linkBtn}>Quên mật khẩu?</button>
               {forgot && (

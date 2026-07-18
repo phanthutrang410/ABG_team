@@ -266,7 +266,7 @@ def test_mvp_attendance_fixture_admitted() -> None:
     manifest = SourceManifest(
         source_id="mvp-attendance-over-time",
         snapshot_sha256=sha,
-        record_count=15,
+        record_count=7360,
         provenance_approved=True,
         schema_version="epu-1",
         extracted_at=datetime(2026, 7, 18, tzinfo=timezone.utc),
@@ -277,7 +277,7 @@ def test_mvp_attendance_fixture_admitted() -> None:
     assert result.admitted is True
     assert result.reason_codes == []
     assert result.role == "attendance"
-    assert result.observed_record_count == 15
+    assert result.observed_record_count == 7360
     assert result.pii_fields_found == []
 
 
@@ -286,7 +286,7 @@ def test_mvp_attendance_unapproved_rejected() -> None:
     manifest = SourceManifest(
         source_id="mvp-attendance-over-time",
         snapshot_sha256=sha,
-        record_count=15,
+        record_count=7360,
         provenance_approved=False,
         schema_version="epu-1",
         extracted_at=datetime(2026, 7, 18, tzinfo=timezone.utc),

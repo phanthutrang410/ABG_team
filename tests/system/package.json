@@ -1,0 +1,20 @@
+{
+  "name": "silent-shield-system-tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:release": "playwright test --config release.config.ts",
+    "test:release:headed": "playwright test --config release.config.ts --headed",
+    "report": "playwright show-report",
+    "report:release": "playwright show-report release-playwright-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}

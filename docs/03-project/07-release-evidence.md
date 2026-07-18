@@ -57,7 +57,7 @@
 | Mục | Owner | Task | Evidence | Status |
 |:--|:--|:--|:--|:--|
 | Semester approved (M05b) | Hoàng | M05b | [14-m05b…](14-m05b-semester-approval.md) · decision #18 · hash `34a53298…` / 460 · raw ngoài git | [x] |
-| Attendance approved (H15) | Hoàng | H15 | [12-h15…](12-h15-attendance-approval-prep.md) · fixture `data/approved/attendance/mvp_attendance_over_time.json` · hash `78d7153f…` / 15 events | [x] |
+| Attendance approved (H15) | Hoàng | H15 | [12-h15…](12-h15-attendance-approval-prep.md) · fixture `data/approved/attendance/mvp_attendance_over_time.json` · **H15b/#27** hash `acfb7d80…` / **7360** events / 460 refs · [21…](21-mvp-linked-attendance-approval.md) · **Live `:d460` re-imported** [23…](23-d460-live-redeploy-evidence.md) · local [22…](22-d460-local-bootstrap-evidence.md) | [x] |
 | Source gate allowlist | Hoàng | H15/M05a | `mvp-attendance-over-time` in `SOURCE_ALLOWLIST`; `tests/test_source_gate.py` 26 pass | [x] |
 
 ## 5c. Agent runtime FR-08 (H23–H26) — 18/7 ~11:30
@@ -87,8 +87,10 @@
 | RBAC foundation | Hoàng | H36 | `app/auth/*`; `test_h36_rbac.py` | [x] |
 | Advisor / turns / export / ops | Hoàng | H35/H37/H38/D6 | `test_h35_*`, `test_h37_*`, `test_h38_*`, `test_d6_*` | [x] |
 | Backend suite | Hoàng | wave | `pytest -m "not slow and not eval"` → **548 passed, 1 skipped** · Ruff clean | [x] |
-| Combined linked namespace | — | H32 | Still `approval:pending-linked-namespace` — Mode B only | [ ] pending |
-| FE G07–G09 / T05 / Live EventBridge | **Khánh Duy**/Trang/ops | — | Not claimed on submission Live URL · owner FE sau #24 = Duy | [ ] N/A |
+| Combined linked namespace | Hoàng | H32 / D460-10 | Live `:d460` linked handle active · auth smoke 0× `attendance_source_unapproved` · [23…](23-d460-live-redeploy-evidence.md) | [x] |
+| Live D460 API bootstrap | Hoàng | D460 | `:d460` digest `sha256:4f1fb57b…` · att 7360 · ml 460 · week 1840 · [23…](23-d460-live-redeploy-evidence.md) | [x] |
+| Vercel FE `/auth` rewrite | ops / Duy | G07 | Production FE còn 404 `POST /auth/login` — **redeploy frontend** còn lại | [ ] pending |
+| FE G07–G09 / T05 / Live EventBridge | **Khánh Duy**/Trang/ops | — | G07 code in tree; Live Vercel image chưa flip · T05 open | [ ] partial |
 
 ## 5f. H39 DB-backed RBAC (19/7)
 

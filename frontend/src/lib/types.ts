@@ -232,16 +232,29 @@ export type AdvisorHandoffDraftListResponse = {
   problem: IntegrationProblem | null;
 };
 
-/* ---------- Phiên demo (không phải auth thật — PRD §9) ---------- */
+/* ---------- Phiên / vai (H39 cookie session + optional local demo) ---------- */
 
 export type Role = "ban_quan_ly" | "gvcn";
 
-export type DemoAccount = {
+/** Account shape for AppShell / guards — server or local demo. */
+export type SessionAccount = {
   id: string;
   name: string;
+  roles: Role[];
+};
+
+/** Local-demo fixture only (`NEXT_PUBLIC_ADVISOR_LOCAL_DEMO=1`). */
+export type DemoAccount = SessionAccount & {
   /** Mật khẩu fixture công khai cho demo — không phải secret. */
   password: string;
-  roles: Role[];
+};
+
+/** GET/POST /auth/* response body (H39a). */
+export type AuthMeResponse = {
+  account_id: string;
+  display_name: string;
+  roles: string[];
+  active_role: string | null;
 };
 
 export const ROLE_LABEL: Record<Role, string> = {

@@ -55,11 +55,11 @@ _DEFAULT_SEMESTER_DOMAIN_PATH = (
 # M05b / H15 approval constants (decision #18) — no PII.
 ATTENDANCE_APPROVAL = ApprovalArtifact(
     source_id=ATTENDANCE_SOURCE_ID,
-    snapshot_sha256="78d7153fe114537410a5179d36840a23af166cd2f86826bf09138ac02e5ad112",
-    record_count=15,
+    snapshot_sha256="acfb7d80dc3a22d63f88b07ef706108743c122a121cd2d6261b993f98be964ac",
+    record_count=7360,
     provenance_approved=True,
     schema_version="epu-1",
-    extracted_at=datetime(2026, 7, 18, tzinfo=timezone.utc),
+    extracted_at=datetime(2026, 7, 18, 12, 0, tzinfo=timezone.utc),
     owner="Hoàng / Admin kỹ thuật · Silent Shield MVP demo",
     usage_rights="MVP Silent Shield pipeline only; no redistribution; no PII in git",
 )

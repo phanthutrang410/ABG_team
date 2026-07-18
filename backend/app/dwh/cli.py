@@ -1,13 +1,17 @@
-"""CLI for H20 `dwh` import + readiness (not a public HTTP API).
+"""CLI for H20 `dwh` import + readiness + ML/week writers (not a public HTTP API).
 
 Usage (from backend/):
   python -m app.dwh.cli import-attendance
   python -m app.dwh.cli import-semester
   python -m app.dwh.cli readiness
+  python -m app.dwh.cli materialize-ml [--source-id …]
+  python -m app.dwh.cli rollup-attendance-week [--source-id …]
 
 Defaults (no env required):
   data/approved/attendance/mvp_attendance_over_time.json
   data/approved/semester/domain_package.json
+  materialize-ml → v59-empty-program-students
+  rollup-attendance-week → mvp-attendance-over-time
 
 Optional: SILENT_SHIELD_SEMESTER_SOURCE_PATH → raw V59 or alternate domain package.
 """
@@ -19,13 +23,26 @@ import json
 import sys
 from pathlib import Path
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+
 from app.config import get_settings
-from app.dwh.importer import import_attendance, import_semester, readiness_report
+from app.dwh.attendance_week_rollup import (
+    DEFAULT_ATTENDANCE_SOURCE_ID,
+    rollup_attendance_weeks,
+)
+from app.dwh.importer import SEMESTER_SOURCE_ID, import_attendance, import_semester, readiness_report
+from app.dwh.ml_materializer import materialize_ml_term_snapshot
 from app.dwh.weekly_workflow import run_weekly_from_bytes
 
 
 def _print_result(payload: object) -> None:
     print(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+
+
+def _session_factory(database_url: str) -> sessionmaker[Session]:
+    engine = create_engine(database_url, pool_pre_ping=True)
+    return sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -53,6 +70,26 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("readiness", help="Print non-PII readiness report")
 
+    p_ml = sub.add_parser(
+        "materialize-ml",
+        help="Materialize M02 scoring into dwh.ml_term_snapshot",
+    )
+    p_ml.add_argument(
+        "--source-id",
+        default=SEMESTER_SOURCE_ID,
+        help=f"Semester source_id (default: {SEMESTER_SOURCE_ID})",
+    )
+
+    p_week = sub.add_parser(
+        "rollup-attendance-week",
+        help="Roll up attendance_event into dwh.attendance_week (student × ISO Monday)",
+    )
+    p_week.add_argument(
+        "--source-id",
+        default=DEFAULT_ATTENDANCE_SOURCE_ID,
+        help=f"Attendance source_id (default: {DEFAULT_ATTENDANCE_SOURCE_ID})",
+    )
+
     p_weekly = sub.add_parser("weekly", help="H31 weekly workflow CLI")
     weekly_sub = p_weekly.add_subparsers(dest="weekly_command", required=True)
     p_run = weekly_sub.add_parser("run", help="Stage/promote approved artifact bytes")
@@ -71,6 +108,42 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "readiness":
         _print_result(readiness_report(database_url))
         return 0
+    elif args.command == "materialize-ml":
+        factory = _session_factory(database_url)
+        with factory() as session:
+            result = materialize_ml_term_snapshot(session, args.source_id)
+            if result.status == "materialized":
+                session.commit()
+            else:
+                session.rollback()
+        _print_result(
+            {
+                "status": result.status,
+                "source_id": result.source_id,
+                "row_counts": result.row_counts,
+                "reason_codes": result.reason_codes,
+                "detail": result.detail,
+            }
+        )
+        return 0 if result.status == "materialized" else 1
+    elif args.command == "rollup-attendance-week":
+        factory = _session_factory(database_url)
+        with factory() as session:
+            result = rollup_attendance_weeks(session, args.source_id)
+            if result.status == "rolled_up":
+                session.commit()
+            else:
+                session.rollback()
+        _print_result(
+            {
+                "status": result.status,
+                "source_id": result.source_id,
+                "row_counts": result.row_counts,
+                "reason_codes": result.reason_codes,
+                "detail": result.detail,
+            }
+        )
+        return 0 if result.status == "rolled_up" else 1
     elif args.command == "weekly":
         if args.weekly_command == "run":
             content = args.path.read_bytes()

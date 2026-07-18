@@ -204,7 +204,7 @@ def test_ready_partial_coverage_exact_m02_codes(
     assert ctx.status == "ready"
     assert ctx.case is not None
     assert ctx.case.model_version == MODEL_VERSION
-    assert MODEL_VERSION == "m02-baseline-0.1"
+    assert MODEL_VERSION == "m02-baseline-0.2"
     codes = {f.code for f in ctx.case.contributing_factors}
     assert "grade_trend_declining" in codes
     assert "grade_trend_negative" not in codes

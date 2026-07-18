@@ -1,5 +1,43 @@
 # Nhật ký công việc
 
+## 2026-07-19 (D460 Live — linked 460 SV redeploy)
+
+- API image `:d460` `sha256:4f1fb57b…` (Dockerfile COPY `data/approved` → `/data/approved`).
+- Env: `LINKED_NAMESPACE_APPROVAL` + `AUTH_SEED_PASSWORD` (SSM Parameter Store; not in git).
+- Clear legacy att `78d7153f…` → import **7360** `acfb7d80…`; `ml_term_snapshot` 460; `attendance_week` 1840/460.
+- Auth smoke: `quanly` → list n=18 · **0** `attendance_source_unapproved` · sample `n_att=16` · `m02-baseline-0.2`.
+- Gap: Vercel production FE chưa redeploy → `POST /auth/login` 404 qua HTTPS; API anon list 401 (H39).
+- Evidence: [23-d460-live-redeploy-evidence.md](23-d460-live-redeploy-evidence.md).
+
+## 2026-07-19 (H15b/H08b — MVP linked session-grain attendance)
+
+- Decision #27: giữ semester 460; mở rộng `mvp-attendance-over-time` → **7360** session events (16 buổi/SV, cùng `student_ref`); handle `approval:mvp-linked-v59-att:v1:acfb7d80dc3a`.
+- Generator `app/ml/mvp_attendance` + CLI `scripts/generate_mvp_linked_attendance.py`; fix `_iso` nhận `…Z`.
+- H08 join exact `student_ref` khi `LINKED_NAMESPACE_APPROVAL` khớp; tắt → Mode B.
+- Artifact [21…](21-mvp-linked-attendance-approval.md); H15 checklist refresh.
+- Checks: `test_h08_linked_attendance` + H08/H20/gate/H32 counts → targeted pass; Quick verify.
+
+## 2026-07-19 (M09b — full n=2000 EPU-weighted catalog)
+
+- Catalog `epu_program_catalog.json` từ V59-empty approved (13 khoa, 21 ngành, 23 program weights).
+- Generator sample theo weight; course bank theo ngành; 2–4 kỳ × 5 môn; attendance 6 mốc.
+- Full: `data/eval/full/` n=2000 seed=42 (~30k grade rows, 420 course refs, 184 lớp).
+- CLI: `python scripts/generate_ml_eval_package.py --full`.
+
+## 2026-07-19 (M09 Done — eval synthetic smoke + EDA)
+
+- Generator `app/ml/eval_synthetic` + CLI `scripts/generate_ml_eval_package.py`.
+- Smoke n=12 seed=42 tại `data/eval/smoke/`; EDA [16…](../04-engineering/16-m09-eval-synthetic-eda.md).
+- Feature coverage 12/12 cho GPA/volatility/trend/attendance; 50% `failed_credits>0`.
+- Quarantine: không vào MVP allowlist/H20. Checks: `test_m09`+M01 **10 passed**; Quick verify pass.
+
+## 2026-07-19 (Decision #26 — A+1 features + eval synthetic lane)
+
+- Decision #26: `latest_term_gpa` + `failed_credits` trên `ScoringFeatures` / M02 (`m02-baseline-0.2`); MVP path vẫn M05b/H15.
+- Eval synthetic lane song song: proposal [15-ml-eval-synthetic-proposal](../04-engineering/15-ml-eval-synthetic-proposal.md); `M09` generate chưa ship.
+- Signal catalog CORE-04/05; Data-ML §2 cập nhật.
+- Checks: Ruff clean; pytest `test_scoring_features_contract` + `test_m02_baseline_scoring` + `test_h08_read_adapter` + `test_h23_agent_context` → **81 passed**; `.\scripts\verify.ps1 -Quick` pass; `git diff --check` clean.
+
 ## 2026-07-19 (H39a+H39b Done — DB-backed RBAC `{ban_quan_ly,gvcn}`)
 
 - Alembic `20260719_h39a_auth_rbac`: schema `app` + `auth_account` / `auth_account_role` / `auth_session` / `access_audit_event`.

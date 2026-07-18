@@ -13,7 +13,7 @@ reference-Learning-Analytics-AI/
 __pycache__/
 *.py[cod]
 *$py.class
-.venv/
+.venv*/
 venv/
 *.egg-info/
 .pytest_cache/
@@ -27,8 +27,18 @@ backend/ml_artifacts/
 # Node
 node_modules/
 frontend/.next/
+frontend/.next-system/
 frontend/out/
 frontend/coverage/
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/.playwright/
+tests/system/test-results/
+tests/system/playwright-report/
+tests/system/blob-report/
+tests/system/release-test-results/
+tests/system/release-playwright-report/
 
 # OS / IDE
 .DS_Store
@@ -46,3 +56,6 @@ Thumbs.db
 *.pem
 *.key
 credentials.json
+
+# M09 local full eval package (smoke under data/eval/smoke is committed)
+data/eval/full/

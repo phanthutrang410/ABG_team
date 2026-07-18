@@ -1,4 +1,4 @@
-import type { DemoAccount, Role } from "@/lib/types";
+import type { Role, SessionAccount } from "@/lib/types";
 
 /** Render mode for legacy `/analysis` — never flash Ban quản lý UI for GVCN. */
 export type AnalysisGate = "loading" | "gvcn_redirect" | "management";
@@ -13,14 +13,14 @@ export function resolveAnalysisGate(
 }
 
 /**
- * Client-side advisor route access (demo session only — not production RBAC).
+ * Client-side advisor route access (session guard only — server RBAC is authoritative).
  * Mirrors AppShell role guard outcomes for unit tests.
  */
 export type AdvisorAccess = "loading" | "unauthenticated" | "wrong_role" | "ok";
 
 export function resolveAdvisorAccess(
   ready: boolean,
-  account: DemoAccount | null | undefined,
+  account: SessionAccount | null | undefined,
   activeRole: Role | null | undefined,
   requiredRole: Role = "gvcn",
 ): AdvisorAccess {
@@ -31,8 +31,9 @@ export function resolveAdvisorAccess(
 }
 
 /**
- * Local/dev-only advisor UI fixtures. Always false in production builds so
- * localStorage generators never ship as the default Live URL path (H36 / G07).
+ * Local/dev-only advisor UI fixtures + offline demo login.
+ * Always false in production builds so localStorage generators never ship
+ * as the default Live URL path (H36 / G07).
  */
 export function isAdvisorLocalDemoEnabled(): boolean {
   if (process.env.NODE_ENV === "production") return false;

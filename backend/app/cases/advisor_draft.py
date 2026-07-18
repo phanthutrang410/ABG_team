@@ -6,6 +6,8 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Sequence
 
+from sqlalchemy.orm import Session
+
 from app.cases.domain import CaseState
 from app.cases.review_projection import project_review_case, student_ref_from_case_id
 from app.cases.store import CaseStore
@@ -43,6 +45,7 @@ def _line_from_projection(
     store: CaseStore,
     thresholds: ThresholdConfig,
     calculated_at: datetime,
+    session: Optional[Session] = None,
 ) -> HandoffDraftCaseLine:
     band = None
     factor_codes: List[str] = []
@@ -58,6 +61,7 @@ def _line_from_projection(
             thresholds=thresholds,
             calculated_at=calculated_at,
             include_below_threshold=True,
+            session=session,
         )
         if projected is not None:
             band = projected.review_priority_band
@@ -109,6 +113,7 @@ def build_advisor_handoff_drafts(
     *,
     thresholds: ThresholdConfig = DEFAULT_THRESHOLDS,
     calculated_at: Optional[datetime] = None,
+    session: Optional[Session] = None,
 ) -> AdvisorHandoffDraftListResponse:
     """Group eligible CaseStore snapshots by H08 advisor_ref (server-side)."""
     calc_at = calculated_at or datetime.now(timezone.utc)
@@ -145,6 +150,7 @@ def build_advisor_handoff_drafts(
             store=store,
             thresholds=thresholds,
             calculated_at=calc_at,
+            session=session,
         )
 
         advisor = None

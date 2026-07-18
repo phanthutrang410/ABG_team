@@ -6,9 +6,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=8000
 
-COPY pyproject.toml README.md alembic.ini ./
-COPY app ./app
-COPY alembic ./alembic
+# Build from repo root:
+#   docker build -f backend/Dockerfile -t silent-shield-api:d460 .
+COPY backend/pyproject.toml backend/README.md backend/alembic.ini ./
+COPY backend/app ./app
+COPY backend/alembic ./alembic
+# Importer `_REPO_ROOT` = parents[3] of /app/app/dwh → /
+COPY data/approved /data/approved
 
 RUN pip install --no-cache-dir .
 

@@ -2,13 +2,21 @@
 # Usage:
 #   .\scripts\verify.ps1           # full verify
 #   .\scripts\verify.ps1 -Quick    # lint only
+#   .\scripts\verify.ps1 -System   # full verify + Playwright system test
+#   .\scripts\verify.ps1 -Release  # full verify + system test + online release gate
 
 param(
-    [switch]$Quick
+    [switch]$Quick,
+    [switch]$System,
+    [switch]$Release
 )
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+
+if ($Quick -and ($System -or $Release)) {
+    throw "-Quick không thể dùng cùng -System hoặc -Release"
+}
 
 function Invoke-Step {
     param([string]$Name, [scriptblock]$Action)
@@ -82,6 +90,19 @@ try {
             }
             Invoke-Step "Frontend production build" {
                 npm run build --prefix frontend
+            }
+            if ($System -or $Release) {
+                Invoke-Step "Cross-system Playwright tests" {
+                    & .\tests\system\run.ps1
+                }
+            }
+            if ($Release) {
+                Invoke-Step "Online release gate" {
+                    & .\tests\system\release\run.ps1 `
+                        -BaseUrl $env:RELEASE_BASE_URL `
+                        -ApiBaseUrl $env:RELEASE_API_BASE_URL `
+                        -RepositoryUrl $env:RELEASE_REPOSITORY_URL
+                }
             }
         }
     } else {

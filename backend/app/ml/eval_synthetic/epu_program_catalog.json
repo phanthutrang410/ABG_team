@@ -1,0 +1,209 @@
+{
+  "source": "data/approved/semester/domain_package.json",
+  "source_id_origin": "v59-empty-program-students",
+  "n_observed": 460,
+  "programs": [
+    {
+      "department": "Khoa Công nghệ Thông tin",
+      "program": "Mạng máy tính và truyền thông dữ liệu",
+      "major": "Mạng máy tính và truyền thông dữ liệu",
+      "cohort": "2022",
+      "class_code_seed": "V59P35A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Khoa học Cơ bản",
+      "program": "Toán tin",
+      "major": "Toán tin",
+      "cohort": "2022",
+      "class_code_seed": "V59P29A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Kế toán - Tài chính",
+      "program": "Công nghệ tài chính",
+      "major": "Công nghệ tài chính",
+      "cohort": "2022",
+      "class_code_seed": "V59P28A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Lý luận chính trị",
+      "program": "Chưa phân ngành",
+      "major": "Chưa phân loại",
+      "cohort": "2022",
+      "class_code_seed": "V59P40A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Quản lý Công nghiệp và Năng lượng",
+      "program": "Kỹ thuật công nghiệp",
+      "major": "Kỹ thuật công nghiệp",
+      "cohort": "2022",
+      "class_code_seed": "V59P36A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Năng lượng mới",
+      "program": "Công nghệ kỹ thuật môi trường",
+      "major": "Công nghệ kỹ thuật môi trường",
+      "cohort": "2022",
+      "class_code_seed": "V59P20A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Công nghệ Thông tin",
+      "program": "Khoa học dữ liệu",
+      "major": "Khoa học dữ liệu",
+      "cohort": "2022",
+      "class_code_seed": "V59P23A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Điều khiển và Tự động hóa",
+      "program": "Kỹ thuật Robot",
+      "major": "Kỹ thuật Robot",
+      "cohort": "2022",
+      "class_code_seed": "V59P22A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Năng lượng mới",
+      "program": "Công nghệ vật liệu",
+      "major": "Công nghệ vật liệu",
+      "cohort": "2022",
+      "class_code_seed": "V59P32A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Ngoại ngữ",
+      "program": "Ngôn ngữ Anh",
+      "major": "Ngôn ngữ Anh",
+      "cohort": "2022",
+      "class_code_seed": "V59P31A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Quản trị Kinh doanh và Du lịch",
+      "program": "Luật kinh tế",
+      "major": "Luật kinh tế",
+      "cohort": "2022",
+      "class_code_seed": "V59P30A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Quản trị Kinh doanh và Du lịch",
+      "program": "Marketing",
+      "major": "Marketing",
+      "cohort": "2022",
+      "class_code_seed": "V59P27A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa GDTC & QP",
+      "program": "Chưa phân ngành",
+      "major": "Chưa phân loại",
+      "cohort": "2022",
+      "class_code_seed": "V59P39A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Kỹ thuật điện",
+      "program": "Kỹ thuật hệ thống công nghiệp",
+      "major": "Kỹ thuật hệ thống công nghiệp",
+      "cohort": "2022",
+      "class_code_seed": "V59P37A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Điện tử Viễn thông",
+      "program": "Kỹ thuật máy tính",
+      "major": "Kỹ thuật máy tính",
+      "cohort": "2022",
+      "class_code_seed": "V59P24A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Cơ khí - ô tô và Xây dựng",
+      "program": "Công nghệ kỹ thuật ô tô",
+      "major": "Công nghệ kỹ thuật ô tô",
+      "cohort": "2022",
+      "class_code_seed": "V59P25A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Quản trị Kinh doanh và Du lịch",
+      "program": "Kinh doanh quốc tế",
+      "major": "Kinh doanh quốc tế",
+      "cohort": "2022",
+      "class_code_seed": "V59P34A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Năng lượng mới",
+      "program": "Kỹ thuật nhiệt",
+      "major": "Kỹ thuật nhiệt",
+      "cohort": "2022",
+      "class_code_seed": "V59P19A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Năng lượng mới",
+      "program": "Chưa phân ngành",
+      "major": "Chưa phân loại",
+      "cohort": "2022",
+      "class_code_seed": "V59P17A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Năng lượng mới",
+      "program": "Công nghệ kỹ thuật hạt nhân",
+      "major": "Công nghệ kỹ thuật hạt nhân",
+      "cohort": "2022",
+      "class_code_seed": "V59P33A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Năng lượng mới",
+      "program": "Vật lý kỹ thuật",
+      "major": "Vật lý kỹ thuật",
+      "cohort": "2022",
+      "class_code_seed": "V59P38A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Năng lượng mới",
+      "program": "Công nghệ kỹ thuật năng lượng",
+      "major": "Công nghệ kỹ thuật năng lượng",
+      "cohort": "2022",
+      "class_code_seed": "V59P18A",
+      "weight": 20
+    },
+    {
+      "department": "Khoa Quản trị Kinh doanh và Du lịch",
+      "program": "Quản trị khách sạn",
+      "major": "Quản trị khách sạn",
+      "cohort": "2022",
+      "class_code_seed": "V59P26A",
+      "weight": 20
+    }
+  ],
+  "credits_observed": [
+    [
+      3.0,
+      2814
+    ],
+    [
+      2.0,
+      866
+    ]
+  ],
+  "terms_template": [
+    "2021-2022-T1",
+    "2021-2022-T2",
+    "2022-2023-T1",
+    "2022-2023-T2"
+  ],
+  "courses_per_term": 5,
+  "course_bank_size_per_major": 20
+}

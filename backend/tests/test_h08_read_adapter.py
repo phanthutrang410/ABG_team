@@ -85,22 +85,25 @@ def test_attendance_normalized_and_scoring_features(h08_database_url: str) -> No
     import_attendance(h08_database_url, ensure_schema=False)
     with _session(h08_database_url) as session:
         records = list_normalized_students(session, ATTENDANCE_SOURCE_ID)
-        assert len(records) == 3
-        by_ref = {r.student_ref: r for r in records}
-        assert by_ref["s-1001"].coverage.n_attendance_events == 5
-        assert by_ref["s-1001"].coverage.status in ("ok", "partial")
-        features = to_scoring_features(by_ref["s-1001"])
+        assert len(records) == 460
+        sample = next(r for r in records if r.coverage.n_attendance_events >= 12)
+        assert sample.coverage.status in ("ok", "partial")
+        features = to_scoring_features(sample)
         assert isinstance(features, ScoringFeatures)
-        assert features.attendance_rate_window == 0.8
-        assert features.student_ref == "s-1001"
+        assert features.attendance_rate_window is not None
+        assert 0.0 <= features.attendance_rate_window <= 1.0
         dumped = features.model_dump()
         assert "is_dropout_outcome" not in dumped
         assert "advisor_ref" not in dumped
 
 
 def test_semester_mapping_repair_and_no_cross_join(
-    h08_database_url: str, tmp_path: Path
+    h08_database_url: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    # Explicit Mode B — decision #27 join must not apply here.
+    monkeypatch.setenv("LINKED_NAMESPACE_APPROVAL", "")
+    get_settings.cache_clear()
+
     # Student without advisor → mapping_repair
     payload = [
         {
@@ -161,7 +164,7 @@ def test_semester_mapping_repair_and_no_cross_join(
         assert features.coverage.n_attendance_events == 0
 
         att = list_normalized_students(session, ATTENDANCE_SOURCE_ID)
-        assert len(att) == 3
+        assert len(att) == 460
         # Attendance stubs have no term grades from semester
         assert all(r.term_grades == [] for r in att)
 

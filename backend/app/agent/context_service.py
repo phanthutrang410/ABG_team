@@ -177,6 +177,7 @@ def build_agent_context(
         thresholds=thresholds,
         calculated_at=clock,
         include_below_threshold=False,
+        session=session,
     )
 
     if case is not None and is_snapshot_stale(case.calculated_at, now=clock):

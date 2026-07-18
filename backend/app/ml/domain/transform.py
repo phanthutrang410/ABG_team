@@ -150,8 +150,11 @@ def _iso(value: object) -> Optional[datetime]:
     if isinstance(value, datetime):
         return value
     if isinstance(value, str) and value.strip():
+        text = value.strip()
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
         try:
-            return datetime.fromisoformat(value.strip())
+            return datetime.fromisoformat(text)
         except ValueError:
             return None
     return None

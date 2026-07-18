@@ -20,8 +20,8 @@
 |:--|:--|:--|
 | 1 | **Owner** | Hoàng / Admin kỹ thuật · Silent Shield MVP demo |
 | 2 | **Rights** | Chỉ pipeline MVP; cấm tái phân phối; không PII trong git |
-| 3 | **Hash** | `78d7153fe114537410a5179d36840a23af166cd2f86826bf09138ac02e5ad112` (`data/approved/attendance/mvp_attendance_over_time.json`) |
-| 4 | **Cadence** | Cửa sổ 90 ngày lịch; snapshot demo cố định tới CP2 |
+| 3 | **Hash** | `acfb7d80dc3a22d63f88b07ef706108743c122a121cd2d6261b993f98be964ac` (`mvp_attendance_over_time.json`) — **H15b / decision #27** |
+| 4 | **Cadence** | Cửa sổ 90 ngày; **session grain** (mỗi buổi = 1 event; không bắt buộc 1 tuần = 1 mốc) |
 | 5 | **Privacy** | Chỉ `student_ref` pseudonymous; không MSSV/tên/email/SĐT; không map danh tính trong repo |
 
 ## 2. Source package
@@ -30,12 +30,14 @@
 |:--|:--|
 | `source_id` | `mvp-attendance-over-time` |
 | Fixture path | `data/approved/attendance/mvp_attendance_over_time.json` |
-| `record_count` | `15` (events) |
+| `record_count` | `7360` events · **460** students (1:1 M06 semester refs) |
 | `schema_version` | `epu-1` |
 | `provenance_approved` | `true` |
-| Grain | `observed_at` (ISO date) + optional `course_ref` |
+| Grain | `observed_at` + `course_ref` (buổi học) |
+| Min events / SV | 16 (≥4 Data-ML §2.2) |
 | `presence_status` | `present` \| `absent` |
 | `excused` | optional; nếu `true` → **không** vào mẫu số rate (Data-ML §2.2) |
+| Linked join | Decision [#27](04-decisions.md) · [21…](21-mvp-linked-attendance-approval.md) · H08 + `LINKED_NAMESPACE_APPROVAL` |
 
 ## 3. Amendment applied (cùng handoff)
 
