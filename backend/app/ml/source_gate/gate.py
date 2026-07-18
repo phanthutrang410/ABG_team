@@ -19,12 +19,13 @@ from typing import Dict, List
 
 from app.ml.source_gate.models import GateReasonCode, GateResult, SourceManifest, SourceRole
 
-#: Allowlist source_id → vai trò. EPU §1: v59-empty là primary; epu_data chỉ
-#: regression transform (không trộn hồ sơ với V59). Tên file không chứng minh
-#: provenance — allowlist chỉ chặn nguồn lạ, provenance vẫn do manifest quyết.
+#: Allowlist source_id → vai trò. EPU §1 + decision #18: v59-empty primary
+#: semester; mvp-attendance-over-time = attendance; epu_data = regression.
+#: Tên file không chứng minh provenance — allowlist chỉ chặn nguồn lạ.
 SOURCE_ALLOWLIST: Dict[str, SourceRole] = {
     "v59-empty-program-students": "primary",
     "epu_data": "regression",
+    "mvp-attendance-over-time": "attendance",
 }
 
 #: Marker nội dung synthetic (case-insensitive). Không dùng định danh legacy đầy

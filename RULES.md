@@ -26,7 +26,7 @@ Demo live trước **11:00 19/7/2026**; nộp đủ slide, video ≤5 phút, Git
 
 ## 3. Ranh giới sản phẩm
 
-- MVP đại học dùng điểm theo học kỳ và điểm danh theo thời gian từ nguồn EPU/điểm danh đã duyệt; không tạo chuỗi chuyên cần/tuần để bù dữ liệu thiếu và không mở rộng Wellbeing, LMS/RAG, adaptive tutor, OCR/TTS hay career.
+- MVP đại học dùng điểm theo học kỳ và điểm danh theo thời gian từ nguồn EPU/điểm danh đã duyệt; không tạo chuỗi chuyên cần/tuần để bù dữ liệu thiếu và không mở rộng Wellbeing, LMS/RAG, adaptive tutor, OCR/TTS hay career. **Ngoại lệ MVP demo (decision #18):** team approver có thể duyệt snapshot semester V59 ngoài git và một nguồn điểm danh allowlisted `mvp-attendance-over-time`; vẫn cấm legacy synthetic đã liệt kê và PII trong repo.
 - Không đưa PII thật, thông tin liên hệ cá nhân không cần thiết, secrets hoặc raw AI sessions vào repo/evidence.
 - Không commit `reference-Learning-Analytics-AI/`.
 - Thuộc tính nhóm cho fairness chỉ được dùng khi đã có nguồn và phê duyệt riêng; luôn tách khỏi scoring, explanation và public case API.

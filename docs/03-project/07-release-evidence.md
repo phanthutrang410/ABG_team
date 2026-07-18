@@ -6,11 +6,13 @@
 
 ## 1. Checkpoint 1: 18/7 11:00
 
+> **ACTION (Hoàng — human):** trước **11:00** paste 4 trường từ [11-h13-cp1-btc-draft.md](11-h13-cp1-btc-draft.md) vào form BTC → lưu screenshot/email/mã xác nhận → tick 2 hàng dưới + Sprint `H13` Done. Agent **không** nộp form hộ.
+
 | Mục | Owner | Task nguồn | Evidence | Status |
 |:--|:--|:--|:--|:--|
 | Tên dự án, track, mô tả, hướng tiếp cận | Hoàng | H13 | [11-h13-cp1-btc-draft.md](11-h13-cp1-btc-draft.md) · paste-ready ~04:25 18/7 | [x] |
-| Đã nộp form/link BTC | Hoàng | H13 | BLOCKED → human BTC submit (deadline 11:00; form URL ngoài repo) | [ ] |
-| Xác nhận BTC đã nhận | Hoàng | H13 | BLOCKED → human BTC submit / receipt | [ ] |
+| Đã nộp form/link BTC | Hoàng | H13 | BLOCKED → human BTC submit (deadline 11:00; form URL ngoài repo) · refreshed ~06:35 | [ ] |
+| Xác nhận BTC đã nhận | Hoàng | H13 | BLOCKED → human BTC submit / receipt · refreshed ~06:35 | [ ] |
 
 > **H13 partial:** nội dung 4 trường đã khóa trong draft. `H13` chưa Done cho đến khi Hoàng nộp form và lưu xác nhận BTC.
 
@@ -51,6 +53,14 @@
 - CP2: không nộp `V05` trước `D4r` xanh. `H16` phải khóa evidence CP2 sau `V07` + `V05` (và gap `A05` nếu có).
 - Asset slide/mô tả không được thay đổi scope/copy canonical do Hoàng khóa (`H12a` runtime; `H12b` banner/asset).
 - Nếu một mục bị block, ghi dependency cụ thể và báo owner, không dùng screenshot/mock thay thế.
+
+## 5b. Source unlock (M05b + H15) — 18/7 ~07:05
+
+| Mục | Owner | Task | Evidence | Status |
+|:--|:--|:--|:--|:--|
+| Semester approved (M05b) | Hoàng | M05b | [14-m05b…](14-m05b-semester-approval.md) · decision #18 · hash `34a53298…` / 460 · raw ngoài git | [x] |
+| Attendance approved (H15) | Hoàng | H15 | [12-h15…](12-h15-attendance-approval-prep.md) · fixture `backend/tests/fixtures/attendance/mvp_attendance_over_time.json` · hash `f65573ad…` / 15 events | [x] |
+| Source gate allowlist | Hoàng | H15/M05a | `mvp-attendance-over-time` in `SOURCE_ALLOWLIST`; `tests/test_source_gate.py` 26 pass | [x] |
 
 ## 6. Fill template (H05b)
 

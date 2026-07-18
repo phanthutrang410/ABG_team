@@ -247,3 +247,78 @@ def test_manifest_forbids_unknown_field() -> None:
             usage_rights="r",
             unexpected="boom",
         )
+
+
+# --- H15 allowlisted attendance (decision #18) -----------------------------
+
+_ATTENDANCE_FIXTURE = (
+    Path(__file__).resolve().parent / "fixtures" / "attendance" / "mvp_attendance_over_time.json"
+)
+
+
+def test_mvp_attendance_fixture_admitted() -> None:
+    assert _ATTENDANCE_FIXTURE.is_file()
+    sha = compute_sha256(_ATTENDANCE_FIXTURE)
+    manifest = SourceManifest(
+        source_id="mvp-attendance-over-time",
+        snapshot_sha256=sha,
+        record_count=15,
+        provenance_approved=True,
+        schema_version="epu-1",
+        extracted_at=datetime(2026, 7, 18, tzinfo=timezone.utc),
+        owner="admin-ky-thuat-hoang",
+        usage_rights="mvp-demo-attendance",
+    )
+    result = evaluate_source(_ATTENDANCE_FIXTURE, manifest)
+    assert result.admitted is True
+    assert result.reason_codes == []
+    assert result.role == "attendance"
+    assert result.observed_record_count == 15
+    assert result.pii_fields_found == []
+
+
+def test_mvp_attendance_unapproved_rejected() -> None:
+    sha = compute_sha256(_ATTENDANCE_FIXTURE)
+    manifest = SourceManifest(
+        source_id="mvp-attendance-over-time",
+        snapshot_sha256=sha,
+        record_count=15,
+        provenance_approved=False,
+        schema_version="epu-1",
+        extracted_at=datetime(2026, 7, 18, tzinfo=timezone.utc),
+        owner="admin-ky-thuat-hoang",
+        usage_rights="mvp-demo-attendance",
+    )
+    result = evaluate_source(_ATTENDANCE_FIXTURE, manifest)
+    assert result.admitted is False
+    assert "source_unapproved" in result.reason_codes
+
+
+def test_legacy_synthetic_marker_still_rejected_on_attendance_id(tmp_path: Path) -> None:
+    """Allowlist id không miễn marker 'synthetic' trong payload."""
+    records = {
+        "source_id": "mvp-attendance-over-time",
+        "events": [
+            {
+                "student_ref": "s-1",
+                "observed_at": "2026-07-01",
+                "presence_status": "present",
+                "note": "synthetic sample",
+            }
+        ],
+    }
+    path = tmp_path / "bad.json"
+    sha = _write_json(path, records)
+    manifest = SourceManifest(
+        source_id="mvp-attendance-over-time",
+        snapshot_sha256=sha,
+        record_count=1,
+        provenance_approved=True,
+        schema_version="epu-1",
+        extracted_at=datetime(2026, 7, 18, tzinfo=timezone.utc),
+        owner="o",
+        usage_rights="r",
+    )
+    result = evaluate_source(path, manifest)
+    assert result.admitted is False
+    assert "synthetic_source_rejected" in result.reason_codes

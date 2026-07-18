@@ -29,15 +29,15 @@ GateReasonCode = Literal[
     "pii_field_present",
 ]
 
-SourceRole = Literal["primary", "regression"]
+SourceRole = Literal["primary", "regression", "attendance"]
 
 
 class SourceManifest(BaseModel):
     """Manifest provenance do data owner cung cấp — input của gate.
 
     `provenance_approved=True` là điều kiện cần (không đủ): gate CODE (M05a) kiểm
-    tra cờ này, nhưng cờ chỉ được bật khi có artifact duyệt của data owner (M05b).
-    M05a Done ≠ nguồn đã duyệt.
+    tra cờ này; cờ được bật khi có artifact duyệt (M05b/H15 — decision #18: team
+    approver MVP demo). M05a Done ≠ nguồn đã duyệt.
     """
 
     model_config = ConfigDict(extra="forbid")

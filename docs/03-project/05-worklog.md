@@ -1,5 +1,22 @@
 # Nhật ký công việc
 
+## 2026-07-18 (~07:05 M05b + H15 unlock — decision #18)
+
+- **Decision #18:** team approver (Hoàng) unlock MVP demo — semester V59 ngoài git + attendance allowlisted `mvp-attendance-over-time`.
+- `M05a`/`H06c` board sync **Done** (PR #17). `M05b` **Done** — [14-m05b…](14-m05b-semester-approval.md) (hash `34a53298…`, 460 rows).
+- `H15` **Done** — [12-h15…](12-h15-attendance-approval-prep.md) + fixture `backend/tests/fixtures/attendance/mvp_attendance_over_time.json`; amend EPU/Data-ML/persistence; RULES pointer.
+- Gate: allowlist `mvp-attendance-over-time` role `attendance`; `tests/test_source_gate.py` **26** xanh.
+- **M06 mở** cho Duy. Không làm H20/H08 trong wave này. Public copy trung lập (không slogan synthetic / không claim institutional approval).
+
+## 2026-07-18 (~06:35 Option 1: M01 Done + H18)
+
+- Chốt **Option 1** multitask Hoàng (không spawn lane Duy/Giang/Trang).
+- `M01` **Done** (PR #16 `1046ffe`): board sync; dọn leftover `backend/app/ml/early_warning/` (`__pycache__`) — 4/4 `test_m01_legacy_quarantine` xanh.
+- `H18` **Done**: `backend/tests/test_h18_api_mvp_quarantine.py` (6) — API/MVP packages không legacy; OpenAPI/ReviewCase không raw risk; health/cases surface không cần early_warning.
+- `H02` còn `BLOCKED → M02` (H18/H06a-r Done).
+- `H13` vẫn TODO — human BTC submit + receipt trước 11:00; draft paste-ready giữ nguyên.
+- Chase `M05b`/`H15` refresh — vẫn BLOCKED → data-owner / M05a; **không** fake approval.
+
 ## 2026-07-18 (~05:56 chase M05b/H15)
 
 - Chase refresh only: [12-h15…](12-h15-attendance-approval-prep.md) §0 — status bảng M05a/M05b/H15 + next asks copy/paste cho Duy và data-owner; checklist §1 vẫn **OPEN** cả 5 hàng.
