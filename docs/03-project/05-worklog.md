@@ -1,5 +1,12 @@
 # Nhật ký công việc
 
+## 2026-07-18 (Board sync — G05/G02/G03/G04 Done, D4b/H11b unblocked)
+
+- Đồng bộ [Sprint](03-sprint.md) với thực tế sau merge `d579909`: lane Giang `G05`/`G02`/`G03`/`G04` **Done** — evidence từ `.ai-log/manifest.csv` (sessions `20260718-G05-…-12`, `…-13`, `…-15`, `…-16`) và code đã merge (`frontend/src/lib/{types,fixtures,api,session,limitations}`, `CareActions`/`FairnessPanel`/`ThresholdPanel`/`AppShell`, các trang login/select-role/dashboard/my-class/cases; `mock-review-list.ts` đã xóa). AI-log `review_status` các dòng này còn `pending` — cần review trước final.
+- Dây chuyền mở khóa cập nhật: `D4b` **TODO unblocked** (D4a/H02/G02 Done — critical path CP2, chạy ngay); `H11b` **TODO unblocked** (G05/T03/H26 Done); `A05` chỉ còn BLOCKED → D4b; `V02` chỉ còn BLOCKED → D4r; `G06` vẫn BLOCKED → H22 (stretch FR-12).
+- Gap ghi nhận từ G02 (cần Hoàng chốt, không tự sửa contract): `ReviewCase` public thiếu `cohort`/`department`/`class_code` → FE chưa làm được scoping khoa/lớp; thêm row risk vào Sprint §10.
+- Checks: docs-only — `git diff --check` + `.\scripts\verify.ps1 -Quick` (kết quả ghi cùng handoff); không sửa code/fixture; không commit.
+
 ## 2026-07-18 (H23–H26 Done — Agent runtime FR-08 backend HTTP)
 
 - `H23`–`H26` **Done**: server-derived `AgentContext` → `POST /review-cases/{case_id}/explanation` → structured grounding + hardened FPT client → mocked HTTP E2E.
