@@ -2,6 +2,9 @@ import type {
   CaseAction,
   CaseDetailResponse,
   CaseListResponse,
+  FairnessReport,
+  PublicThresholdConfig,
+  ThresholdImpactResponse,
   TransitionErrorBody,
   TransitionResponse,
   TransitionResult,
@@ -77,6 +80,44 @@ export async function postCaseTransition(
     return { ok: false, error: null };
   } catch {
     return { ok: false, error: null };
+  }
+}
+
+/** G04 — GET /config/thresholds (H04). null = upstream unavailable (fail-closed hiển thị lỗi). */
+export async function fetchThresholds(signal?: AbortSignal): Promise<PublicThresholdConfig | null> {
+  try {
+    const res = await fetch(`${API_BASE}/config/thresholds`, { cache: "no-store", signal });
+    if (!res.ok) return null;
+    return (await res.json()) as PublicThresholdConfig;
+  } catch {
+    return null;
+  }
+}
+
+/** G04 — GET /config/thresholds/impact (aggregate counts only). */
+export async function fetchThresholdImpact(
+  tauCase: number,
+  tauHigh: number,
+  signal?: AbortSignal,
+): Promise<ThresholdImpactResponse | null> {
+  try {
+    const qs = new URLSearchParams({ tau_case: String(tauCase), tau_high: String(tauHigh) });
+    const res = await fetch(`${API_BASE}/config/thresholds/impact?${qs}`, { cache: "no-store", signal });
+    if (!res.ok) return null;
+    return (await res.json()) as ThresholdImpactResponse;
+  } catch {
+    return null;
+  }
+}
+
+/** G04 — GET /fairness/report (MVP: status=insufficient_data, fail-closed). */
+export async function fetchFairnessReport(signal?: AbortSignal): Promise<FairnessReport | null> {
+  try {
+    const res = await fetch(`${API_BASE}/fairness/report`, { cache: "no-store", signal });
+    if (!res.ok) return null;
+    return (await res.json()) as FairnessReport;
+  } catch {
+    return null;
   }
 }
 

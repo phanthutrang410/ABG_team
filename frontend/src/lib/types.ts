@@ -133,6 +133,79 @@ export type TransitionResult =
   | { ok: true; data: TransitionResponse }
   | { ok: false; error: TransitionErrorBody | null };
 
+/* ---------- H04: threshold public + fairness (mirror backend contracts) ---------- */
+
+/** mirror app/contracts/threshold_public.py PublicThresholdConfig. */
+export type PublicThresholdConfig = {
+  threshold_config_version: string;
+  tau_case: number;
+  tau_high: number;
+  model_version: string;
+};
+
+/** mirror ThresholdImpactResponse — aggregate counts only, never per-student scores. */
+export type ThresholdImpactResponse = {
+  threshold_config_version: string;
+  tau_case: number;
+  tau_high: number;
+  model_version: string;
+  n_scored: number;
+  n_can_ra_soat: number;
+  n_uu_tien_som: number;
+  n_no_case: number;
+};
+
+/** mirror app/contracts/fairness.py — MVP path: status=insufficient_data, no group metrics. */
+export type FairnessGroupMetrics = {
+  group_type: "socioeconomic" | "ethnicity";
+  group: string;
+  n_total: number;
+  n_label_neg: number;
+  n_label_pos: number;
+  n_excluded_insufficient: number;
+  fpr: number | null;
+  tpr: number | null;
+  selection_rate: number | null;
+  status: "ok" | "insufficient_group_data";
+};
+
+export type FairnessReport = {
+  dataset_version: string;
+  model_version: string;
+  threshold_config_version: string;
+  label_rule_version: string;
+  computed_at: string;
+  status: "insufficient_data" | "ok";
+  reason_code: "no_approved_audit_attribute" | "insufficient_group_data" | null;
+  audit_attribute: string | null;
+  small_n_min_denominator: number | null;
+  groups: FairnessGroupMetrics[] | null;
+  delta_fpr_by_group_type?: Record<string, { status: "ok" | "insufficient"; value: number | null; reason: string | null }> | null;
+  fairness_flag?: { flagged: boolean; delta_fpr_threshold: number; triggered_group_types: string[] } | null;
+};
+
+/* ---------- Phiên demo (không phải auth thật — PRD §9) ---------- */
+
+export type Role = "ban_quan_ly" | "gvcn";
+
+export type DemoAccount = {
+  id: string;
+  name: string;
+  /** Mật khẩu fixture công khai cho demo — không phải secret. */
+  password: string;
+  roles: Role[];
+};
+
+export const ROLE_LABEL: Record<Role, string> = {
+  ban_quan_ly: "Ban quản lý — giám sát học tập",
+  gvcn: "Giảng viên chủ nhiệm",
+};
+
+export const ROLE_ICON: Record<Role, string> = {
+  ban_quan_ly: "👔",
+  gvcn: "🧑‍🏫",
+};
+
 /* ---------- Nhãn hiển thị (đã dùng nhất quán trong docs/prototype trước) ---------- */
 
 export const BAND_LABEL: Record<ReviewPriorityBand, string> = {
