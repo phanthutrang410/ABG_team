@@ -63,9 +63,9 @@ Baseline khóa sau review progress/direction. **Không đổi** product directio
 | 7 | Go/no-go nguồn (~07:00–08:00): fail → chỉ demo `insufficient_data` + fail-closed workflow; **cấm** synthetic thay E2E |
 | 8 | Freeze hybrid/forecast/Post-MVP; **V08** + AI log backfill và release skeleton chạy ngay |
 
-**Bổ sung board:** Critical path còn `M06→H20→H08→M02`; Profile `M01`+`H18` **Done**; `M05a`/`H06c`/`M05b`/`H15` **Done** (decision #18). `H06b` = **Done — transition core** + deploy-blocker harden.
+**Bổ sung board:** Critical path còn `H20→H08→M02`; Profile `M01`+`H18` **Done**; `M05a`/`H06c`/`M05b`/`H15`/`M06` **Done** (decision #18). `H06b` = **Done — transition core** + deploy-blocker harden.
 
-**Owner ngay:** Hoàng — H13 (BTC submit). Khánh Duy — **`M06` ngay** (M05b+H15 Done). Giang — `G05`. Thu Trang — `T03`. Văn Hải — `V08`. **Hạ Giang** — UAT/slide/claim skeleton.
+**Owner ngay:** Hoàng — H13 (BTC submit) + **`H20`** (M06 Done — nạp `app/ml/domain` output). Giang — `G05`. Thu Trang — `T03`. Văn Hải — `V08`. **Hạ Giang** — UAT/slide/claim skeleton. Khánh Duy — `M06` **Done**; `M02` vẫn `BLOCKED → H08`.
 
 ## 2. Boundary bắt buộc cho ML, agent và hybrid
 
@@ -83,7 +83,7 @@ Mỗi task có một owner. Nếu dependency chưa Done, status ghi `BLOCKED →
 **Critical path MVP (realign §1.2 — còn lại sau P0.5):**
 
 ```text
-Data:     M05a ✓ → M05b ✓ → M06 → H20 → H08 → M02 ─┐
+Data:     M05a ✓ → M05b ✓ → M06 ✓ → H20 → H08 → M02 ┐
 Profile:  M01 ✓ → H18 ✓ ───────────────────────────┼→ H02 → G02 → D4b
 Attendance: H15 ✓ (mvp-attendance-over-time) ───────┘
 Contract: H06a-r → H11a-r → (G05 ∥ T03)
@@ -110,7 +110,7 @@ Deploy:   (H07 ∥ D3) → D4a (shell) → D4b (product smoke) → V07 + A05 →
 | H11b | Docs agent/FE hoàn thiện sau build | H11a, G05, T03 | [ ] BLOCKED → G05, T03 |
 | H07 | Deployment/runbook docs | H05a | [x] Done — runbook draft; finalize Live/smoke/rollback tại D4a/D4b |
 | H19 | MVP persistence schema versioned + legacy mapping | H10 | [x] Done — Alembic 7 bảng `dwh` + 4 migrate tests; schema doc |
-| H20 | Transactional approved-fixture import vào `dwh` | H19, M06 | [ ] BLOCKED → M06 · H19 Done |
+| H20 | Transactional approved-fixture import vào `dwh` | H19, M06 | [ ] TODO — unblocked (H19 + M06 Done); consume `app/ml/domain` output (Hoàng) |
 | H08 | `dwh` → normalized internal DTO read adapter | H20, H06a | [ ] BLOCKED → H20, H06a-r |
 | H18 | Quarantine legacy ML synthetic khỏi API/MVP path | M01 | [x] **Done** — API/MVP quarantine tests; leftover `early_warning` gỡ; mở khóa blocker H18 trên H02 |
 | H14 | Decision/contract research forecast/fusion từ M07 | M07 | [ ] BLOCKED → M07 · **FREEZE** tới sau submission |
@@ -139,7 +139,7 @@ Deploy:   (H07 ∥ D3) → D4a (shell) → D4b (product smoke) → V07 + A05 →
 | H06c | FairnessReport schema + fail-closed fixture | H10 | [x] **Done** — PR #17; fail-closed fixture |
 | M05a | Build semester source gate (code/tests) | H10 | [x] **Done** — PR #17; `app/ml/source_gate` + tests |
 | M05b | Approved source available (artifact duyệt) | M05a + approval | [x] **Done** — [14-m05b…](14-m05b-semester-approval.md); team approver (decision #18) |
-| M06 | Fixture 4 bảng domain + manifests + quality tests | M05b | [ ] **TODO ngay** — unblocked; gồm `attendance_event` từ H15 |
+| M06 | Fixture 4 bảng domain + manifests + quality tests | M05b | [x] **Done** — `app/ml/domain` transform + quality report; attendance manifest/DQR committed; `tests/test_m06_domain_fixture.py` (46); mở `H20` |
 | M02 | Baseline semester ML | M06, H06a, H08 | [ ] BLOCKED → M06, H08, H06a-r |
 | M07 | Nghiên cứu hybrid (research-only) | M02, H02, H13 | [ ] **FREEZE** tới sau submission |
 | M03 | Fairness gate FPR/ΔFPR/N | M02, H06c | [ ] BLOCKED → M02, H06c |
@@ -239,7 +239,7 @@ Deploy:   (H07 ∥ D3) → D4a (shell) → D4b (product smoke) → V07 + A05 →
 | H06c | P1 · sau H10 | `FairnessReport` schema + fail-closed fixture | **Done** PR #17 |
 | M05a | P1 · sau H10 | **Build** source gate: register, hash/count, PII exclusion, fail-closed khi thiếu approval | **Done** PR #17 |
 | M05b | P1 · sau M05a | **Approved source available** | **Done** [14-m05b…](14-m05b-semester-approval.md); team approver (decision #18) |
-| M06 | P1 · sau M05b | Fixture: bảng domain điểm + `attendance_event` (H15) + `source_manifest` + `data_quality_report` | **TODO ngay** — unblocked; deterministic, pseudonymous; không cross-join/PII/token |
+| M06 | P1 · sau M05b | Fixture: bảng domain điểm + `attendance_event` (H15) + `source_manifest` + `data_quality_report` | **Done:** `app/ml/domain` (models/transform/attendance) — deterministic, pseudonymous, fail-closed PII/token, không cross-join, `is_dropout_outcome` chỉ evaluation; field khớp cột `dwh` (H20/H08); attendance `source_manifest`/`data_quality_report` committed (`tests/fixtures/attendance/`); `tests/test_m06_domain_fixture.py` (46). Semester domain artifact sinh tại vị trí ngoài repo từ file M05b external (H20 đọc) — không commit raw/PII |
 | M02 | P1 · baseline | Baseline ML: trend/volatility điểm + chuyên cần theo thời gian (khi có) + factors + coverage | Sau M06+H08+H06a-r; cấm synthetic/legacy; không dùng `is_dropout_outcome` trong score |
 | M07 | **FREEZE** | Nghiên cứu forecast/fusion | Không tranh slot MVP; chỉ sau submission |
 | M03 | P2 | Fairness gate FPR/ΔFPR/N hoặc `insufficient_data` | Formula/denominator/group-separation; outcome chỉ evaluation |
