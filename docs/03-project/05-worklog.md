@@ -1,5 +1,29 @@
 # Nhật ký công việc
 
+## 2026-07-18 (Wave H28a–D6 backend Done — weekly + OpenAI + Global Agent)
+
+- Slice 0–5 backend landed: Decision #23; OpenAI runtime (`H29`); snapshot ledger + CLI (`H30`/`H31`); Mode B observations + durable cases + delta + report/briefing (`H32`–`H34b`); RBAC (`H36`); advisor draft v2 (`H35`); `POST /agent/turns` (`H37`); safe export (`H38`); ops kill-switch/`scheduler_tick` (`D6` foundation).
+- Checks: backend `pytest -m "not slow and not eval"` → **548 passed, 1 skipped**; Ruff clean.
+- **Gaps:** Case store still in-memory (not Alembic); linked namespace combined feed still pending approval; EventBridge live wiring manual; FE `G07–G09` + `T05` chưa ship — không overclaim trên Live URL nộp bài.
+- Unlock: Giang `G07` (sau H36); `G08`/`G09` sau G07; Thu Trang `T05` sau G07.
+
+## 2026-07-18 (H29 Done — OpenAI Responses provider)
+
+- `H29` **Done**: `app/agent/model.py` + `openai_client.py`; `get_text_model` chỉ OpenAI / missing-key stand-in; FPT không còn active path; `store=false`; `tests/test_h29_openai_transport.py` + agent regression 100 passed / 1 skipped.
+- Env: `OPENAI_API_KEY` / `OPENAI_MODEL` / `OPENAI_BASE_URL` trong `.env.example`.
+
+## 2026-07-18 (H28a Done — readiness/decision lock weekly wave)
+
+- `H28a` **Done**: Decision #23 khóa significant-change/resurfaced, Mode B linked-namespace (`approval:pending-linked-namespace`), identity/RBAC/90d retention, EventBridge→SQS→worker, OpenAI model pin/`store=false`, email draft-only (#20).
+- Artifacts: [04-decisions.md](04-decisions.md) #23; architecture §16; deploy runbook §12; Sprint unlock `H30`/`H32`(Mode B)/`H33b`/`H36`.
+- Không schema migration / provider code trong H28a. Critical path `V07+A05→D4r` không bị block bởi wave này.
+
+## 2026-07-18 (Phân công: V05 → Thu Trang; V07 checklist rõ cho Hải)
+
+- `V05` (nộp Checkpoint 2) **chuyển owner** Văn Hải → **Thu Trang**; story [16-stories-thu-trang.md](16-stories-thu-trang.md).
+- `V07` viết lại thành checklist từng bước + **output template** bắt buộc trong [09-stories-van-hai.md](09-stories-van-hai.md); Hải không nộp CP2.
+- Đồng bộ [Sprint](03-sprint.md) board/lane + [07-release-evidence §2](07-release-evidence.md).
+
 ## 2026-07-18 (H11b + H22 Done — docs agent/FE + advisor handoff draft API)
 
 - `H11b` **Done**: sync arch §6 (bounded DAG HTTP), [guardrails](../04-engineering/08-agent-grounding-guardrails.md) canonical, [doc 10](../04-engineering/10-fe-agent-integration-contract.md) after-build matrix; claim FR-08 = backend HTTP only; no FE Agent UI overclaim.

@@ -81,7 +81,7 @@ def _assert_empty_domain_tables(engine) -> None:
             assert count == 0, f"expected empty {table}, got {count} rows"
 
 
-def test_upgrade_head_creates_seven_empty_tables(migrate_database_url: str) -> None:
+def test_upgrade_head_creates_empty_tables(migrate_database_url: str) -> None:
     upgrade_head(migrate_database_url)
     engine = create_engine(migrate_database_url)
     try:

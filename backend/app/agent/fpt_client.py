@@ -1,7 +1,7 @@
-"""Hardened FPT AI chat-completions adapter (H25).
+"""Hardened FPT AI chat-completions adapter (H25) — legacy / historical only.
 
-Text-in/text-out only. No case, scoring, transition or notification tools.
-Tests inject a fake client; live HTTP is never used in the mocked gate.
+Active runtime target is OpenAI Responses (H29). This module remains for
+historical transport tests; ``get_text_model`` must not construct FPTChatClient.
 """
 
 from __future__ import annotations
@@ -9,26 +9,30 @@ from __future__ import annotations
 import json
 import threading
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 from urllib import error, request
 from urllib.parse import urlparse
 
+from app.agent.model import ModelUnavailable, TextModel
+
 if TYPE_CHECKING:
     from app.config import Settings
+
+__all__ = [
+    "ALLOWED_FPT_HOSTS",
+    "FPTChatClient",
+    "MAX_RESPONSE_BYTES",
+    "MAX_TIMEOUT_SECONDS",
+    "MAX_TOKENS",
+    "ModelUnavailable",
+    "TextModel",
+]
 
 ALLOWED_FPT_HOSTS = frozenset({"mkp-api.fptcloud.com"})
 MAX_TIMEOUT_SECONDS = 30.0
 MAX_TOKENS = 512
 MAX_RESPONSE_BYTES = 16 * 1024
 DEFAULT_MAX_CONCURRENT = 3
-
-
-class ModelUnavailable(RuntimeError):
-    """The inference service did not return a usable response."""
-
-
-class TextModel(Protocol):
-    def complete(self, *, system: str, user: str) -> str: ...
 
 
 def _validate_https_allowlisted_base_url(base_url: str) -> str:

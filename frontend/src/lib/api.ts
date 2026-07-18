@@ -20,7 +20,13 @@ import type {
  * fail-closed, never fabricate items or a band (RULES / AGENTS §C.5).
  */
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000").replace(/\/+$/, "");
+// Empty string = same-origin (Vercel rewrite → BACKEND_URL). Local default via
+// next.config env / .env.local is http://localhost:8000.
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000").replace(
+  /\/+$/,
+  "",
+);
+
 const ADVISOR_HANDOFF_DRAFTS_URL =
   process.env.NEXT_PUBLIC_ADVISOR_HANDOFF_DRAFTS_URL?.trim() ||
   `${API_BASE}/advisor-handoff-drafts`;

@@ -11,7 +11,7 @@ from typing import Dict, FrozenSet, List, Literal, Optional, Set
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.agent.fpt_client import ModelUnavailable
+from app.agent.model import ModelUnavailable
 from app.agent.schemas import DraftMessage
 from app.contracts.integration import AgentIntent
 from app.contracts.review_case import ReviewCase

@@ -9,11 +9,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.agent.router import router as agent_explanation_router
+from app.agent.turns_router import router as agent_turns_router
 from app.cases.advisor_draft_router import router as advisor_handoff_draft_router
 from app.cases.router import router as cases_router
 from app.cases.review_router import router as review_cases_router
 from app.config_api.router import router as config_router
 from app.database import check_db, init_schemas
+from app.weekly.export_router import router as weekly_export_router
+from app.weekly.router import router as weekly_router
 
 
 def _cors_allow_origins() -> list[str]:
@@ -55,8 +58,11 @@ app.add_middleware(
 app.include_router(cases_router)
 app.include_router(review_cases_router)
 app.include_router(agent_explanation_router)
+app.include_router(agent_turns_router)
 app.include_router(advisor_handoff_draft_router)
 app.include_router(config_router)
+app.include_router(weekly_router)
+app.include_router(weekly_export_router)
 
 
 @app.get("/health")

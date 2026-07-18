@@ -10,12 +10,20 @@ from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _ALLOWED_FPT_HOSTS = frozenset({"mkp-api.fptcloud.com"})
+_ALLOWED_OPENAI_HOSTS = frozenset({"api.openai.com"})
 
 
 class Settings(BaseSettings):
     database_url: str = (
         "postgresql+psycopg://silentshield:silentshield@localhost:5432/silentshield"
     )
+    # H29 target provider
+    openai_api_key: SecretStr = SecretStr("")
+    openai_base_url: str = "https://api.openai.com"
+    openai_model: str = "gpt-4.1-mini"
+    openai_max_output_tokens: int = Field(default=512, ge=1, le=512)
+    openai_max_response_bytes: int = Field(default=16 * 1024, ge=1, le=16 * 1024)
+    # Legacy H23–H26 FPT settings (inactive path after H29; kept for historical tests)
     fpt_api_key: SecretStr = SecretStr("")
     fpt_base_url: str = "https://mkp-api.fptcloud.com"
     fpt_model: str = "Qwen/Qwen3-32B"
@@ -72,6 +80,28 @@ class Settings(BaseSettings):
                 "fpt_base_url host must be mkp-api.fptcloud.com"
             )
         return value.rstrip("/")
+
+    @field_validator("openai_base_url")
+    @classmethod
+    def _openai_base_url_https_allowlist(cls, value: str) -> str:
+        parsed = urlparse(value)
+        if parsed.scheme != "https":
+            raise ValueError("openai_base_url must use HTTPS")
+        host = (parsed.hostname or "").lower()
+        if host not in _ALLOWED_OPENAI_HOSTS:
+            raise ValueError("openai_base_url host must be api.openai.com")
+        return value.rstrip("/")
+
+    @field_validator("openai_max_output_tokens", mode="before")
+    @classmethod
+    def _cap_openai_max_output_tokens(cls, value: object) -> object:
+        if value is None or value == "":
+            return 512
+        try:
+            number = int(value)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return value
+        return min(max(number, 1), 512)
 
 
 @lru_cache

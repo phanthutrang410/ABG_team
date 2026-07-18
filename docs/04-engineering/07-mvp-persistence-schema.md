@@ -1,8 +1,10 @@
-# MVP persistence schema — H19/H20
+# MVP persistence schema — H19/H20/H30
 
-> **Trạng thái:** `H19` **Done** — empty versioned `dwh` schema + Alembic revision `20260718_h19_dwh`. `H15` **Done** (decision #18). `H20` **Done** — CLI/service importer (`app/dwh/import_gate.py`, `importer.py`, `cli.py`) nạp `data/approved/` (attendance + semester domain package; optional raw via `SILENT_SHIELD_SEMESTER_SOURCE_PATH`); atomic/idempotent/fail-closed; readiness report không PII. `H08` đọc adapter trên snapshot đã nạp. Không commit raw V59 / PII / legacy synthetic cấm.
+> **Trạng thái:** `H19`/`H20` Done. `H30` **Done** — Alembic `20260718_h30_snapshot` thêm `dataset_source`, `dataset_snapshot`, `active_dataset_snapshot`, `workflow_run`, `workflow_step_run`; backfill từ `source_manifest` thành snapshot v1 (`legacy_source_id`). Domain rows vẫn keyed by `source_id` (chưa rewrite weekly IDs).
 >
-> **Owner:** Hoàng · **Evidence:** migration revision; `tests/test_h20_import_gates.py`, `tests/test_h20_import.py`, `tests/test_h08_read_adapter.py`; CLI `python -m app.dwh.cli`.
+> **Owner:** Hoàng · **Evidence:** `tests/test_dwh_migrate.py`, `tests/test_h30_h31_weekly_workflow.py`; CLI `python -m app.dwh.cli weekly run`.
+>
+> **ERD + catalog cột hiện tại:** [14-database-schema-erd](14-database-schema-erd.md) (SoT vật lý; tài liệu này giữ quyết định thiết kế / import gate).
 
 ## 1. Quyết định persistence
 
