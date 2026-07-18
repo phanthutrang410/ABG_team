@@ -19,6 +19,7 @@
 | Mục | Owner | Task nguồn | Evidence | Status |
 |:--|:--|:--|:--|:--|
 | Live URL hoạt động (smoke lần 1) | Hoàng | D4a → **D4b** | **D4b product 2026-07-18 ~13:05 +07:** FE `http://52.74.255.88:3000` · API `http://52.74.255.88:8000` · health `{"status":"ok","service":"silent-shield","database":true}` · `GET /review-cases` state=`ok` n=50 · detail `rc-s-00518c9485a9` band=`can_ra_soat` student_ref=`s-00518c9485a9` · FE `/login` `/dashboard` `/select-role` 200 · CORS ACAO=`http://52.74.255.88:3000` · no `model_score`/PII/`advisor_ref` · images `:d4b` API `sha256:bab21546…` FE `sha256:70eb44b5…` · Postgres + approved import (sem `73274079…` / att `78d7153f…`) · runbook [06-deploy-runbook.md](../04-engineering/06-deploy-runbook.md) | [x] shell / [x] **D4b** |
+| Vercel FE candidate (H27) | Hoàng | H27 | **Candidate** `https://abg-team.vercel.app` · Root `frontend` · same-origin rewrite → API `http://52.74.255.88:8000` · login shell OK; data requires rewrite deploy · **not** submission Live URL until V07+A05 re-smoke · runbook §11 | [ ] pending redeploy smoke |
 | Smoke test ẩn danh độc lập lần 1 | Văn Hải | V07 |  | [ ] |
 | Fix → redeploy → re-smoke | Hoàng | D4r |  | [ ] |
 | GitHub public, PII/secret scan | Hoàng | D3 | [10-d3-github-pii-secret-scan.md](10-d3-github-pii-secret-scan.md) · https://github.com/phanthutrang410/ABG_team | [x] |

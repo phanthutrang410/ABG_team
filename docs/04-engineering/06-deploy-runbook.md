@@ -176,3 +176,30 @@ Independent smoke owner from P2: Văn Hải (`V07`). Hoàng owns first Live shel
 - [x] Rollback steps with revision IDs — D4a + D4b digests
 - [x] Cross-link evidence rows in `07-release-evidence.md` — D4a shell + **D4b**
 - [x] Product list→case smoke — **D4b Done**
+
+## 11. H27 — Vercel frontend (candidate; HTTPS-safe API)
+
+**Topology:** Browser → `https://abg-team.vercel.app` (Next.js) → rewrite/proxy → Live API `http://52.74.255.88:8000`. Browser must **not** call the HTTP API origin directly from an HTTPS page (mixed content).
+
+| Concern | Value |
+|:--------|:------|
+| Vercel project | `abg-team` · Root Directory `frontend` · Framework Next.js |
+| Production URL | `https://abg-team.vercel.app` |
+| API path | Same-origin (`NEXT_PUBLIC_API_BASE` empty) + `rewrites` in `frontend/next.config.js` |
+| Rewrite target | `BACKEND_URL` or default Live API when `VERCEL=1` |
+| Secrets on Vercel | **None** — no `FPT_API_KEY` / `DATABASE_URL` on the FE project |
+| Optional Dashboard env | `BACKEND_URL=http://52.74.255.88:8000` · `NEXT_PUBLIC_API_BASE=` (empty) |
+| Rollback | Vercel → Deployments → prior Ready deployment → Promote / Rollback |
+| Submission Live URL | Keep EC2 FE until V07+A05 re-smoke on this URL, then owner may flip via `D4r` |
+
+**Smoke (incognito):**
+
+```powershell
+# Page
+Invoke-WebRequest https://abg-team.vercel.app/login -UseBasicParsing | Select-Object StatusCode
+# Same-origin API proxy (must be JSON from Live backend, not HTML)
+Invoke-RestMethod https://abg-team.vercel.app/review-cases | Select-Object state, @{n='n';e={$_.items.Count}}
+Invoke-RestMethod https://abg-team.vercel.app/health
+```
+
+Pass: login UI loads; `/review-cases` returns `state=ok` with items; dashboard list→detail works; DevTools shows no mixed-content errors.
