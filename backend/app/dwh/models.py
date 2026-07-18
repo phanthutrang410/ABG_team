@@ -36,6 +36,12 @@ DWH_TABLE_NAMES = (
     "academic_status",
     "advisor_assignment",
     "data_quality_report",
+    # H30 weekly snapshot registry / workflow ledger
+    "dataset_source",
+    "dataset_snapshot",
+    "active_dataset_snapshot",
+    "workflow_run",
+    "workflow_step_run",
 )
 
 
@@ -205,4 +211,158 @@ class DataQualityReport(Base):
         ),
         CheckConstraint("row_count >= 0", name="ck_dqr_row_count_nonneg"),
         CheckConstraint("reject_count >= 0", name="ck_dqr_reject_count_nonneg"),
+    )
+
+
+class DatasetSource(Base):
+    """Registry for a logical dataset_key (H30)."""
+
+    __tablename__ = "dataset_source"
+
+    dataset_key: Mapped[str] = mapped_column(String(128), primary_key=True)
+    source_owner: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    retention_policy: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    usage_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class DatasetSnapshot(Base):
+    """Immutable multi-version snapshot of a dataset (H30)."""
+
+    __tablename__ = "dataset_snapshot"
+
+    snapshot_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    dataset_key: Mapped[str] = mapped_column(
+        String(128),
+        ForeignKey(f"{DWH_SCHEMA}.dataset_source.dataset_key", ondelete="CASCADE"),
+        nullable=False,
+    )
+    previous_snapshot_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    supersedes_snapshot_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    period_start: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    period_end: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    extracted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    delivered_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    schema_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    pseudonym_namespace_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_snapshot_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    normalized_artifact_sha256: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    dataset_content_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    approval_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    provenance_approved: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    fixture_mode: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    legacy_source_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    row_counts_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    quality_reason_codes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="staged")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "dataset_key",
+            "dataset_content_sha256",
+            name="uq_dataset_snapshot_content_hash",
+        ),
+        CheckConstraint(
+            "char_length(source_snapshot_sha256) = 64",
+            name="ck_dataset_snapshot_source_sha_len",
+        ),
+        CheckConstraint(
+            "char_length(dataset_content_sha256) = 64",
+            name="ck_dataset_snapshot_content_sha_len",
+        ),
+        CheckConstraint(
+            "status IN ('staged', 'active', 'superseded', 'rejected')",
+            name="ck_dataset_snapshot_status",
+        ),
+    )
+
+
+class ActiveDatasetSnapshot(Base):
+    """Atomic pointer to the currently active snapshot per dataset_key (H30)."""
+
+    __tablename__ = "active_dataset_snapshot"
+
+    dataset_key: Mapped[str] = mapped_column(
+        String(128),
+        ForeignKey(f"{DWH_SCHEMA}.dataset_source.dataset_key", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    snapshot_id: Mapped[str] = mapped_column(
+        String(128),
+        ForeignKey(f"{DWH_SCHEMA}.dataset_snapshot.snapshot_id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    promoted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    promoted_by_run_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+
+
+class WorkflowRun(Base):
+    """Weekly workflow run ledger (H30)."""
+
+    __tablename__ = "workflow_run"
+
+    run_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    dataset_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    snapshot_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    trigger_kind: Mapped[str] = mapped_column(String(64), nullable=False, default="cli")
+    idempotency_key: Mapped[str] = mapped_column(String(256), nullable=False)
+    workflow_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    model_version: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    threshold_config_version: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    dataset_content_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="queued")
+    failure_reason_code: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    replay_of_run_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    started_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    finished_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "dataset_content_sha256",
+            "workflow_version",
+            "idempotency_key",
+            name="uq_workflow_run_idempotency",
+        ),
+        CheckConstraint(
+            "status IN ("
+            "'queued','validating','staging','scoring','reconciling',"
+            "'reporting','publishing','succeeded','failed','duplicate'"
+            ")",
+            name="ck_workflow_run_status",
+        ),
+    )
+
+
+class WorkflowStepRun(Base):
+    """Per-step ledger for a workflow run (H30)."""
+
+    __tablename__ = "workflow_step_run"
+
+    step_run_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    run_id: Mapped[str] = mapped_column(
+        String(128),
+        ForeignKey(f"{DWH_SCHEMA}.workflow_run.run_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    step_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="queued")
+    reason_code: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    started_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    finished_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    __table_args__ = (
+        UniqueConstraint("run_id", "step_name", name="uq_workflow_step_run_name"),
+        CheckConstraint(
+            "status IN ('queued','running','succeeded','failed','skipped')",
+            name="ck_workflow_step_status",
+        ),
     )

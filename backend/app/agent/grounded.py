@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from app.agent.fpt_client import ModelUnavailable, TextModel
+from app.agent.model import ModelUnavailable, TextModel
 from app.agent.schemas import AgentExplanation, AgentExplanationRequest, ExplanationStatus
 from app.agent.stub import explain as explain_stub
 from app.agent.vi_renderer import (

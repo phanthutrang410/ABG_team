@@ -9,7 +9,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.agent.fpt_client import TextModel
+from app.agent.model import TextModel
 from app.agent.runtime import get_text_model, run_explanation
 from app.agent.schemas import AgentCommand, AgentExplanation
 from app.config import Settings, get_settings

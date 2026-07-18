@@ -1,9 +1,8 @@
 # Kiến trúc đích — snapshot tuần, workflow DAG và Global Agent
 
-> **Trạng thái:** Proposed — chưa triển khai, chưa được claim là feature đã ship  
+> **Trạng thái:** Backend wave H28a–D6 landed (library + APIs); FE Global Agent/weekly UI (`G07–G09`) và live EventBridge chưa ship — không claim demo Live URL nộp bài.
 > **Owner kiến trúc:** Hoàng · **Task brief:** `H28` · **Liên quan:** FR-01–FR-08, FR-12  
-> **Quyết định provider:** OpenAI là đích mới theo [Decision #22](../03-project/04-decisions.md); code H23–H26 dùng FPT vẫn là hiện trạng lịch sử cho tới khi migration hoàn tất.  
-> **Ranh giới:** Agent không nằm trong đường import/scoring, không đổi case state và không tự gửi email.
+> **Quyết định provider:** OpenAI là provider đích theo [Decision #22](../03-project/04-decisions.md); `H29` đã wire runtime (FPT inactive). Combined linked-namespace feed vẫn Mode B ([Decision #23](../03-project/04-decisions.md)).
 
 Tài liệu này chuyển mô tả sản phẩm “robot xuất hiện sau đăng nhập, báo tình hình tuần và dẫn tới các công cụ” thành kiến trúc có thể triển khai. Nó bổ sung, không thay thế, [PRD](../02-product/04-prd.md), [Process](../02-product/03-process.md), [Ethics](../02-product/05-ethics.md), [BRD](../02-product/08-brd.md) và contract Data-ML hiện hành.
 
@@ -440,38 +439,49 @@ Metrics/log chỉ giữ run/step duration, counts, version, stale age, provider 
 
 ## 14. Backlog theo dependency
 
+Sprint là nguồn chuẩn owner/status. Hoàng sở hữu `H28`, `H28a`, `H29–H38` và `D6` trong phạm vi backend/docs/security/deploy; task brief đầy đủ tại [Stories — Hoàng](../03-project/17-stories-hoang-weekly-agent.md). `G07–G09` và `T05` vẫn là consumer lanes riêng.
+
 | ID | Outcome | Depends on | Evidence tối thiểu |
 |:--|:--|:--|:--|
+| `H28a` | Readiness/decision lock: delta, linked namespace, identity, retention, scheduler | H28 | Decision/approval handles; không raw PII; downstream có task-ID dependency |
 | `H29` | Decision/config/provider-neutral interface + OpenAI Responses adapter | H28 | Mocked transport, missing-key zero call, `store:false`, strict schema, timeout/429/malformed |
-| `H30` | Snapshot v2 registry + Alembic run/step ledger + active pointer | H28 + data-owner contract | Multi-version/idempotency/correction migration tests |
-| `H31` | Importer stage/promote + CLI mock sender | H30 | Exact-byte replay, concurrent duplicate, atomic failure/replay |
-| `H32` | Canonical linked bundle/adapter + immutable observations | H30 + approved linked namespace | Hash/count/PII/coverage/freshness/determinism tests |
-| `H33` | Durable case/event + delta engine | H32 + Product delta decision | Full delta matrix; preserve human state; no auto-close |
-| `H34` | Weekly report/briefing APIs + receipt | H33 + production identity | Exact aggregates, scope negative tests, one-time receipt |
-| `H35` | Advisor draft API trên durable approved cases | H33 + H22 | Mapping-repair, server scope, no send/public contacts |
-| `G07` | Authenticated route layout + global Agent shell | Production auth contract | All protected pages; route/role reset; accessibility |
-| `G08` | Weekly briefing, report view/new badges, deep links | H34 + G07 | ok/empty/stale/failed/baseline-missing E2E |
+| `H30` | Snapshot v2 registry + Alembic run/step ledger + active pointer | H28a + H19 | Multi-version/idempotency/correction migration tests |
+| `H31` | Importer stage/promote + CLI mock sender | H30 + H20 | Exact-byte replay, concurrent duplicate, atomic failure/replay |
+| `H32` | Canonical linked bundle/adapter + immutable observations | H31 + H28a | Hash/count/PII/coverage/freshness/determinism tests |
+| `H33a` | Durable case/event persistence; GET read-only | H32 + H06b | Migration/concurrency/transition regression; no GET mutation |
+| `H33b` | Deterministic delta/reconcile engine | H33a + H28a | Full delta matrix; preserve human state; no auto-close |
+| `H36` | Production identity/RBAC/scope + access-audit foundation | H28a + H06b | Cross-scope negative tests; server-derived actor/source/advisor |
+| `H34a` | Weekly report materializer + scoped APIs | H33b + H36 | Exact aggregates, scope negative tests, stale/failed states |
+| `H34b` | Deterministic briefing + one-time receipt APIs | H34a + H36 | Role-scoped copy, concurrent receipt dedupe, provider independence |
+| `H35` | Advisor draft API trên durable approved cases/report | H34a + H36 + H22 | Mapping-repair, server scope, no send/public contacts |
+| `H37` | Global Agent backend turn + strict capability registry | H29 + H34b + H35 + H36 | One-tool bound, evidence refs, zero forbidden effects |
+| `H38` | Safe aggregate/per-case export + watermark/audit | H34a + H36 | No bulk identifiers; cross-scope deny; export audit |
+| `G07` | Authenticated route layout + global Agent shell | H36 | All protected pages; route/role reset; accessibility |
+| `G08` | Weekly briefing, report view/new badges, deep links | H34b + G07 | ok/empty/stale/failed/baseline-missing E2E |
 | `G09` | `/notify` advisor filter/preview/Copy/`mailto:` | H35 + G07 | Human preview; no SMTP; negative scope tests |
-| `T05` | Agent tool/RBAC/adversarial/e2e matrix | H29 + H34 + G07 | Injection, PII, forbidden tool, provider-down independence |
-| `D6` | Scheduler/worker deploy, observability, retention, rollback | H31–H35 + T05 | Scheduled dry run, replay, kill switches, redacted evidence |
+| `T05` | Agent tool/RBAC/adversarial/e2e matrix | H29 + H34b + H37 + G07 | Injection, PII, forbidden tool, provider-down independence |
+| `D6` | Scheduler/worker deploy, observability, retention, rollback | H31 + H34b + H35 + H37 + H38 | Scheduled dry run, replay, kill switches, redacted evidence; T05 là cross-lane QA bổ sung |
 
 ### 14.1 Thứ tự vertical slice khuyến nghị
 
 ```text
+Slice 0: H28a ∥ H29
+  Khóa input/permission/scheduler decisions; migration OpenAI độc lập với data DAG.
+
 Slice 1: H30 → H31
   Approved replay chạy qua CLI, có ledger/idempotency; chưa cần UI/LLM.
 
-Slice 2: H32 → H33 → H34
-  Hai snapshot đã duyệt tạo delta/report/briefing deterministic và case bền vững.
+Slice 2: H32 → H33a → H33b; H36 chạy song song → H34a → H34b
+  Hai snapshot đã duyệt tạo delta/report/briefing deterministic, case bền vững và scope server-side.
 
 Slice 3: G07 → G08
   Robot toàn cục hiện một briefing và ba action card; chưa cần free-form chat.
 
-Slice 4: H29 → T05
-  OpenAI giải thích/route bounded trên artifact đã khóa.
+Slice 4: H29 + H34b + H35 + H36 → H37 → T05
+  OpenAI giải thích/route bounded trên artifact đã khóa; không có action write/send.
 
-Slice 5: H35 → G09 → D6
-  Notify draft-only và scheduler production hardening.
+Slice 5: H38 ∥ (H35 → G09) → D6
+  Export an toàn, Notify draft-only và scheduler production hardening.
 ```
 
 Global shell không nên block việc sửa persistence/data pipeline. Ngược lại, tool chat free-form bị block cho tới khi RBAC, report handles và safe tool schemas hoàn tất.
@@ -492,11 +502,13 @@ Global shell không nên block việc sửa persistence/data pipeline. Ngược 
 | OpenAI bị tắt | Briefing/report/navigation/draft deterministic vẫn hoạt động |
 | Ban quản lý muốn “xuất toàn bộ danh sách” | Chỉ view trong app; export aggregate hoặc per-student có watermark/audit |
 
-## 16. Các decision còn phải owner chốt trước build
+## 16. Readiness decisions (H28a — locked)
 
-1. Product semantics của “significant change” để mở episode sau case terminal; không tự đặt heuristic.
-2. Data owner có cung cấp canonical linked bundle cùng pseudonym namespace hay không; nếu không, report phải tách nhánh điểm và chuyên cần.
-3. Production identity/RBAC source, organization/advisor scope và retention cho receipts/audit.
-4. Scheduler/deploy target cụ thể: EventBridge + worker/queue hay cron nội bộ; cả hai phải gọi cùng service.
-5. OpenAI model pin sau mocked test + authorized eval; không hardcode “model mới nhất” trước capability/cost/privacy review.
-6. Email vẫn draft-only theo Decision #20. Nếu muốn delivery thật, tạo PRD/decision/threat model/task độc lập.
+Các mục dưới đây đã chốt trong [Decision #23](../03-project/04-decisions.md). Build `H30+` chỉ được dùng các handle này; không tự mở rộng.
+
+1. **Significant-change / resurfaced:** đổi `review_priority_band` hoặc set `contributing_factor` codes sau terminal → được mở episode mới; `no_longer_detected` không auto-close; version/namespace không comparable → `comparison_unavailable`.
+2. **Linked namespace:** chưa có canonical linked bundle → **Mode B** (tách nhánh điểm / chuyên cần). Handle hiện tại: `approval:pending-linked-namespace`. Combined feed chỉ sau approval handle không-PII từ data owner.
+3. **Identity/RBAC/retention:** server principal `actor_id` / `active_role` / `org_scope` / `advisor_scope`; client role không SoT; receipt/audit metadata 90 ngày, không raw prompt/PII.
+4. **Scheduler:** EventBridge → SQS (hoặc approved cron host) → worker gọi cùng `WeeklyWorkflowService`; cấm APScheduler trong FastAPI process.
+5. **OpenAI model pin:** `OPENAI_MODEL` env (pin sau mocked `H29`); `store=false`; không “latest”.
+6. **Email:** Decision #20 draft-only; delivery = out of scope.

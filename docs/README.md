@@ -53,6 +53,7 @@ docs/
 | 12 | [H15 attendance approval prep](03-project/12-h15-attendance-approval-prep.md) | Prep only: chase checklist + amendment outline; H15 vẫn BLOCKED → data-owner |
 | 13 | [H12b asset / claim-copy skeleton](03-project/13-h12b-asset-copy-skeleton.md) | Banner + claim matrix cho Hạ Giang D1; attendance = MVP; forecast/fusion = research/blocked |
 | 16 | [Stories — Thu Trang](03-project/16-stories-thu-trang.md) | `V05` nộp Checkpoint 2 sau `D4r`; lane Agent xem Sprint §7 |
+| 17 | [Stories — Hoàng: weekly snapshot + Global Agent](03-project/17-stories-hoang-weekly-agent.md) | Task brief H28/H28a/H29–H38/D6: OpenAI, workflow tuần, durable delta/report, RBAC, tool runtime và deploy |
 
 ## 4. Engineering
 
@@ -70,7 +71,7 @@ docs/
 | 10 | [FE/Agent integration contract](04-engineering/10-fe-agent-integration-contract.md) | H11a/H11b schema + current delta: case-local `AgentPanel` có; Global Agent chưa ship |
 | 11 | [Advisor-batch mail draft](04-engineering/11-advisor-batch-mail-draft.md) | FR-12: `GET /advisor-handoff-drafts` (H22 Done); G06 FE Copy/`mailto:` |
 | 12 | [Agent runtime integration & hardening — lịch sử](04-engineering/12-agent-runtime-integration-plan.md) | H23–H26 Done (backend HTTP; mocked FPT); không phải provider/Global Agent target |
-| 13 | [Weekly snapshot + Global Agent target architecture](04-engineering/13-weekly-snapshot-global-agent-architecture.md) | OpenAI target, mock feed tuần, durable delta/report, global shell, tool/RBAC và backlog H29–D6 |
+| 13 | [Weekly snapshot + Global Agent target architecture](04-engineering/13-weekly-snapshot-global-agent-architecture.md) | OpenAI target, mock feed tuần, durable delta/report, global shell, tool/RBAC và backlog H28a–H38/D6 |
 
 ## Thứ tự ưu tiên khi có mâu thuẫn
 

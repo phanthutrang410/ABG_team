@@ -5,7 +5,7 @@ allowlisted demo source constants — **not** production RBAC. Browser must not
 send context, source_id, actor, or advisor fields.
 
 Zero-call rule: invoke TextModel only when ``provider_call_allowed`` is True
-and an FPT key is configured (or a test injects a fake model via DI).
+and an OpenAI key is configured (or a test injects a fake model via DI).
 """
 
 from __future__ import annotations
@@ -20,9 +20,10 @@ from app.agent.context_service import (
     build_agent_context,
     provider_call_allowed,
 )
-from app.agent.fpt_client import FPTChatClient, ModelUnavailable, TextModel
 from app.agent.grounded import explain as explain_grounded
 from app.agent.guardrails import REFUSAL_ANSWERS_VI, REFUSAL_LIMITATIONS_VI
+from app.agent.model import ModelUnavailable, TextModel
+from app.agent.openai_client import OpenAIResponsesClient
 from app.agent.schemas import (
     AgentCommand,
     AgentExplanation,
@@ -43,17 +44,17 @@ _MODEL_KEY_UNAVAILABLE = AgentExplanation(
         "của con người."
     ),
     limitations_vi=(
-        "FPT API key chưa được cấu hình trên server — không phải kết luận về dữ liệu "
+        "OpenAI API key chưa được cấu hình trên server — không phải kết luận về dữ liệu "
         "hay về sinh viên. (MVP demo identity; chưa phải production RBAC.)"
     ),
 )
 
 
 class _MissingKeyModel:
-    """Injectable stand-in when Settings has no FPT key — never hits the network."""
+    """Injectable stand-in when Settings has no OpenAI key — never hits the network."""
 
     def complete(self, *, system: str, user: str) -> str:
-        raise ModelUnavailable("FPT_API_KEY is not configured")
+        raise ModelUnavailable("OPENAI_API_KEY is not configured")
 
 
 def trusted_scope_from_settings(settings: Optional[Settings] = None) -> TrustedScope:
@@ -67,12 +68,15 @@ def trusted_scope_from_settings(settings: Optional[Settings] = None) -> TrustedS
 
 
 def get_text_model(settings: Settings = Depends(get_settings)) -> TextModel:
-    """DI factory: real FPT client when key present; else fail-closed stand-in."""
-    key = settings.fpt_api_key
+    """DI factory: OpenAI Responses client when key present; else fail-closed stand-in.
+
+    No FPT fallback (Decision #22 / H29).
+    """
+    key = settings.openai_api_key
     secret = key.get_secret_value() if hasattr(key, "get_secret_value") else str(key or "")
     if not str(secret or "").strip():
         return _MissingKeyModel()
-    return FPTChatClient.from_settings(settings)
+    return OpenAIResponsesClient.from_settings(settings)
 
 
 def _intent_not_allowed(request: AgentExplanationRequest) -> AgentExplanation:
@@ -91,8 +95,8 @@ def _intent_not_allowed(request: AgentExplanationRequest) -> AgentExplanation:
     )
 
 
-def _fpt_key_configured(settings: Settings) -> bool:
-    key = settings.fpt_api_key
+def _openai_key_configured(settings: Settings) -> bool:
+    key = settings.openai_api_key
     secret = key.get_secret_value() if hasattr(key, "get_secret_value") else str(key or "")
     return bool(str(secret or "").strip())
 
@@ -125,7 +129,8 @@ def run_explanation(
     # Provider path: missing key fail-closed before network (still 0 live calls).
     # Injected fakes (tests) are not MissingKeyModel and may run without a key.
     if isinstance(model, _MissingKeyModel) or (
-        not _fpt_key_configured(cfg) and type(model).__name__ == "FPTChatClient"
+        not _openai_key_configured(cfg)
+        and type(model).__name__ == "OpenAIResponsesClient"
     ):
         return _MODEL_KEY_UNAVAILABLE
 

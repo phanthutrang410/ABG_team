@@ -9,7 +9,7 @@ from alembic.config import Config
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 ALEMBIC_INI = BACKEND_ROOT / "alembic.ini"
-HEAD_REVISION = "20260718_h19_dwh"
+HEAD_REVISION = "20260718_h30_snapshot"
 
 
 def make_alembic_config(database_url: str) -> Config:
