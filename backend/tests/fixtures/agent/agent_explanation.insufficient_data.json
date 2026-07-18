@@ -1,0 +1,18 @@
+{
+  "status": "insufficient_data",
+  "answer_vi": "Chưa đủ dữ liệu để giải thích case này: không có học kỳ hợp lệ nào trong bản trích xuất và nhánh chuyên cần chưa có nguồn được phê duyệt. Hệ thống chọn im lặng có giải thích thay vì đưa ra nhận định thiếu căn cứ.",
+  "grounded_facts": [
+    {
+      "statement_vi": "Không có học kỳ hợp lệ (n_valid_terms = 0) nên chưa tính được xu hướng điểm; mức ưu tiên để trống.",
+      "source": "coverage",
+      "ref": null
+    }
+  ],
+  "model_factors_used": [],
+  "limitation_keys": ["grade_coverage_insufficient", "attendance_source_unapproved"],
+  "limitations_vi": "Thiếu dữ liệu không có nghĩa là sinh viên ổn định — chỉ là chưa đủ căn cứ để nói. Cần bổ sung bản trích xuất điểm được phê duyệt trước khi đánh giá lại.",
+  "refusal_reason": null,
+  "draft_message": null,
+  "model_version": "ew-term-0.1-uncalibrated",
+  "disclaimer_vi": "Đây là tín hiệu cần rà soát nhằm hỗ trợ con người ưu tiên sự quan tâm, không phải kết luận về sinh viên. Quyết định và việc liên hệ do con người thực hiện."
+}

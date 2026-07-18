@@ -1,0 +1,28 @@
+{
+  "status": "ok",
+  "answer_vi": "Case này được đưa vào danh sách rà soát vì điểm trung bình theo học kỳ có xu hướng giảm giữa hai kỳ gần nhất. Mức ưu tiên hiện tại là 'cần rà soát' — đây là tín hiệu để con người xem xét, không phải kết luận về sinh viên.",
+  "grounded_facts": [
+    {
+      "statement_vi": "Điểm trung bình theo kỳ giảm giữa kỳ 20242 và kỳ 20251.",
+      "source": "model_factor",
+      "ref": "grade_trend_negative"
+    },
+    {
+      "statement_vi": "Dữ liệu có 2 học kỳ hợp lệ trên 8 học phần; nhánh chuyên cần chưa có nguồn được phê duyệt.",
+      "source": "coverage",
+      "ref": null
+    },
+    {
+      "statement_vi": "Case đang ở trạng thái chờ rà soát (pending_review).",
+      "source": "case_field",
+      "ref": "case_state"
+    }
+  ],
+  "model_factors_used": ["grade_trend_negative"],
+  "limitation_keys": ["attendance_source_unapproved", "copy.partial_term_only"],
+  "limitations_vi": "Chỉ có tín hiệu điểm theo học kỳ; nhánh chuyên cần chưa sẵn sàng vì chưa có nguồn điểm danh đã được phê duyệt. Hệ thống không kết luận về chuyên cần và không suy ra nguyên nhân cá nhân.",
+  "refusal_reason": null,
+  "draft_message": null,
+  "model_version": "ew-term-0.1-uncalibrated",
+  "disclaimer_vi": "Đây là tín hiệu cần rà soát nhằm hỗ trợ con người ưu tiên sự quan tâm, không phải kết luận về sinh viên. Quyết định và việc liên hệ do con người thực hiện."
+}
