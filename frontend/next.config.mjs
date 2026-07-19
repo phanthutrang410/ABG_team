@@ -44,12 +44,15 @@ const nextConfig = {
       { source: "/dashboard", destination: "/overview", permanent: false },
       { source: "/select-role", destination: "/login", permanent: false },
       { source: "/my-class", destination: "/analysis", permanent: false },
-      { source: "/cases/:caseId", destination: "/analysis/:caseId", permanent: false },
+      // Do NOT redirect /cases/:caseId here — that path is the care-workflow API
+      // (GET/POST via same-origin rewrite). UI case pages live under /analysis/:caseId.
     ];
   },
   async rewrites() {
     if (!backendUrl) return [];
-    return [
+    // beforeFiles: API proxy wins over any App Router page at the same path
+    // (e.g. legacy app/cases/[caseId] must not swallow GET /cases/{id} JSON).
+    const apiProxies = [
       {
         source: "/auth/:path*",
         destination: `${backendUrl}/auth/:path*`,
@@ -61,6 +64,10 @@ const nextConfig = {
       {
         source: "/review-cases/:path*",
         destination: `${backendUrl}/review-cases/:path*`,
+      },
+      {
+        source: "/cases",
+        destination: `${backendUrl}/cases`,
       },
       {
         source: "/cases/:path*",
@@ -94,7 +101,12 @@ const nextConfig = {
         source: "/weekly-briefings/:path*",
         destination: `${backendUrl}/weekly-briefings/:path*`,
       },
+      {
+        source: "/agent/:path*",
+        destination: `${backendUrl}/agent/:path*`,
+      },
     ];
+    return { beforeFiles: apiProxies };
   },
 };
 
