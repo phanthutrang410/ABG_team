@@ -12,8 +12,8 @@ const pill: CSSProperties = {
 
 /** Only two public bands (Data-ML §4) — no numeric severity implied by color alone. */
 const BAND_COLOR: Record<ReviewPriorityBand, { bg: string; fg: string }> = {
-  can_ra_soat: { bg: "#fee2e2", fg: "#991b1b" },
-  uu_tien_som: { bg: "#fef3c7", fg: "#92400e" },
+  uu_tien_som: { bg: "#fee2e2", fg: "#991b1b" }, // Ưu tiên sớm — đỏ (khẩn hơn)
+  can_ra_soat: { bg: "#fef3c7", fg: "#92400e" }, // Cần rà soát — vàng
 };
 
 export function BandBadge({ band }: { band: ReviewPriorityBand | null }) {
