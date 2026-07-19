@@ -88,6 +88,32 @@ export type CaseListResponse = {
   problem: IntegrationProblem | null;
 };
 
+/**
+ * Organization-level denominator for the management overview.
+ * Mirror backend/app/contracts/review_overview.py; this is deliberately
+ * separate from CaseListResponse because the review queue is not the roster.
+ */
+export type ReviewOverviewSummary = {
+  state: ListState;
+  scope: "organization";
+  source_id: string;
+  dataset_version: string | null;
+  source_extracted_at: string | null;
+  generated_at: string;
+  total_students: number;
+  review_case_count: number;
+  review_student_count: number;
+  limited_student_count: number;
+  limited_review_case_count: number;
+  priority_band_counts: Record<ReviewPriorityBand, number>;
+  case_state_counts: Record<CaseState, number>;
+  student_coverage_counts: Record<CoverageStatus, number>;
+  review_data_state_counts: Record<DataState, number>;
+  comparison_status: "unavailable";
+  new_since_previous_snapshot: null;
+  problem: IntegrationProblem | null;
+};
+
 export type CaseDetailResponse = {
   case: ReviewCase | null;
   state: DetailState;
@@ -118,6 +144,8 @@ export type TransitionResponse = {
   monitoring_until: string | null;
   mapping_repair_queued: boolean;
   updated_at: string | null;
+  /** GVCN "đã xem" receipt; null until the assigned advisor first opens the detail. */
+  viewed_at: string | null;
 };
 
 /** mirror TransitionErrorBody (wrapped in FastAPI {detail: ...}). */
@@ -211,6 +239,8 @@ export type AdvisorHandoffDraft = {
 
 export type AdvisorHandoffDraftBundle = {
   advisor_ref: string;
+  /** Server-resolved display name for the advisor pseudonym (BLĐ view); null if unmapped. */
+  advisor_display_name?: string | null;
   case_count: number;
   cases: HandoffDraftCaseLine[];
   draft: AdvisorHandoffDraft;

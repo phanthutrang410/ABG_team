@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockCaseList, useDemoSession } from "./support";
+import { json, mockCaseList, mockReviewOverviewSummary, useDemoSession } from "./support";
 
 test.describe("Đăng nhập và điều hướng theo vai trò", () => {
   test.describe.configure({ mode: "serial" });
@@ -16,6 +16,7 @@ test.describe("Đăng nhập và điều hướng theo vai trò", () => {
       Math.random = () => 0;
     });
     await mockCaseList(page);
+    await mockReviewOverviewSummary(page);
     await page.goto("/login");
 
     await page.getByLabel("Tài khoản").fill("demo");
@@ -34,6 +35,28 @@ test.describe("Đăng nhập và điều hướng theo vai trò", () => {
   test("giảng viên không mở được workspace quản lý", async ({ page }) => {
     await useDemoSession(page, "gvcn", "gvcn");
     await page.goto("/analysis");
+
+    await expect(page).toHaveURL(/\/advisor(?:#cases)?$/);
+    await expect(page.getByRole("heading", { name: "Case của tôi" })).toBeVisible();
+  });
+
+  test("tài khoản nhiều vai chuyển từ Ban quản lý sang GVCN và rời /analysis", async ({ page }) => {
+    const managementSession = {
+      account_id: "acct:demo",
+      display_name: "Tài khoản trình diễn",
+      roles: ["ban_quan_ly", "gvcn"],
+      active_role: "ban_quan_ly",
+    };
+    await page.route(/\/auth\/me$/, (route) => json(route, managementSession));
+    await page.route(/\/auth\/active-role$/, async (route) => {
+      expect(route.request().postDataJSON()).toEqual({ role: "gvcn" });
+      await json(route, { ...managementSession, active_role: "gvcn" });
+    });
+    await mockCaseList(page);
+    await page.goto("/analysis");
+
+    await page.locator('header button[aria-haspopup="menu"]').click();
+    await page.locator('select[title="Chuyển vai trò"]').selectOption("gvcn");
 
     await expect(page).toHaveURL(/\/advisor(?:#cases)?$/);
     await expect(page.getByRole("heading", { name: "Case của tôi" })).toBeVisible();

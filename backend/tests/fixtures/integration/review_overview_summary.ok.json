@@ -1,0 +1,40 @@
+{
+  "state": "ok",
+  "scope": "organization",
+  "source_id": "v59-empty-program-students",
+  "dataset_version": "v59-empty-program-students:abcd1234:epu-1",
+  "source_extracted_at": "2026-07-18T00:05:00Z",
+  "generated_at": "2026-07-19T04:00:00Z",
+  "total_students": 460,
+  "review_case_count": 35,
+  "review_student_count": 35,
+  "limited_student_count": 460,
+  "limited_review_case_count": 35,
+  "priority_band_counts": {
+    "uu_tien_som": 0,
+    "can_ra_soat": 35
+  },
+  "case_state_counts": {
+    "new_signal": 35,
+    "pending_review": 0,
+    "approved_for_follow_up": 0,
+    "dismissed": 0,
+    "assigned": 0,
+    "follow_up_in_progress": 0,
+    "resolved": 0,
+    "monitoring": 0
+  },
+  "student_coverage_counts": {
+    "ok": 0,
+    "partial": 460,
+    "insufficient": 0
+  },
+  "review_data_state_counts": {
+    "ok": 0,
+    "partial": 35,
+    "insufficient_data": 0
+  },
+  "comparison_status": "unavailable",
+  "new_since_previous_snapshot": null,
+  "problem": null
+}

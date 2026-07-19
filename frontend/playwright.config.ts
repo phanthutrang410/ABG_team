@@ -38,6 +38,7 @@ export default defineConfig({
         reuseExistingServer: false,
         timeout: 120_000,
         env: {
+          NEXT_DIST_DIR: ".next-e2e",
           NEXT_PUBLIC_API_BASE: "http://127.0.0.1:8000",
           NEXT_PUBLIC_ADVISOR_LOCAL_DEMO: "1",
         },

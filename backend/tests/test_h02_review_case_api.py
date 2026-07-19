@@ -8,6 +8,7 @@ from typing import List
 import pytest
 from fastapi.testclient import TestClient
 
+from app.auth.principal import get_principal
 from app.cases.store import store
 from app.contracts.coverage import Coverage
 from app.contracts.integration import FORBIDDEN_PUBLIC_FIELDS, assert_no_forbidden_keys
@@ -18,6 +19,7 @@ from app.contracts.normalized import (
 )
 from app.dwh.read_adapter import ReadAdapterError
 from app.main import app
+from tests.auth_helpers import DEFAULT_GVCN
 
 client = TestClient(app)
 NOW = datetime(2026, 7, 18, 12, 0, tzinfo=timezone.utc)
@@ -57,8 +59,20 @@ def _record(
         grades = [
             NormalizedTermGrade(term_code="20241", course_ref="c1", credits=3.0, final_grade=9.0),
             NormalizedTermGrade(term_code="20241", course_ref="c2", credits=3.0, final_grade=8.5),
-            NormalizedTermGrade(term_code="20251", course_ref="c1", credits=3.0, final_grade=4.0),
-            NormalizedTermGrade(term_code="20251", course_ref="c2", credits=3.0, final_grade=3.5),
+            NormalizedTermGrade(
+                term_code="20251",
+                course_ref="c1",
+                credits=3.0,
+                final_grade=4.0,
+                grade_status="Không đạt",
+            ),
+            NormalizedTermGrade(
+                term_code="20251",
+                course_ref="c2",
+                credits=3.0,
+                final_grade=3.5,
+                grade_status="Không đạt",
+            ),
         ]
     return NormalizedStudentRecord(
         student_ref=student_ref,
@@ -149,6 +163,88 @@ def test_list_stale(monkeypatch: pytest.MonkeyPatch) -> None:
     assert body["problem"]["code"] == "stale_snapshot"
     assert len(body["items"]) >= 1
     assert_no_forbidden_keys(body)
+
+
+def test_summary_separates_roster_from_review_queue(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    flat_grades = [
+        NormalizedTermGrade(term_code="20241", course_ref="c1", credits=3.0, final_grade=8.0),
+        NormalizedTermGrade(term_code="20251", course_ref="c1", credits=3.0, final_grade=8.1),
+    ]
+    insufficient = _coverage(
+        n_valid_terms=0,
+        n_courses=0,
+        last_term_code=None,
+        status="insufficient",
+        reason_codes=["grade_coverage_insufficient", "attendance_source_unapproved"],
+    )
+    _override_list(
+        monkeypatch,
+        [
+            _record("stu_review"),
+            _record("stu_below", grades=flat_grades),
+            _record("stu_insufficient", grades=[], coverage=insufficient),
+        ],
+    )
+    monkeypatch.setattr(
+        "app.cases.review_router._source_extracted_at",
+        lambda _db, _source_id: NOW,
+    )
+    monkeypatch.setattr(
+        "app.cases.review_router.is_snapshot_stale",
+        lambda *_args, **_kwargs: False,
+    )
+
+    res = client.get("/review-cases/summary")
+    assert res.status_code == 200
+    body = res.json()
+    assert_no_forbidden_keys(body)
+    assert body["state"] == "ok"
+    assert body["total_students"] == 3
+    assert body["review_case_count"] == 1
+    assert body["review_student_count"] == 1
+    assert body["limited_student_count"] == 3
+    assert body["limited_review_case_count"] == 1
+    assert sum(body["priority_band_counts"].values()) == 1
+    assert body["case_state_counts"]["new_signal"] == 1
+    assert body["student_coverage_counts"] == {
+        "ok": 0,
+        "partial": 2,
+        "insufficient": 1,
+    }
+    assert body["review_data_state_counts"] == {
+        "ok": 0,
+        "partial": 1,
+        "insufficient_data": 0,
+    }
+    assert body["comparison_status"] == "unavailable"
+    assert body["new_since_previous_snapshot"] is None
+
+
+def test_summary_error_has_no_misleading_zero_comparison(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _boom(_db, _source_id):
+        raise ReadAdapterError(["source_unapproved"], "nope")
+
+    monkeypatch.setattr("app.cases.review_router.list_normalized_students", _boom)
+    res = client.get("/review-cases/summary")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["state"] == "error"
+    assert body["total_students"] == 0
+    assert body["review_case_count"] == 0
+    assert body["comparison_status"] == "unavailable"
+    assert body["new_since_previous_snapshot"] is None
+    assert body["problem"]["reason_codes"] == ["source_unapproved"]
+
+
+def test_summary_rejects_gvcn_scope(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(app.dependency_overrides, get_principal, lambda: DEFAULT_GVCN)
+    res = client.get("/review-cases/summary")
+    assert res.status_code == 403
+    assert res.json()["detail"]["code"] == "role_not_permitted"
 
 
 def test_detail_ok(monkeypatch: pytest.MonkeyPatch) -> None:

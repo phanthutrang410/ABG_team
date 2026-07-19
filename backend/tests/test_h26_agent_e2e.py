@@ -1,6 +1,6 @@
 """H26 — Agent HTTP E2E (mocked FPT) + release-gate evidence.
 
-Vertical slice: M02 scoring factors → H02 ReviewCase projection →
+Vertical slice: active scoring factors → H02 ReviewCase projection →
 server AgentContext → fake structured FPT plan → POST explanation.
 
 Covers happy path, adversarial/fail-closed (0 calls), and
@@ -57,7 +57,7 @@ class FakeModel:
 def _structured_plan(**overrides: object) -> str:
     payload = {
         "template_key": "explain_review_priority",
-        "used_factor_codes": ["grade_trend_declining"],
+        "used_factor_codes": ["gpa_below_target"],
         "limitation_keys": ["attendance_source_unapproved"],
         "draft_variant_key": None,
     }
@@ -93,12 +93,12 @@ def _coverage(**kwargs) -> Coverage:
 
 
 def _declining_grades() -> List[NormalizedTermGrade]:
-    """Grades that produce M02 factor ``grade_trend_declining``."""
+    """Grades that produce active grade-only model factors."""
     return [
         NormalizedTermGrade(term_code="20241", course_ref="c1", credits=3.0, final_grade=9.0),
         NormalizedTermGrade(term_code="20241", course_ref="c2", credits=3.0, final_grade=8.5),
-        NormalizedTermGrade(term_code="20251", course_ref="c1", credits=3.0, final_grade=4.0),
-        NormalizedTermGrade(term_code="20251", course_ref="c2", credits=3.0, final_grade=3.5),
+        NormalizedTermGrade(term_code="20251", course_ref="c1", credits=3.0, final_grade=4.0, grade_status="Không đạt"),
+        NormalizedTermGrade(term_code="20251", course_ref="c2", credits=3.0, final_grade=3.5, grade_status="Không đạt"),
     ]
 
 
@@ -199,12 +199,12 @@ def test_h26_openapi_exposes_explanation_route() -> None:
         assert forbidden not in props
 
 
-# --- Happy path: M02 → H02 → context → fake FPT → HTTP ----------------------
+# --- Happy path: M10 → H02 → context → fake FPT → HTTP ----------------------
 
 
-def test_h26_e2e_happy_m02_through_http(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Full mocked vertical slice with real M02 factor/version on the wire."""
-    assert MODEL_VERSION == "m02-baseline-0.1"
+def test_h26_e2e_happy_m10_through_http(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Full mocked vertical slice with real M10 factor/version on the wire."""
+    assert MODEL_VERSION == "m10-reality460-logreg-1.0"
     student = "stu_h26_ok"
     case_id = f"rc-{student}"
     _seed_state(case_id, student, "pending_review")
@@ -219,9 +219,9 @@ def test_h26_e2e_happy_m02_through_http(monkeypatch: pytest.MonkeyPatch) -> None
     body = res.json()
     assert body["status"] == "ok"
     assert body["model_version"] == MODEL_VERSION
-    # Deterministic from H02/M02 case factors (stub baseline), not plan prose.
+    # Deterministic from the active case factors, not model prose.
     factors = body["model_factors_used"]
-    assert "grade_trend_declining" in factors
+    assert "gpa_below_target" in factors
     assert "grade_trend_negative" not in factors
     assert "xu hướng điểm" in body["answer_vi"].lower() or "điểm" in body["answer_vi"]
     assert fake.calls == 1
@@ -234,7 +234,7 @@ def test_h26_e2e_happy_m02_through_http(monkeypatch: pytest.MonkeyPatch) -> None
     assert "case_id" not in provider_payload
     assert "student_ref" not in provider_payload
     assert "advisor_ref" not in provider_payload
-    assert "grade_trend_declining" in provider_payload["factor_codes"]
+    assert "gpa_below_target" in provider_payload["factor_codes"]
     assert "Vì sao" not in fake.last_user
 
 

@@ -38,7 +38,7 @@ const ACTION_LABEL: Record<CaseAction, string> = {
   approve: "Phê duyệt",
   dismiss: "Loại",
   defer: "Hoãn",
-  assign: "Bàn giao cho GVCN",
+  assign: "Bàn giao",
   accept: "Tiếp nhận",
   resolve: "Kết thúc hỗ trợ",
   monitor: "Theo dõi",
@@ -272,10 +272,10 @@ function describeError(err: TransitionErrorBody | null): string {
   }
 }
 
-const panel: CSSProperties = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "1.1rem 1.35rem", alignSelf: "start" };
+const panel: CSSProperties = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 16, padding: "1.25rem", alignSelf: "start", boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)" };
 const h2: CSSProperties = { margin: "0 0 0.4rem", fontSize: 13, color: "#64748b", letterSpacing: 0.3 };
 const btn: CSSProperties = { flexShrink: 0, minWidth: 128, padding: "9px 14px", borderRadius: 8, border: "1px solid #cbd5e1", background: "#fff", fontSize: 13.5, fontWeight: 600, cursor: "pointer", textAlign: "center", color: "#334155" };
-const btnPrimary: CSSProperties = { ...btn, border: "1px solid #2a78d6", background: "#2a78d6", color: "#fff" };
+const btnPrimary: CSSProperties = { ...btn, border: "1px solid #dc2626", background: "#dc2626", color: "#fff", boxShadow: "0 4px 10px rgba(220, 38, 38, 0.18)" };
 const input: CSSProperties = { width: "100%", maxWidth: 220, padding: "6px 9px", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: 13, fontFamily: "inherit" };
 const noticeWarn: CSSProperties = { marginTop: "0.75rem", padding: "0.7rem 0.9rem", borderRadius: 8, background: "#fffbeb", border: "1px solid #fde68a", color: "#92400e", fontSize: 13 };
 const noticeErr: CSSProperties = { marginTop: "0.75rem", padding: "0.7rem 0.9rem", borderRadius: 8, background: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", fontSize: 13 };

@@ -36,6 +36,8 @@ class TransitionResponse(BaseModel):
     monitoring_until: Optional[datetime] = None
     mapping_repair_queued: bool = False
     updated_at: Optional[datetime] = None
+    # GVCN "đã xem" receipt; null until the assigned advisor first opens the detail.
+    viewed_at: Optional[datetime] = None
 
 
 class TransitionErrorBody(BaseModel):

@@ -64,8 +64,8 @@ def weekly_database_url() -> str:
 
 
 def test_h30_head_revision_and_tables(weekly_database_url: str) -> None:
-    # H30 tables remain present after later revisions (H39a is current HEAD).
-    assert HEAD_REVISION == "20260719_h39a_auth_rbac"
+    # H30 tables remain present after all later revisions, including M10.
+    assert HEAD_REVISION == "20260719_m10_model_artifact"
     engine = create_engine(weekly_database_url)
     try:
         tables = set(inspect(engine).get_table_names(schema="dwh")) - {"alembic_version"}

@@ -30,6 +30,7 @@ class MlTermProjection:
     features: ScoringFeatures
     review_priority_band: Optional[str]
     contributing_factors: List[ContributingFactor]
+    limitations: List[str]
 
 
 def _float_opt(value: Optional[Decimal]) -> Optional[float]:
@@ -69,6 +70,8 @@ def projection_from_snapshot(row: MlTermSnapshot) -> MlTermProjection:
     coverage = Coverage.model_validate(json.loads(row.coverage_json))
     raw_factors = json.loads(row.contributing_factors_json or "[]")
     factors = [ContributingFactor.model_validate(item) for item in raw_factors]
+    explain = json.loads(row.agent_explain_json or "{}")
+    limitations = [str(item) for item in explain.get("limitations", [])]
     features = ScoringFeatures(
         dataset_version=row.dataset_version,
         model_version=row.model_version,
@@ -87,6 +90,7 @@ def projection_from_snapshot(row: MlTermSnapshot) -> MlTermProjection:
         features=features,
         review_priority_band=row.review_priority_band,
         contributing_factors=factors,
+        limitations=limitations,
     )
 
 

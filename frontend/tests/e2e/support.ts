@@ -46,12 +46,49 @@ export const caseListOk = {
   problem: null,
 };
 
+export const reviewOverviewSummaryOk = {
+  state: "ok",
+  scope: "organization",
+  source_id: "v59-empty-program-students",
+  dataset_version: "epu-v59-empty:deadbeef:schema-1",
+  source_extracted_at: "2026-07-18T03:00:00Z",
+  generated_at: "2026-07-18T04:00:00Z",
+  total_students: 460,
+  review_case_count: 1,
+  review_student_count: 1,
+  limited_student_count: 460,
+  limited_review_case_count: 1,
+  priority_band_counts: { uu_tien_som: 0, can_ra_soat: 1 },
+  case_state_counts: {
+    new_signal: 0,
+    pending_review: 1,
+    approved_for_follow_up: 0,
+    dismissed: 0,
+    assigned: 0,
+    follow_up_in_progress: 0,
+    resolved: 0,
+    monitoring: 0,
+  },
+  student_coverage_counts: { ok: 0, partial: 460, insufficient: 0 },
+  review_data_state_counts: { ok: 0, partial: 1, insufficient_data: 0 },
+  comparison_status: "unavailable",
+  new_since_previous_snapshot: null,
+  problem: null,
+};
+
 export function json(route: Route, body: unknown, status = 200) {
   return route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
 }
 
 export async function mockCaseList(page: Page, body: unknown = caseListOk) {
   await page.route(/\/review-cases(?:\?.*)?$/, (route) => json(route, body));
+}
+
+export async function mockReviewOverviewSummary(
+  page: Page,
+  body: unknown = reviewOverviewSummaryOk,
+) {
+  await page.route(/\/review-cases\/summary$/, (route) => json(route, body));
 }
 
 export async function mockCaseDetail(page: Page, body: unknown, caseId = "case_pseudo_001") {

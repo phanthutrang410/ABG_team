@@ -97,7 +97,7 @@ def test_backend_renders_vi_from_catalog_not_model_prose() -> None:
     model = FakeModel(_plan())
     result = explain(_request(), model)
     assert result.status is ExplanationStatus.OK
-    assert "xu hướng điểm trung bình theo học kỳ giảm" in result.answer_vi
+    assert "điểm trung bình giữa hai kỳ giảm" in result.answer_vi
     assert "cần rà soát" in result.answer_vi
     assert result.model_version == "m02-baseline-0.1"
     assert result.model_factors_used == ["grade_trend_declining"]

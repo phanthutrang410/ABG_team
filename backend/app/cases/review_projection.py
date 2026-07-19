@@ -18,15 +18,7 @@ from app.contracts.normalized import NormalizedStudentRecord
 from app.contracts.review_case import ContributingFactor, ReviewCase
 from app.contracts.scoring import ScoringFeatures
 from app.dwh.ml_snapshot_reader import get_ml_term_projection, get_ml_term_snapshot
-from app.ml.scoring import (
-    DEFAULT_THRESHOLDS,
-    MODEL_VERSION,
-    ThresholdConfig,
-    band_for_score,
-    compute_model_score,
-    contributing_factors,
-    score_student,
-)
+from app.ml.scoring import DEFAULT_THRESHOLDS, ThresholdConfig, score_record
 
 CASE_ID_PREFIX = "rc-"
 
@@ -98,7 +90,13 @@ def _resolve_scored(
     session: Optional[Session],
     thresholds: ThresholdConfig,
     calculated_at: datetime,
-) -> tuple[ScoringFeatures, Optional[str], List[ContributingFactor], Optional[float]]:
+) -> tuple[
+    ScoringFeatures,
+    Optional[str],
+    List[ContributingFactor],
+    Optional[float],
+    List[str],
+]:
     """Prefer materialized ``ml_term_snapshot``; else live M02.
 
     Returns ``(features, band, factors, model_score_or_none)``.
@@ -113,18 +111,21 @@ def _resolve_scored(
                 projection.review_priority_band,
                 list(projection.contributing_factors),
                 None,
+                list(projection.limitations),
             )
 
-    features = score_student(
+    scored = score_record(
         record,
         calculated_at=calculated_at,
-        model_version=MODEL_VERSION,
-        threshold_config_version=thresholds.version,
+        thresholds=thresholds,
     )
-    score = compute_model_score(features)
-    band = band_for_score(score, thresholds)
-    factors = contributing_factors(features)
-    return features, band, factors, score
+    return (
+        scored.features,
+        scored.review_priority_band,
+        scored.factors,
+        scored.model_score,
+        scored.limitations,
+    )
 
 
 def project_review_case(
@@ -140,13 +141,14 @@ def project_review_case(
 
     Rules (Data-ML + plan):
     - coverage.status=insufficient -> ReviewCase with band=None (detail insufficient_data).
-    - score/band is None and coverage ready -> no case (unless include_below_threshold).
+    - score/band is None and coverage ready -> no ReviewCase. Existing workflow
+      records remain in CaseStore and may be represented by internal consumers.
     - band set -> ensure CaseStore snapshot; never attach model_score / advisor_ref / PII.
     - When ``session`` is set and ``ml_term_snapshot`` exists, use that band/factors
       (no live M02 recompute).
     """
     calc_at = calculated_at or datetime.now(timezone.utc)
-    features, band, factors, _score = _resolve_scored(
+    features, band, factors, _score, model_limitations = _resolve_scored(
         record,
         session=session,
         thresholds=thresholds,
@@ -176,14 +178,14 @@ def project_review_case(
             contributing_factors=[],
             coverage=coverage,
             data_state="insufficient_data",
-            limitations=_limitations(coverage),
+            limitations=_limitations(coverage) + model_limitations,
             dataset_version=dataset_version,
             model_version=model_version,
             threshold_config_version=threshold_version,
             calculated_at=calc_at,
         )
 
-    if band is None and not include_below_threshold:
+    if band is None:
         return None
 
     # coverage ok requires non-empty factors — skip if materiality filtered everything
@@ -207,7 +209,7 @@ def project_review_case(
         contributing_factors=factors,
         coverage=coverage,
         data_state=data_state,  # type: ignore[arg-type]
-        limitations=_limitations(coverage),
+        limitations=_limitations(coverage) + model_limitations,
         dataset_version=dataset_version,
         model_version=model_version,
         threshold_config_version=threshold_version,
@@ -252,13 +254,15 @@ def score_band_only(
         row = get_ml_term_snapshot(session, record.source_id, record.student_ref)
         if row is not None:
             score = float(row.model_score) if row.model_score is not None else None
-            return score, row.review_priority_band
+            # The stored score is authoritative; only remap the requested
+            # threshold instead of reusing the materialized band.
+            if score is None:
+                return None, None
+            if score >= thresholds.tau_high:
+                return score, "uu_tien_som"
+            if score >= thresholds.tau_case:
+                return score, "can_ra_soat"
+            return score, None
 
-    features = score_student(
-        record,
-        model_version=MODEL_VERSION,
-        threshold_config_version=thresholds.version,
-    )
-    score = compute_model_score(features)
-    band = band_for_score(score, thresholds)
-    return score, band
+    scored = score_record(record, thresholds=thresholds)
+    return scored.model_score, scored.review_priority_band

@@ -69,7 +69,9 @@ function Body() {
   );
 
   const advisorOptions = useMemo(
-    () => [...bundles].map((bundle) => bundle.advisor_ref).sort((a, b) => a.localeCompare(b, "vi")),
+    () => [...bundles]
+      .map((bundle) => ({ ref: bundle.advisor_ref, name: bundle.advisor_display_name ?? bundle.advisor_ref }))
+      .sort((a, b) => a.name.localeCompare(b.name, "vi")),
     [bundles],
   );
 
@@ -81,6 +83,7 @@ function Body() {
       const matchText =
         !needle ||
         b.advisor_ref.toLowerCase().includes(needle) ||
+        (b.advisor_display_name ?? "").toLowerCase().includes(needle) ||
         b.cases.some(
           (c) =>
             c.student_ref.toLowerCase().includes(needle) ||
@@ -146,7 +149,7 @@ function Body() {
             className="h-11 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-11 pr-9 text-sm text-slate-600 outline-none transition focus:border-red-300 focus:ring-2 focus:ring-red-100"
           >
             <option value="all">Nhóm giảng viên</option>
-            {advisorOptions.map((advisorRef) => <option key={advisorRef} value={advisorRef}>{advisorRef}</option>)}
+            {advisorOptions.map((o) => <option key={o.ref} value={o.ref}>{o.name}</option>)}
           </select>
           <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-700"><ChevronIcon /></span>
         </label>
@@ -177,8 +180,8 @@ function Body() {
           <input
             value={q}
             onChange={(event) => setQ(event.target.value)}
-            placeholder="Tìm theo mã giảng viên"
-            aria-label="Tìm theo mã giảng viên, mã sinh viên hoặc yếu tố đóng góp"
+            placeholder="Tìm theo tên/mã giảng viên"
+            aria-label="Tìm theo tên hoặc mã giảng viên, mã sinh viên hoặc yếu tố đóng góp"
             className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-red-300 focus:ring-2 focus:ring-red-100"
           />
         </label>
@@ -250,9 +253,12 @@ function BundleCard({ bundle }: { bundle: AdvisorHandoffDraftBundle }) {
         </span>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-slate-800">
-            Giảng viên <span className="text-[#dc2626]">{bundle.advisor_ref}</span>
+            Giảng viên <span className="text-[#dc2626]">{bundle.advisor_display_name ?? bundle.advisor_ref}</span>
           </p>
-          <p className="text-xs text-slate-400">{bundle.case_count} sinh viên trong danh sách bàn giao</p>
+          <p className="text-xs text-slate-400">
+            {bundle.advisor_display_name && <span className="font-mono">Mã {bundle.advisor_ref} · </span>}
+            {bundle.case_count} sinh viên trong danh sách bàn giao
+          </p>
         </div>
       </div>
 

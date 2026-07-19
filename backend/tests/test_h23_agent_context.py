@@ -1,7 +1,7 @@
 """H23 — server-derived AgentContext + AgentCommand contract.
 
-Evidence: M02 projection → H02 ReviewCase → AgentContextResponse; state/intent
-matrix; forbidden-key scan; exact M02 factor codes/version; fail-closed gates
+Evidence: active scoring projection → H02 ReviewCase → AgentContextResponse;
+state/intent matrix; forbidden-key scan; factor/version; fail-closed gates
 for H24 (provider_call_allowed == False ⇒ zero model calls).
 """
 
@@ -59,8 +59,8 @@ def _declining_grades() -> List[NormalizedTermGrade]:
     return [
         NormalizedTermGrade(term_code="20241", course_ref="c1", credits=3.0, final_grade=9.0),
         NormalizedTermGrade(term_code="20241", course_ref="c2", credits=3.0, final_grade=8.5),
-        NormalizedTermGrade(term_code="20251", course_ref="c1", credits=3.0, final_grade=4.0),
-        NormalizedTermGrade(term_code="20251", course_ref="c2", credits=3.0, final_grade=3.5),
+        NormalizedTermGrade(term_code="20251", course_ref="c1", credits=3.0, final_grade=4.0, grade_status="Không đạt"),
+        NormalizedTermGrade(term_code="20251", course_ref="c2", credits=3.0, final_grade=3.5, grade_status="Không đạt"),
     ]
 
 
@@ -180,10 +180,10 @@ def test_agent_explanation_request_still_accepts_library_context() -> None:
     assert req.context.status == "unavailable"
 
 
-# --- build_agent_context happy / M02 codes ---------------------------------
+# --- build_agent_context happy / active model codes -------------------------
 
 
-def test_ready_partial_coverage_exact_m02_codes(
+def test_ready_partial_coverage_exact_active_codes(
     monkeypatch: pytest.MonkeyPatch, case_store: CaseStore
 ) -> None:
     student = "stu_h23_ok"
@@ -204,9 +204,9 @@ def test_ready_partial_coverage_exact_m02_codes(
     assert ctx.status == "ready"
     assert ctx.case is not None
     assert ctx.case.model_version == MODEL_VERSION
-    assert MODEL_VERSION == "m02-baseline-0.2"
+    assert MODEL_VERSION == "m10-reality460-logreg-1.0"
     codes = {f.code for f in ctx.case.contributing_factors}
-    assert "grade_trend_declining" in codes
+    assert {"gpa_below_target", "failed_credits_elevated"}.issubset(codes)
     assert "grade_trend_negative" not in codes
     assert ctx.allowed_intents == ["explain_case"]
     assert provider_call_allowed(ctx, "explain_case") is True

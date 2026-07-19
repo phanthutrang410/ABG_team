@@ -5,6 +5,8 @@ H39b: actor/role/scope from session Principal; client actor ignored.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -37,6 +39,7 @@ def _to_public_response(case) -> TransitionResponse:
         monitoring_until=case.monitoring_until,
         mapping_repair_queued=case.mapping_repair_queued,
         updated_at=case.updated_at,
+        viewed_at=case.viewed_at,
     )
 
 
@@ -119,6 +122,39 @@ def get_case(
     ):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="case not found")
     return _to_public_response(case)
+
+
+@router.post("/{case_id}/viewed", response_model=TransitionResponse)
+def mark_case_viewed(
+    case_id: str,
+    principal: Principal = Depends(require_active_role),
+    db: Session = Depends(get_db),
+) -> TransitionResponse:
+    """GVCN logs 'đã xem' when opening the secured detail — idempotent, not a state change.
+
+    Distinct from acceptance (the ``assigned → follow_up_in_progress`` transition):
+    viewing records that the advisor read the handoff; accepting is the explicit
+    confirmation that closes the loop with the khoa.
+    """
+    case = store.get(case_id)
+    if case is None or not principal_can_view_care_case(
+        principal,
+        case_advisor_ref=case.advisor_ref,
+        case_state=case.state.value,
+    ):
+        audit(principal, action="case.viewed", resource_handle=case_id, allowed=False, db=db)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="case not found")
+
+    if principal.active_role != "gvcn":
+        audit(principal, action="case.viewed", resource_handle=case_id, allowed=False, db=db)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "role_not_permitted", "message": "view receipt is advisor-only"},
+        )
+
+    updated = store.mark_viewed(case_id, datetime.now(timezone.utc))
+    audit(principal, action="case.viewed", resource_handle=case_id, allowed=True, db=db)
+    return _to_public_response(updated)
 
 
 @router.post("/{case_id}/transitions", response_model=TransitionResponse)

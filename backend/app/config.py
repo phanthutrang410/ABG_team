@@ -32,6 +32,15 @@ class Settings(BaseSettings):
     max_concurrent_agent_runs: int = Field(default=3, ge=1)
     agent_run_timeout_seconds: int = Field(default=30, ge=1, le=30)
 
+    # Public base URL of the frontend, used to build login-gated links inside
+    # advisor handoff email drafts. No trailing slash needed.
+    frontend_base_url: str = "http://localhost:3000"
+
+    # M10 — explicit scoring engine selection. Rollback is operator-controlled;
+    # artifact failures never silently fall back to the heuristic.
+    scoring_model_version: str = "m10-reality460-logreg-1.0"
+    scoring_model_artifact: Optional[str] = None
+
     # Care /cases harden (H06b deploy-blocker)
     app_env: str = "local"
     # None = derive from app_env (local/dev/test only); explicit bool overrides.

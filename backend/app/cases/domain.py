@@ -105,6 +105,9 @@ class CaseSnapshot:
     monitoring_until: Optional[datetime] = None
     mapping_repair_queued: bool = False
     updated_at: Optional[datetime] = None
+    # First time the assigned GVCN opened the secured detail ("đã xem"). Set once,
+    # separate from acceptance (which is the assigned → follow_up_in_progress transition).
+    viewed_at: Optional[datetime] = None
 
 
 @dataclass(frozen=True)
