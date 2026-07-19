@@ -130,7 +130,7 @@ hoạt động.
 
 ```powershell
 # Chỉ dùng mật khẩu local; không dùng hoặc commit secret production.
-$env:AUTH_SEED_PASSWORD = "<local-demo-password>"
+$env:AUTH_SEED_PASSWORD = "demo123"
 
 python .\scripts\bootstrap_d460.py
 ```

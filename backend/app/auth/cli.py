@@ -2,8 +2,11 @@
 
 Usage (from backend/):
 
-    set AUTH_SEED_PASSWORD=...
+    set AUTH_SEED_PASSWORD=demo123
     python -m app.auth.cli seed
+
+Canonical demo password for quanly/gvcn/demo (and future seed accounts): demo123.
+Live ops keep the same value in SSM `/silent-shield/d460/AUTH_SEED_PASSWORD`.
 """
 
 from __future__ import annotations

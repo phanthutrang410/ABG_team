@@ -14,7 +14,7 @@
 | Semester | 460 · hash `73274079…` |
 | `ml_term_snapshot` | 460 |
 | `attendance_week` | 1840 rows · 460 students |
-| Auth seed | `quanly` / `gvcn` / `demo` (password in SSM Parameter Store `/silent-shield/d460/AUTH_SEED_PASSWORD` — **not** in git) |
+| Auth seed | `quanly` / `gvcn` / `demo` · password canonical `demo123` (SSM `/silent-shield/d460/AUTH_SEED_PASSWORD`) |
 | Model | `m02-baseline-0.2` |
 
 ## Ops sequence (executed)
