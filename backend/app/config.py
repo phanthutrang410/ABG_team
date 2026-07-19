@@ -32,6 +32,13 @@ class Settings(BaseSettings):
     max_concurrent_agent_runs: int = Field(default=3, ge=1)
     agent_run_timeout_seconds: int = Field(default=30, ge=1, le=30)
 
+    # Optional LangSmith (default off). Redacted agent metadata only — see
+    # app.agent.tracing. Requires optional extra: pip install -e ".[observability]".
+    langsmith_tracing: bool = False
+    langsmith_api_key: SecretStr = SecretStr("")
+    langsmith_project: str = "silent-shield"
+    langsmith_endpoint: str = "https://api.smith.langchain.com"
+
     # Public base URL of the frontend, used to build login-gated links inside
     # advisor handoff email drafts. No trailing slash needed.
     frontend_base_url: str = "http://localhost:3000"

@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="vi">
       <body>
         <SessionProvider>
-          {/* Provider above AppShell remounts so thread survives route changes. */}
+          {/* Global shell persists; provider resets transient thread on route/role changes. */}
           <GlobalAgentProvider>{children}</GlobalAgentProvider>
         </SessionProvider>
       </body>

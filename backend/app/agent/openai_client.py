@@ -39,6 +39,26 @@ _FORBIDDEN_REQUEST_KEYS = frozenset(
 )
 
 
+def _llm_span_cm(
+    *,
+    name: str,
+    model: str,
+    system: str,
+    user: str,
+    structured_json: bool,
+):
+    """Lazy import so OpenAI transport stays usable without langsmith installed."""
+    from app.agent.tracing import llm_span
+
+    return llm_span(
+        name=name,
+        model=model,
+        system_chars=len(system),
+        user_chars=len(user),
+        structured_json=structured_json,
+    )
+
+
 def _validate_https_allowlisted_base_url(base_url: str) -> str:
     parsed = urlparse(base_url)
     if parsed.scheme != "https":
@@ -201,8 +221,21 @@ class OpenAIResponsesClient:
         acquired = self._semaphore.acquire(blocking=True, timeout=self.timeout_seconds)
         if not acquired:
             raise ModelUnavailable("OpenAI concurrency limit reached")
+        span_name = "openai_complete_json" if text_format is not None else "openai_complete"
+        format_name = "result"
+        if isinstance(text_format, dict):
+            fmt = text_format.get("format")
+            if isinstance(fmt, dict) and isinstance(fmt.get("name"), str):
+                format_name = fmt["name"]
         try:
-            return self._do_request(req)
+            with _llm_span_cm(
+                name=format_name if text_format is not None else span_name,
+                model=self.model,
+                system=system,
+                user=user,
+                structured_json=text_format is not None,
+            ):
+                return self._do_request(req)
         finally:
             self._semaphore.release()
 

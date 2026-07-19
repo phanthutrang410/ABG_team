@@ -4,13 +4,12 @@
     "surface": "overview",
     "resource_handle": null,
     "question": "Tóm tắt tín hiệu trên Overview giúp tôi.",
-    "locale": "vi",
-    "thread_summary": "User asked for overview summary; no tool requested yet."
+    "locale": "vi"
   },
   "response": {
     "status": "ok",
-    "answer_vi": "Trên Overview, trợ lý chỉ giải thích tín hiệu tổng hợp server đã cấp — không bịa số liệu ngoài context packet. So sánh với snapshot tuần trước chưa sẵn sàng (comparison_status=unavailable). Giới hạn dữ liệu: weekly_comparison_unavailable, aggregate_only, no_client_case_payload. Dữ liệu thiếu hoặc cũ được đánh dấu insufficient_data/stale, không suy diễn thành \"ổn định\".",
-    "evidence_refs": ["route:answer", "facts:overview_packet"],
+    "answer_vi": "Em đang hỗ trợ trên màn Overview. Các con số chi tiết (tổng sinh viên, số case trong danh sách tổng quan) sẽ hiện khi dữ liệu tổng hợp đã sẵn sàng — em không tự bịa số. So sánh với tuần trước hiện chưa sẵn sàng. Anh/chị có thể mở báo cáo tổng quan, danh sách rà soát, hoặc bản nháp thông báo GVCN bằng các thẻ bên dưới.",
+    "evidence_refs": ["route:answer", "review_overview:organization"],
     "ui_actions": [
       {
         "key": "open_overview_report",

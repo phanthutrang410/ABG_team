@@ -1,0 +1,7 @@
+{
+    "commands":  [
+                     "docker ps --filter name=silent-shield-api --format \"{{.Names}} {{.Status}}\"",
+                     "docker logs --tail 80 silent-shield-api 2\u003e\u00261 | sed -E \"s/(sk-[A-Za-z0-9_-]+|Bearer [A-Za-z0-9._-]+|OPENAI_API_KEY=[^ ]+)/\\\\1=***REDACTED***/g\"",
+                     "docker exec silent-shield-api python -c \"from app.agent.overview_graph import run_overview_graph, _is_chitchat; print(_is_chitchat(\\\"hello\\\")); print(\\\"import_ok\\\")\""
+                 ]
+}

@@ -11,11 +11,11 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { postAgentTurn } from "@/lib/api";
+import { postAgentTurnStream } from "@/lib/api";
 import {
+  isSupportedAgentAction,
   navigateAgentRouteKey,
   resourceHandleFromPathname,
-  routeKeyForCapability,
   surfaceFromPathname,
 } from "@/lib/agent-routes";
 import { useSession } from "@/lib/session";
@@ -23,8 +23,9 @@ import type { AgentTurnResponse, AgentUIAction } from "@/lib/types";
 
 /**
  * Global Agent thread state (Workstream B / doc 13 §9).
- * Memory-only — no localStorage for chat PII. Reset on role change;
- * keep thread across route changes (provider lives above AppShell remounts).
+ * Memory-only — no localStorage for chat PII. Reset on role, route, or resource
+ * change so one case/page never becomes context for another.
+ * Sends via POST /agent/turns/stream (SSE status + faux deltas + done).
  */
 
 export type AgentMessageRole = "user" | "assistant";
@@ -59,19 +60,6 @@ function nextId(prefix: string): string {
   return `${prefix}-${messageSeq}`;
 }
 
-/** Structured facts only (≤800) — not a raw chat dump. */
-function buildThreadSummary(messages: AgentMessage[]): string | null {
-  if (messages.length === 0) return null;
-  const recent = messages.slice(-6);
-  const parts = recent.map((m) => {
-    const label = m.role === "user" ? "Q" : "A";
-    const clipped = m.text.replace(/\s+/g, " ").trim().slice(0, 120);
-    return `${label}: ${clipped}`;
-  });
-  const joined = parts.join(" | ");
-  return joined.length > 800 ? joined.slice(0, 800) : joined;
-}
-
 export function GlobalAgentProvider({ children }: { children: ReactNode }) {
   const { activeRole } = useSession();
   const pathname = usePathname() ?? "/";
@@ -82,20 +70,37 @@ export function GlobalAgentProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [lastUiActions, setLastUiActions] = useState<AgentUIAction[]>([]);
   const launcherRef = useRef<HTMLElement | null>(null);
-  const roleRef = useRef(activeRole);
+  const activeRequestRef = useRef<AbortController | null>(null);
 
   const surface = surfaceFromPathname(pathname);
   const resourceHandle = resourceHandleFromPathname(pathname);
+  const contextKey = [
+    activeRole ?? "none",
+    pathname,
+    surface,
+    resourceHandle ?? "none",
+  ].join("|");
+  const contextRef = useRef(contextKey);
+  const contextReady = contextRef.current === contextKey;
 
-  // Reset thread on role change; keep across route changes.
+  // Target architecture §9.3: no transient memory across role/page/resource.
   useEffect(() => {
-    if (roleRef.current === activeRole) return;
-    roleRef.current = activeRole;
+    if (contextRef.current === contextKey) return;
+    activeRequestRef.current?.abort();
+    activeRequestRef.current = null;
+    contextRef.current = contextKey;
     setMessages([]);
     setLastUiActions([]);
     setBusy(false);
     setOpen(false);
-  }, [activeRole]);
+  }, [contextKey]);
+
+  useEffect(
+    () => () => {
+      activeRequestRef.current?.abort();
+    },
+    [],
+  );
 
   const openDrawer = useCallback(() => setOpen(true), []);
   const closeDrawer = useCallback(() => {
@@ -121,66 +126,129 @@ export function GlobalAgentProvider({ children }: { children: ReactNode }) {
       if (!text || busy) return;
 
       const userMsg: AgentMessage = { id: nextId("u"), role: "user", text };
-      setMessages((prev) => [...prev, userMsg]);
+      const assistantId = nextId("a");
+      const placeholder: AgentMessage = {
+        id: assistantId,
+        role: "assistant",
+        text: "",
+      };
+      setMessages((prev) => [...prev, userMsg, placeholder]);
       setBusy(true);
       setOpen(true);
 
-      const thread_summary = buildThreadSummary([...messages, userMsg]);
-      const result = await postAgentTurn({
-        surface,
-        resource_handle: resourceHandle,
-        question: text,
-        thread_summary,
-      });
+      const controller = new AbortController();
+      activeRequestRef.current?.abort();
+      activeRequestRef.current = controller;
+      const requestContextKey = contextKey;
+      const isCurrentRequest = () =>
+        !controller.signal.aborted && contextRef.current === requestContextKey;
+      let finished = false;
 
-      if (!result) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: nextId("a"),
-            role: "assistant",
-            text: "Máy chủ tạm thời không phản hồi. Chưa có câu trả lời từ trợ lý — vui lòng thử lại sau.",
-            status: "error",
+      await postAgentTurnStream(
+        {
+          surface,
+          resource_handle: resourceHandle,
+          question: text,
+        },
+        {
+          onDelta: (chunk) => {
+            if (!isCurrentRequest()) return;
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId ? { ...m, text: m.text + chunk } : m,
+              ),
+            );
           },
-        ]);
-        setLastUiActions([]);
-        setBusy(false);
-        return;
+          onDone: (result) => {
+            if (!isCurrentRequest()) return;
+            finished = true;
+            // Never render a dead/unknown action chip. The backend registry is
+            // broader than the currently shipped Overview route allowlist.
+            const uiActions =
+              result.status === "refused"
+                ? []
+                : result.ui_actions.filter(isSupportedAgentAction);
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId
+                  ? {
+                      ...m,
+                      text: result.answer_vi,
+                      status: result.status,
+                      uiActions,
+                    }
+                  : m,
+              ),
+            );
+            setLastUiActions(uiActions);
+
+            if (result.status === "ok" && result.selected_capability) {
+              const selectedAction = uiActions.find(
+                (a) => a.key === result.selected_capability,
+              );
+              // Auto-navigation requires the exact server-authorized card;
+              // never reconstruct a route from selected_capability alone.
+              if (
+                selectedAction
+                && navigateAgentRouteKey(router, selectedAction.route_key)
+              ) {
+                setOpen(true);
+              }
+            }
+          },
+          onError: (messageVi) => {
+            if (!isCurrentRequest()) return;
+            finished = true;
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId
+                  ? { ...m, text: messageVi, status: "error", uiActions: [] }
+                  : m,
+              ),
+            );
+            setLastUiActions([]);
+          },
+        },
+        controller.signal,
+      );
+
+      if (activeRequestRef.current === controller) {
+        activeRequestRef.current = null;
       }
+      if (!isCurrentRequest()) return;
 
-      const assistantMsg: AgentMessage = {
-        id: nextId("a"),
-        role: "assistant",
-        text: result.answer_vi,
-        status: result.status,
-        uiActions: result.status === "ok" ? result.ui_actions : [],
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
-      setLastUiActions(result.status === "ok" ? result.ui_actions : []);
-
-      if (result.status === "ok" && result.selected_capability) {
-        const selectedAction = result.ui_actions.find((a) => a.key === result.selected_capability);
-        const routeKey =
-          selectedAction?.route_key
-          ?? routeKeyForCapability(result.selected_capability)
-          ?? null;
-        if (routeKey && navigateAgentRouteKey(router, routeKey)) {
-          setOpen(true);
-        }
+      if (!finished) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId
+              ? {
+                  ...m,
+                  text:
+                    m.text.trim()
+                    || "Máy chủ tạm thời không phản hồi. Chưa có câu trả lời từ trợ lý — vui lòng thử lại sau.",
+                  status: "error",
+                  uiActions: [],
+                }
+              : m,
+          ),
+        );
+        setLastUiActions([]);
       }
 
       setBusy(false);
     },
-    [busy, messages, resourceHandle, router, surface],
+    [busy, contextKey, resourceHandle, router, surface],
   );
 
   const value = useMemo<GlobalAgentCtx>(
     () => ({
-      open,
-      busy,
-      messages,
+      // Effects clear the backing state; these guards also prevent one paint
+      // of the previous route/case thread before that effect commits.
+      open: contextReady ? open : false,
+      busy: contextReady ? busy : false,
+      messages: contextReady ? messages : [],
       surface,
-      lastUiActions,
+      lastUiActions: contextReady ? lastUiActions : [],
       openDrawer,
       closeDrawer,
       sendQuestion,
@@ -191,6 +259,7 @@ export function GlobalAgentProvider({ children }: { children: ReactNode }) {
       open,
       busy,
       messages,
+      contextReady,
       surface,
       lastUiActions,
       openDrawer,

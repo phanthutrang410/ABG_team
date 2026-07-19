@@ -154,6 +154,7 @@ LLM chỉ chọn cách diễn đạt trong allowlist. Backend render câu tiến
 - Request đặt `temperature=0`, `max_tokens<=512`; response body tối đa 16 KiB.
 - JSON null/sai type, 401, 429, timeout, invalid UTF-8 hoặc response quá lớn đều map `model_unavailable`; không raw 500 và không fallback scoring/provider ẩn.
 - Log chỉ gồm `run_status`, duration, provider/model, intent và safe grounding refs. Không log raw question, prompt, context, answer/draft, secret hoặc chain-of-thought. Tracing mặc định tắt.
+- Optional LangSmith: bật bằng `LANGSMITH_TRACING=true` + `LANGSMITH_API_KEY` (Settings/`app.agent.tracing`). Span chỉ mang metadata đã redact (surface/status/capability/length); không gửi raw question/prompt/answer. Cần `pip install -e ".[observability]"`.
 - `context_unavailable` và `model_unavailable` phải có copy khác nhau.
 
 Live FPT smoke không thuộc mocked gate thường ngày. Chỉ chạy khi có phê duyệt key/deploy riêng và dùng fixture pseudonymous; không đưa raw response vào repo/evidence.

@@ -56,7 +56,8 @@ Copy `.env.example` → `.env` (or inject equivalent secrets on the host). Docum
 | `CORS_ORIGINS` | Extra browser origins (comma-separated) | Live: `http://52.74.255.88:3000` (plus code default `http://localhost:3000`) |
 | `APP_ENV` | Runtime mode | Live container set `demo` |
 | `FPT_API_KEY` / `FPT_BASE_URL` / `FPT_MODEL` | Agent explain path | See FPT doc; empty key = agent features unavailable |
-| `OPENAI_API_KEY` | Optional backup LLM | Empty unless backup path enabled |
+| `OPENAI_API_KEY` / `OPENAI_BASE_URL` / `OPENAI_MODEL` | Agent explain + Global Agent turns | Decision #22 / H29; empty key = provider fail-closed |
+| `LANGSMITH_TRACING` / `LANGSMITH_API_KEY` / `LANGSMITH_PROJECT` | Optional agent tracing | Default **off**; redacted metadata only (`app.agent.tracing`); needs `pip install -e ".[observability]"` |
 | `MAX_CONCURRENT_AGENT_RUNS` / `AGENT_RUN_TIMEOUT_SECONDS` | Agent limits | Defaults in `.env.example` |
 | `NEXT_PUBLIC_API_BASE` / `BACKEND_URL` | Frontend → API | Live bake: `http://52.74.255.88:8000` |
 
@@ -119,7 +120,9 @@ python -m app.dwh.cli readiness
 | `attendance_week` distinct students | 460 |
 | readiness | `ready: true` |
 
-**Live D460 (19/7 ~03:10 +07):** API `:d460` digest `sha256:4f1fb57b7e4f259fdf9751a88cd54f57316a92e70dbb088302308a5d05d1714a` · linked attendance **7360** (`acfb7d80…`) · `ml_term_snapshot` 460 · `attendance_week` 1840/460 · auth smoke **0** `attendance_source_unapproved` · evidence [23-d460…](../03-project/23-d460-live-redeploy-evidence.md). H39: anon `/review-cases` → 401; seed accounts `quanly`/`gvcn`/`demo`. **Vercel FE** still needs production redeploy for `/auth/*` rewrite (until then browser login via Vercel 404).
+**Live D460 (19/7 ~03:10 +07):** API `:d460` digest `sha256:4f1fb57b7e4f259fdf9751a88cd54f57316a92e70dbb088302308a5d05d1714a` · linked attendance **7360** (`acfb7d80…`) · `ml_term_snapshot` 460 · `attendance_week` 1840/460 · auth smoke **0** `attendance_source_unapproved` · evidence [23-d460…](../03-project/23-d460-live-redeploy-evidence.md). H39: anon `/review-cases` → 401; seed accounts `quanly`/`gvcn`/`demo`.
+
+**Live 4 GVCN roster (19/7):** overlay `demo-class-partition-v1` 4×115 · API digest `sha256:831e0e23…` · `GET /advisor/roster` · accounts `duy.bk`/`hoang.nv`/`trang.pt`/`giang.nt` · evidence [24-d460…](../03-project/24-d460-four-gvcn-roster-evidence.md). **Vercel FE** redeploy needed for `/advisor/roster` rewrite + server roster UI.
 
 **If re-bootstrap:** (1) image with `/data/approved` fixtures + writers, (2) env `LINKED_NAMESPACE_APPROVAL`, (3) on `snapshot_conflict` → clear attendance `source_id` rows **after** `upgrade_head` (separate tx per table), (4) import + materialize + rollup. SSM helpers: `deploy/aws/ssm-d460-redeploy-api.json`, `ssm-d460-bootstrap.json`.
 

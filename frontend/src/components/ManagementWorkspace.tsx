@@ -555,15 +555,13 @@ type OverviewCounts = {
 };
 
 function AiAgentLauncher() {
-  const { openDrawer, launcherRef, busy } = useGlobalAgent();
+  // Focus-return target lives on the global AgentFab — do not overwrite launcherRef here.
+  const { openDrawer, busy } = useGlobalAgent();
 
   return (
     <div className="space-y-3">
       <button
         type="button"
-        ref={(el) => {
-          launcherRef.current = el;
-        }}
         onClick={openDrawer}
         disabled={busy}
         className="w-full flex items-center gap-3 bg-white border border-[#fbd7d7] rounded-full pl-5 pr-2 py-2 shadow-sm hover:border-[#dc2626] transition-colors text-left"

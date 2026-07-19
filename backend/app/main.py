@@ -37,6 +37,13 @@ def _cors_allow_origins() -> list[str]:
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     try:
+        from app.agent.tracing import configure_langsmith
+        from app.config import get_settings
+
+        configure_langsmith(get_settings())
+    except Exception:
+        pass
+    try:
         init_schemas()
         try_enable_postgres_case_store()
     except Exception:

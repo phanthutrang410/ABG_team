@@ -5,6 +5,7 @@ import type {
   AgentIntent,
   AgentTurnRequest,
   AgentTurnResponse,
+  AgentTurnStreamHandlers,
   AuthMeResponse,
   CaseAction,
   CaseDetailResponse,
@@ -323,7 +324,7 @@ export async function fetchFairnessReport(signal?: AbortSignal): Promise<Fairnes
 
 /**
  * H37 — POST /agent/turns (Global Agent). Cookie session; browser only sends
- * surface / optional handle / question / thread_summary — never raw case context.
+ * surface / optional handle / current question — never raw case context/history.
  * null = transport/parse failure → UI fail-closed copy.
  */
 export async function postAgentTurn(
@@ -340,23 +341,185 @@ export async function postAgentTurn(
         resource_handle: payload.resource_handle ?? null,
         question: payload.question ?? null,
         locale: payload.locale ?? "vi",
-        thread_summary: payload.thread_summary ?? null,
       } satisfies AgentTurnRequest),
       signal,
     });
     if (!res.ok) return null;
-    const body = (await res.json()) as AgentTurnResponse;
-    if (
-      !body
-      || (body.status !== "ok" && body.status !== "refused")
-      || typeof body.answer_vi !== "string"
-      || !Array.isArray(body.ui_actions)
-    ) {
-      return null;
-    }
-    return body;
+    const body = await res.json();
+    return isAgentTurnResponse(body) ? body : null;
   } catch {
     return null;
+  }
+}
+
+const AGENT_STREAM_FAIL_VI =
+  "Máy chủ tạm thời không phản hồi. Chưa có câu trả lời từ trợ lý — vui lòng thử lại sau.";
+
+const AGENT_REFUSAL_REASONS = new Set([
+  "forbidden_tool_requested",
+  "out_of_scope_surface",
+  "prompt_injection_detected",
+  "arbitrary_url_or_sql_requested",
+  "sensitive_data_requested",
+  "unsafe_inference_requested",
+]);
+
+function isAgentTurnResponse(body: unknown): body is AgentTurnResponse {
+  if (!body || typeof body !== "object") return false;
+  const b = body as Record<string, unknown>;
+  if (
+    (b.status !== "ok" && b.status !== "refused" && b.status !== "unavailable")
+    || typeof b.answer_vi !== "string"
+    || b.answer_vi.trim().length === 0
+    || !Array.isArray(b.evidence_refs)
+    || !b.evidence_refs.every((ref) => typeof ref === "string")
+    || !Array.isArray(b.ui_actions)
+    || !b.ui_actions.every(
+      (action) =>
+        action !== null
+        && typeof action === "object"
+        && typeof (action as Record<string, unknown>).key === "string"
+        && typeof (action as Record<string, unknown>).label_vi === "string"
+        && typeof (action as Record<string, unknown>).route_key === "string",
+    )
+    || (b.selected_capability !== null && typeof b.selected_capability !== "string")
+  ) {
+    return false;
+  }
+
+  const actions = b.ui_actions as Array<Record<string, unknown>>;
+  if (b.status === "refused") {
+    return (
+      typeof b.refusal_reason === "string"
+      && AGENT_REFUSAL_REASONS.has(b.refusal_reason)
+      && actions.length === 0
+      && b.selected_capability === null
+    );
+  }
+  if (b.refusal_reason !== null) return false;
+  if (b.status === "unavailable" && b.selected_capability !== null) return false;
+  if (
+    typeof b.selected_capability === "string"
+    && !actions.some((action) => action.key === b.selected_capability)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * H37 stream — POST /agent/turns/stream (SSE). Same request body as postAgentTurn.
+ * Status phases → faux answer deltas (post-guard) → done. Uses fetch (not EventSource)
+ * so cookies + POST body work.
+ */
+export async function postAgentTurnStream(
+  payload: Omit<AgentTurnRequest, "locale"> & { locale?: "vi" },
+  handlers: AgentTurnStreamHandlers,
+  signal?: AbortSignal,
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/agent/turns/stream`, {
+      ...CREDENTIALS,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+      },
+      body: JSON.stringify({
+        surface: payload.surface,
+        resource_handle: payload.resource_handle ?? null,
+        question: payload.question ?? null,
+        locale: payload.locale ?? "vi",
+      } satisfies AgentTurnRequest),
+      signal,
+    });
+    if (!res.ok || !res.body) {
+      handlers.onError?.(AGENT_STREAM_FAIL_VI);
+      return false;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let terminal: "done" | "error" | null = null;
+
+    const dispatchBlock = (block: string) => {
+      if (terminal !== null) return;
+      const trimmed = block.trim();
+      if (!trimmed) return;
+      let eventName = "message";
+      const dataLines: string[] = [];
+      for (const line of trimmed.split(/\r?\n/)) {
+        if (line.startsWith("event:")) {
+          eventName = line.slice("event:".length).trim();
+        } else if (line.startsWith("data:")) {
+          dataLines.push(line.slice("data:".length).trim());
+        }
+      }
+      if (dataLines.length === 0) return;
+      let payloadJson: unknown;
+      try {
+        payloadJson = JSON.parse(dataLines.join("\n"));
+      } catch {
+        return;
+      }
+      if (eventName === "status") {
+        const phase =
+          payloadJson && typeof payloadJson === "object" && "phase" in payloadJson
+            ? String((payloadJson as { phase: unknown }).phase)
+            : "";
+        if (phase) handlers.onStatus?.(phase);
+        return;
+      }
+      if (eventName === "delta") {
+        const text =
+          payloadJson && typeof payloadJson === "object" && "text" in payloadJson
+            ? String((payloadJson as { text: unknown }).text ?? "")
+            : "";
+        if (text) handlers.onDelta?.(text);
+        return;
+      }
+      if (eventName === "done") {
+        if (isAgentTurnResponse(payloadJson)) {
+          terminal = "done";
+          handlers.onDone?.(payloadJson);
+        } else {
+          terminal = "error";
+          handlers.onError?.(AGENT_STREAM_FAIL_VI);
+        }
+        return;
+      }
+      if (eventName === "error") {
+        const msg =
+          payloadJson && typeof payloadJson === "object" && "message_vi" in payloadJson
+            ? String((payloadJson as { message_vi: unknown }).message_vi || AGENT_STREAM_FAIL_VI)
+            : AGENT_STREAM_FAIL_VI;
+        terminal = "error";
+        handlers.onError?.(msg);
+      }
+    };
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split(/\r?\n\r?\n/);
+      buffer = parts.pop() ?? "";
+      for (const part of parts) dispatchBlock(part);
+    }
+    buffer += decoder.decode();
+    if (buffer.trim()) dispatchBlock(buffer);
+
+    if (terminal !== "done") {
+      if (terminal === "error") return false;
+      handlers.onError?.(AGENT_STREAM_FAIL_VI);
+      return false;
+    }
+    return true;
+  } catch {
+    if (signal?.aborted) return false;
+    handlers.onError?.(AGENT_STREAM_FAIL_VI);
+    return false;
   }
 }
 
