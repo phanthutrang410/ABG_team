@@ -47,6 +47,29 @@ test("hiển thị danh sách bằng mã bảo vệ và không lộ trường n�
   await expect(page.getByText(/raw score|probability|trọng số/i)).toHaveCount(0);
 });
 
+test("Dashboard tăng cỡ chữ trong card nhưng vẫn vừa một viewport desktop", async ({ page }) => {
+  await page.setViewportSize({ width: 1628, height: 980 });
+  await mockCaseList(page, {
+    ...caseListOk,
+    items: [
+      { ...reviewCase, case_id: "case_pseudo_new", case_state: "new_signal" },
+      { ...reviewCase, case_id: "case_pseudo_assigned", student_ref: "stu_pseudo_002", case_state: "assigned" },
+      { ...reviewCase, case_id: "case_pseudo_active", student_ref: "stu_pseudo_003", case_state: "follow_up_in_progress" },
+    ],
+  });
+  await page.goto("/analysis");
+
+  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await expect(page.getByText("Tín hiệu cần rà soát sớm", { exact: true })).toHaveCSS("font-size", "17px");
+  await expect(page.getByText("Trạng thái Tín hiệu mới", { exact: true })).toHaveCSS("font-size", "17px");
+
+  const viewport = await page.evaluate(() => ({
+    innerHeight: window.innerHeight,
+    scrollHeight: document.documentElement.scrollHeight,
+  }));
+  expect(viewport.scrollHeight).toBeLessThanOrEqual(viewport.innerHeight);
+});
+
 test("mở chi tiết case trong popup và giữ nguyên danh sách phía sau", async ({ page }) => {
   await mockCaseList(page);
   await mockCaseDetail(page, { case: reviewCase, state: "ok", freshness: "fresh", problem: null });
@@ -96,6 +119,33 @@ test("tải lại sau lỗi và phục hồi bằng dữ liệu API", async ({ p
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
   await page.getByRole("button", { name: "Mở danh sách rà soát" }).click();
   await expect(page.getByText("stu_pseudo_001", { exact: true }).first()).toBeVisible();
+});
+
+test("phủ sáng mờ và báo AI Thinking trong lúc chuyển trang còn chờ dữ liệu", async ({ page }) => {
+  let delayAnalysis = false;
+  let releaseAnalysis: (() => void) | undefined;
+  const analysisPending = new Promise<void>((resolve) => {
+    releaseAnalysis = resolve;
+  });
+
+  await page.route(/\/review-cases(?:\?.*)?$/, async (route) => {
+    if (delayAnalysis) await analysisPending;
+    return json(route, caseListOk);
+  });
+  await mockReviewOverviewSummary(page);
+  await page.goto("/overview");
+  await expect(page.getByRole("button", { name: "Xem chi tiết gợi ý" })).toBeVisible();
+
+  delayAnalysis = true;
+  await page.getByRole("link", { name: "Phân tích" }).click();
+
+  const thinking = page.getByRole("status", { name: "AI Thinking ..." });
+  await expect(thinking.first()).toBeVisible();
+  await expect(thinking.first()).toHaveClass(/backdrop-blur/);
+
+  releaseAnalysis?.();
+  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await expect(thinking).toHaveCount(0);
 });
 
 test("link fairness cũ đóng an toàn về Dashboard thay vì render số liệu ngoài navigation", async ({ page }) => {

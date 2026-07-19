@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+/* ===== Cỡ chữ toàn hệ thống — phóng to token text-* của Tailwind =====
+   Chỉ tăng font-size (không đụng spacing), nên chữ to lên TƯƠNG ĐỐI so với
+   khoảng trắng → dễ đọc hơn và bớt cảm giác nhiều khoảng trống. Line-height của
+   Tailwind v4 là tỉ lệ không đơn vị nên tự giãn theo cỡ mới. Áp dụng mọi trang
+   dùng class text-xs/sm/base/lg/xl/2xl…; các chỗ px cứng được bump riêng. */
+@theme {
+  --text-xs: 0.8125rem;   /* 12 → 13 */
+  --text-sm: 0.9375rem;   /* 14 → 15 */
+  --text-base: 1.0625rem; /* 16 → 17 */
+  --text-lg: 1.1875rem;   /* 18 → 19 */
+  --text-xl: 1.3125rem;   /* 20 → 21 */
+  --text-2xl: 1.625rem;   /* 24 → 26 */
+  --text-3xl: 2rem;       /* 30 → 32 */
+  --text-4xl: 2.375rem;   /* 36 → 38 */
+}
+
 * {
   box-sizing: border-box;
 }
@@ -59,8 +75,16 @@ aside button[aria-haspopup="menu"] {
 }
 .ss-glow { animation: ss-glow 3.5s ease-in-out infinite; }
 
+/* 3 tool gợi ý xuất hiện lần lượt (staggered) khi bấm "Xem chi tiết gợi ý".
+   animation-delay được đặt theo index ở component để hiện từng thẻ một. */
+@keyframes ss-tool-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ss-tool-in { animation: ss-tool-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
-  .ss-float, .ss-shadow-anim, .ss-live-dot, .ss-typing-dot, .ss-glow { animation: none; }
+  .ss-float, .ss-shadow-anim, .ss-live-dot, .ss-typing-dot, .ss-glow, .ss-tool-in { animation: none; }
 }
 
 /* ===== Báo cáo tổng thể — In / Lưu PDF chỉ nội dung report (plan.md §3.2) =====
