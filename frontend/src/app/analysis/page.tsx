@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { AIThinkingOverlay } from "@/components/AIThinkingOverlay";
 import ManagementWorkspace from "@/components/ManagementWorkspace";
 import { resolveAnalysisGate } from "@/lib/advisor-routing";
 import { useSession } from "@/lib/session";
@@ -23,11 +24,11 @@ export default function AnalysisPage() {
   }, [gate, router]);
 
   if (gate === "loading") {
-    return <div className="p-12 text-center text-slate-400">Đang tải…</div>;
+    return <AIThinkingOverlay />;
   }
 
   if (gate === "gvcn_redirect") {
-    return <div className="p-12 text-center text-slate-400">Đang mở hàng đợi case…</div>;
+    return <AIThinkingOverlay />;
   }
 
   return <ManagementWorkspace />;

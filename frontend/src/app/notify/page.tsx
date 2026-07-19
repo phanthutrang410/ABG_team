@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
+import { AIThinkingOverlay } from "@/components/AIThinkingOverlay";
 import { BandBadge, CaseStateBadge } from "@/components/badges";
 import { fetchAdvisorHandoffDrafts } from "@/lib/api";
 import { FACTOR_LABEL } from "@/lib/factors";
@@ -43,13 +44,18 @@ export default function NotifyPage() {
 function Body() {
   const [loading, setLoading] = useState(true);
   const [response, setResponse] = useState<AdvisorHandoffDraftListResponse | null>(null);
+  const activeLoadRef = useRef<AbortController | null>(null);
 
   const load = useCallback(() => {
+    activeLoadRef.current?.abort();
     setLoading(true);
     const controller = new AbortController();
+    activeLoadRef.current = controller;
     fetchAdvisorHandoffDrafts(controller.signal).then((r) => {
+      if (controller.signal.aborted || activeLoadRef.current !== controller) return;
       setResponse(r);
       setLoading(false);
+      activeLoadRef.current = null;
     });
     return controller;
   }, []);
@@ -118,6 +124,7 @@ function Body() {
 
   return (
     <div className="space-y-5 pb-1">
+      <AIThinkingOverlay visible={loading} />
       <header>
         <h1 className="text-[28px] font-bold tracking-tight text-slate-900">
           Soạn mail cho giảng viên phụ trách

@@ -1,13 +1,14 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { AppShell, useSetTopbarInfo } from "@/components/AppShell";
+import { AppShell, useSetTopbarInfo, type TopbarNotification } from "@/components/AppShell";
+import { AIThinkingOverlay } from "@/components/AIThinkingOverlay";
 import { BandBadge, CaseStateBadge } from "@/components/badges";
 import { CaseDetailDialog } from "@/components/CaseDetailPage";
+import { QueuePagination } from "@/components/QueuePagination";
 import { ReportModal } from "@/components/ReportModal";
 import { ThresholdPanel } from "@/components/ThresholdPanel";
-import { WeeklyBriefingPanel } from "@/components/WeeklyBriefingPanel";
 import { fetchReviewCases, fetchReviewOverviewSummary } from "@/lib/api";
 import { FACTOR_LABEL } from "@/lib/factors";
 import { splitAccountName, useSession } from "@/lib/session";
@@ -79,19 +80,27 @@ function DashboardBody() {
   const [response, setResponse] = useState<CaseListResponse | null>(null);
   const [summary, setSummary] = useState<ReviewOverviewSummary | null>(null);
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
+  const activeLoadRef = useRef<AbortController | null>(null);
 
   const load = useCallback(() => {
+    activeLoadRef.current?.abort();
     setLoading(true);
     const controller = new AbortController();
+    activeLoadRef.current = controller;
     Promise.all([
       fetchReviewCases(controller.signal),
       isAnalysisRoute
         ? Promise.resolve<ReviewOverviewSummary | null>(null)
         : fetchReviewOverviewSummary(controller.signal),
     ]).then(([caseResponse, overviewSummary]) => {
+      // Route changes and React Strict Mode abort the superseded request. The
+      // fetch client maps transport failures to a fail-closed error envelope,
+      // so never let that obsolete envelope replace the request still running.
+      if (controller.signal.aborted || activeLoadRef.current !== controller) return;
       setResponse(caseResponse);
       setSummary(overviewSummary);
       setLoading(false);
+      activeLoadRef.current = null;
     });
     return controller;
   }, [isAnalysisRoute]);
@@ -124,14 +133,52 @@ function DashboardBody() {
       ?? items.filter((c) => c.review_priority_band === "uu_tien_som").length;
     return { updatedAt: updatedAt || null, alertCount };
   }, [response, summary]);
-  useSetTopbarInfo(topInfo.updatedAt, topInfo.alertCount);
+
+  // Thông báo cho chuông topbar — hiển thị ở MỌI trang management. Ưu tiên summary
+  // (Tổng quan); trang /analysis không fetch summary nên suy số liệu từ danh sách case.
+  const notifications = useMemo<TopbarNotification[]>(() => {
+    const reviewsHref = "/analysis?tab=reviews";
+    let reviewStudents: number;
+    let early: number;
+    let newSignal: number;
+    let pending: number;
+    let active: number;
+    if (summary && summary.state !== "error") {
+      reviewStudents = summary.review_student_count;
+      early = summary.priority_band_counts.uu_tien_som;
+      newSignal = summary.case_state_counts.new_signal;
+      pending = summary.case_state_counts.pending_review;
+      active =
+        summary.case_state_counts.assigned
+        + summary.case_state_counts.follow_up_in_progress
+        + summary.case_state_counts.monitoring;
+    } else if (response && response.state !== "error") {
+      const items = response.items;
+      reviewStudents = new Set(items.map((c) => c.student_ref)).size;
+      early = items.filter((c) => c.review_priority_band === "uu_tien_som").length;
+      newSignal = items.filter((c) => c.case_state === "new_signal").length;
+      pending = items.filter((c) => c.case_state === "pending_review").length;
+      active = items.filter((c) => c.case_state === "assigned" || c.case_state === "follow_up_in_progress" || c.case_state === "monitoring").length;
+    } else {
+      return [];
+    }
+    const list: TopbarNotification[] = [];
+    if (reviewStudents > 0) list.push({ key: "students", count: reviewStudents, label: "sinh viên có tín hiệu cần rà soát", href: reviewsHref });
+    if (early > 0) list.push({ key: "early", count: early, label: "case ở mức ưu tiên sớm", href: `${reviewsHref}&band=uu_tien_som` });
+    if (newSignal > 0) list.push({ key: "new", count: newSignal, label: "case ở trạng thái tín hiệu mới", href: `${reviewsHref}&state=new_signal` });
+    if (pending > 0) list.push({ key: "pending", count: pending, label: "case đang chờ duyệt", href: `${reviewsHref}&state=pending_review` });
+    if (active > 0) list.push({ key: "active", count: active, label: "case đang theo dõi / hỗ trợ", href: reviewsHref });
+    return list;
+  }, [summary, response]);
+  useSetTopbarInfo(topInfo.updatedAt, topInfo.alertCount, notifications);
 
   return (
-    <div className="space-y-6">
+    <div className={tab === "analytics" ? "space-y-3" : "space-y-6"}>
+      <AIThinkingOverlay visible={loading} />
       {isAnalysisRoute && <AnalysisTabs active={analysisTab} onChange={(next) => setTab(next === "dashboard" ? "analytics" : next)} />}
       {/* Khối "Phạm vi MVP" (ScopeBanner/H12b) đã bỏ theo yêu cầu owner 18/7 —
           copy giới hạn phạm vi còn lại ở disclaimer đầu trang + chip cam kết trong hero. */}
-      {(tab === "analytics" || tab === "reviews") && (
+      {tab === "reviews" && (
         <div className="flex justify-end">
           <button
             onClick={() => load()}
@@ -143,23 +190,20 @@ function DashboardBody() {
       )}
 
       {tab === "overview" && (
-        <>
-          <OverviewHeader
-            loading={loading}
-            response={response}
-            summary={summary}
-            setTab={setTab}
-            onReload={load}
-            onOpenCase={openCase}
-          />
-          <WeeklyBriefingPanel />
-        </>
+        <OverviewHeader
+          loading={loading}
+          response={response}
+          summary={summary}
+          setTab={setTab}
+          onReload={load}
+          onOpenCase={openCase}
+        />
       )}
       {tab === "analytics" && (
         <AnalyticsTab loading={loading} response={response} setTab={setTab} onReload={load} />
       )}
       {tab === "reviews" && (
-        loading ? <ListSkeleton compact /> : response ? <ReviewList response={response} onOpenCase={openCase} /> : null
+        loading && !response ? <ListSkeleton compact /> : response ? <ReviewList response={response} onOpenCase={openCase} initialBand={searchParams.get("band")} initialStateFilter={searchParams.get("state")} /> : null
       )}
       {tab === "threshold" && <ThresholdPanel />}
 
@@ -266,9 +310,11 @@ function OverviewHeader({
   const items = useMemo(() => (response && response.state !== "error" ? response.items : []), [response]);
   // Tool 1 — modal "Báo cáo tổng thể" (plan.md §3.2); mở tại chỗ, không rời trang.
   const [reportOpen, setReportOpen] = useState(false);
+  // 3 tool gợi ý chỉ hiện khi bấm "Xem chi tiết gợi ý" (xuất hiện lần lượt bên phải).
+  const [showTools, setShowTools] = useState(false);
 
   // Fetch đang chạy thật → hiển thị trạng thái "đang phân tích" (không phải hiệu ứng giả).
-  if (loading) {
+  if (loading && (!response || !summary)) {
     return (
       <div className="min-h-[calc(100vh-170px)] flex flex-col items-center justify-center gap-8 rounded-3xl border border-[#fbd7d7] bg-gradient-to-br from-white via-[#fef2f2] to-[#fde4e4]">
         <div
@@ -294,7 +340,6 @@ function OverviewHeader({
   // Một thông báo duy nhất: denominator và aggregate lấy từ summary backend,
   // không suy ra roster từ review queue và không biến workflow state thành delta.
   const isStale = response.state === "stale" || summary.state === "stale";
-  const latest = items.length > 0 ? items.reduce((m, c) => (c.calculated_at > m.calculated_at ? c : m)) : null;
   const overviewCounts: OverviewCounts = {
     totalStudents: summary.total_students,
     reviewCases: summary.review_case_count,
@@ -309,31 +354,35 @@ function OverviewHeader({
     limitedStudents: summary.limited_student_count,
     limitedReviewCases: summary.limited_review_case_count,
   };
-  const segments: { strong: string; text: string }[] = [];
-  if (overviewCounts.earlyPriority > 0) segments.push({ strong: `${overviewCounts.earlyPriority} case`, text: "ở mức Ưu tiên sớm" });
-  if (overviewCounts.workflowNew > 0) segments.push({ strong: `${overviewCounts.workflowNew} case`, text: "đang ở trạng thái Tín hiệu mới" });
-  if (overviewCounts.pending > 0) segments.push({ strong: `${overviewCounts.pending} case`, text: "đang chờ thầy/cô duyệt" });
-  if (overviewCounts.active > 0) segments.push({ strong: `${overviewCounts.active} case`, text: "đang được theo dõi / hỗ trợ" });
-  if (overviewCounts.limitedReviewCases > 0) segments.push({ strong: `${overviewCounts.limitedReviewCases} case`, text: "có dữ liệu hạn chế — hệ thống không kết luận khi thiếu dữ liệu" });
-  if (overviewCounts.limitedStudents > 0) segments.push({ strong: `${overviewCounts.limitedStudents} sinh viên`, text: "có độ phủ dữ liệu hạn chế trong toàn cohort" });
+  // Số liệu nổi bật cho bản tin gọn — mỗi mục 1 badge THIẾT KẾ ĐẶC TRƯNG theo ý
+  // nghĩa (màu + icon riêng). Fail-closed: chỉ đẩy mục > 0. Mọi số từ summary backend.
+  // Mỗi badge bấm được → mở danh sách rà soát đã lọc đúng loại (drill-down).
+  const stats: { value: number; label: string; box: string; num: string; icon: string; href: string }[] = [
+    { value: overviewCounts.reviewCases, label: "case rà soát", box: "border-rose-200 bg-rose-50", num: "text-rose-600", icon: iconPaths.search, href: "/analysis?tab=reviews" },
+  ];
+  if (overviewCounts.earlyPriority > 0) stats.push({ value: overviewCounts.earlyPriority, label: "ưu tiên sớm", box: "border-red-300 bg-red-100", num: "text-red-700", icon: iconPaths.alert, href: "/analysis?tab=reviews&band=uu_tien_som" });
+  if (overviewCounts.workflowNew > 0) stats.push({ value: overviewCounts.workflowNew, label: "tín hiệu mới", box: "border-amber-200 bg-amber-50", num: "text-amber-600", icon: iconPaths.activity, href: "/analysis?tab=reviews&state=new_signal" });
+  if (overviewCounts.active > 0) stats.push({ value: overviewCounts.active, label: "đang theo dõi / hỗ trợ", box: "border-emerald-200 bg-emerald-50", num: "text-emerald-600", icon: iconPaths.heart, href: "/analysis?tab=reviews" });
 
   // 3 tool của EduSignal AI (plan.md §3.2). Các tool chỉ điều hướng tới route
   // đã có thật; trang Tổng quan không tự tính thêm band hay dữ liệu sinh viên.
-  const tools: { key: string; icon: string; title: string; desc: string; accent: string; onClick?: () => void; disabled?: boolean }[] = [
+  const tools: OverviewTool[] = [
     {
       key: "report",
       icon: iconPaths.fileText,
       title: "Xuất báo cáo tổng thể",
-      desc: `${overviewCounts.active} case đang theo dõi / hỗ trợ · ${overviewCounts.reviewCases} case trong hàng rà soát — xem, in / lưu PDF`,
-      accent: "bg-[#fee2e2] text-[#dc2626]",
+      desc: `${overviewCounts.active} case đang theo dõi · ${overviewCounts.reviewCases} case rà soát — xem, in / lưu PDF`,
+      gradient: "from-[#dc2626] to-[#fb923c]",
+      glow: "shadow-red-500/40",
       onClick: () => setReportOpen(true),
     },
     {
       key: "analyze",
       icon: iconPaths.search,
       title: "Danh sách rà soát",
-      desc: `${overviewCounts.reviewCases} case của ${overviewCounts.reviewStudents} sinh viên trên tổng ${overviewCounts.totalStudents} sinh viên`,
-      accent: "bg-emerald-50 text-emerald-600",
+      desc: `${overviewCounts.reviewCases} case của ${overviewCounts.reviewStudents} sinh viên trên tổng ${overviewCounts.totalStudents}`,
+      gradient: "from-emerald-500 to-teal-400",
+      glow: "shadow-emerald-500/40",
       onClick: () => router.push("/analysis?tab=reviews"),
     },
     {
@@ -341,7 +390,8 @@ function OverviewHeader({
       icon: iconPaths.mail,
       title: "Soạn mail cho GVCN",
       desc: "Lọc sinh viên theo giảng viên phụ trách và xem bản nháp mail bàn giao",
-      accent: "bg-sky-50 text-sky-600",
+      gradient: "from-sky-500 to-indigo-500",
+      glow: "shadow-sky-500/40",
       onClick: () => router.push("/notify"),
     },
   ];
@@ -381,10 +431,10 @@ function OverviewHeader({
           <h1 className="text-3xl md:text-4xl font-bold text-slate-800">
             Chào <span className="text-[#dc2626]">{shortName}</span> 👋
           </h1>
-          <p className="mt-2 text-slate-500 md:text-[15px]">
+          <p className="mt-2 text-slate-500 text-base md:text-lg">
             Chúc thầy/cô một ngày làm việc hiệu quả. EduSignal đã tải bản tổng hợp từ snapshot được phê duyệt.
           </p>
-          <p className="mt-1 text-slate-400 text-sm">
+          <p className="mt-1 text-slate-400 text-sm md:text-base">
             Hệ thống <strong className="font-semibold text-slate-600">chỉ gợi ý</strong> — mọi quyết định do thầy/cô thực hiện.
           </p>
         </div>
@@ -419,7 +469,7 @@ function OverviewHeader({
         </div>
 
         {/* Panel suy nghĩ của AI — glow đỏ thở nhẹ + viền đậm cho nổi bật */}
-        <div className="flex-1 min-w-0 max-w-2xl space-y-4">
+        <div className="flex-1 min-w-0 max-w-3xl space-y-4">
           <div className="relative">
             <div className="ss-glow absolute -inset-2 rounded-[28px] bg-[#dc2626]/10 blur-xl" aria-hidden />
             <div className="relative bg-white rounded-3xl rounded-tl-lg border-2 border-[#f6bcbc] shadow-xl shadow-red-900/10 px-7 py-6">
@@ -428,25 +478,28 @@ function OverviewHeader({
               <p className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#dc2626] to-[#ef4444] text-white text-xs font-bold rounded-full px-3.5 py-1.5 shadow-md shadow-red-600/30">
                 <Icon path={iconPaths.sparkles} className="w-3.5 h-3.5 animate-pulse" /> EduSignal AI
               </p>
-              <p className="text-xl md:text-2xl font-bold text-slate-800 mt-3">Xin chào {shortName} 👋</p>
-              {/* Bản tin duy nhất về kỳ dữ liệu — một đoạn, mọi số từ response */}
+              <p className="text-2xl md:text-3xl font-bold text-slate-800 mt-3">Xin chào {shortName} 👋</p>
+              {/* Bản tin gọn: mỗi số liệu là 1 badge đặc trưng (màu + icon riêng); mọi số từ response */}
               {overviewCounts.totalStudents > 0 ? (
-                <p className="mt-2.5 text-[15px] text-slate-600 leading-relaxed">
-                  Snapshot đã phê duyệt có{" "}
-                  <strong className="font-semibold text-[#dc2626]">{overviewCounts.totalStudents} sinh viên</strong>.{" "}
-                  Hệ thống đưa{" "}
-                  <strong className="font-semibold text-[#dc2626]">{overviewCounts.reviewCases} case</strong> của{" "}
-                  <strong className="font-semibold text-[#dc2626]">{overviewCounts.reviewStudents} sinh viên</strong> vào danh sách rà soát
-                  {segments.length > 0 ? ": " : "."}
-                  {segments.map((s, i) => (
-                    <span key={s.strong + s.text}>
-                      <strong className="font-semibold text-[#dc2626]">{s.strong}</strong> {s.text}
-                      {i < segments.length - 1 ? "; " : "."}
-                    </span>
+                <div className="mt-3 flex flex-wrap items-center gap-2.5 text-base md:text-lg text-slate-600">
+                  <span className="font-semibold text-slate-700">Tuần vừa qua:</span>
+                  {stats.map((s) => (
+                    <button
+                      key={s.label}
+                      type="button"
+                      onClick={() => router.push(s.href)}
+                      title={`Mở danh sách rà soát — ${s.label}`}
+                      className={`group inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${s.box}`}
+                    >
+                      <Icon path={s.icon} className={`h-5 w-5 ${s.num}`} />
+                      <strong className={`text-3xl font-extrabold leading-none tabular-nums ${s.num}`}>{s.value}</strong>
+                      <span className="text-xs font-medium text-slate-500">{s.label}</span>
+                      <Icon path={iconPaths.arrowRight} className={`-ml-1 h-4 w-4 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100 ${s.num}`} />
+                    </button>
                   ))}
-                </p>
+                </div>
               ) : (
-                <p className="text-sm text-slate-500 mt-1.5">
+                <p className="text-base text-slate-500 mt-1.5">
                   Snapshot hiện không có sinh viên để tổng hợp. Hệ thống không suy diễn số liệu thay thế.
                 </p>
               )}
@@ -456,19 +509,13 @@ function OverviewHeader({
                 </p>
               )}
               <button
-                onClick={() => setTab("reviews")}
-                className="mt-5 inline-flex items-center gap-2 bg-[#dc2626] hover:bg-[#b91c1c] text-white font-semibold text-sm rounded-xl px-5 py-3 shadow-md shadow-red-600/25 transition-colors"
+                onClick={() => setShowTools((v) => !v)}
+                aria-expanded={showTools}
+                className="mt-5 inline-flex items-center gap-2 bg-[#dc2626] hover:bg-[#b91c1c] text-white font-semibold text-base rounded-xl px-5 py-3 shadow-md shadow-red-600/25 transition-colors"
               >
-                Xem chi tiết gợi ý
-                <Icon path={iconPaths.arrowRight} className="w-4 h-4" />
+                {showTools ? "Ẩn gợi ý" : "Xem chi tiết gợi ý"}
+                <Icon path={iconPaths.arrowRight} className={`w-4 h-4 transition-transform ${showTools ? "rotate-90" : ""}`} />
               </button>
-              {/* Nguồn của bản tin — snapshot/version thật từ response, không suy đoán */}
-              {summary.dataset_version && (
-                <p className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
-                  Nguồn trích xuất {summary.source_extracted_at ? formatAnalyzedAt(summary.source_extracted_at) : "không có thời điểm"} · dataset {summary.dataset_version}
-                  {latest ? ` · model ${latest.model_version}` : ""} — bản tin tổng hợp trực tiếp từ API, chưa gọi model AI; chưa có dữ liệu so sánh với snapshot trước.
-                </p>
-              )}
             </div>
           </div>
 
@@ -477,34 +524,23 @@ function OverviewHeader({
         </div>
       </div>
 
-      {/* 3 tool của EduSignal AI — tương tác chuột dẫn sang các hướng (plan.md §3.2) */}
-      <div className="relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {tools.map((t) => (
-            <button
-              key={t.key}
-              onClick={t.onClick}
-              disabled={t.disabled}
-              className={
-                t.disabled
-                  ? "bg-white/60 border border-dashed border-slate-200 rounded-2xl p-5 text-left cursor-not-allowed"
-                  : "group bg-white border border-[#fbeaea] rounded-2xl p-5 text-left shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:border-[#f4b8b8]"
-              }
-            >
-              <div className={`p-2.5 rounded-xl w-fit ${t.disabled ? "bg-slate-100 text-slate-400" : t.accent}`}>
-                <Icon path={t.icon} className="w-5 h-5" />
-              </div>
-              <p className={`text-sm font-semibold mt-3 flex items-center gap-1.5 ${t.disabled ? "text-slate-500" : "text-slate-800"}`}>
-                {t.title}
-                {!t.disabled && (
-                  <Icon path={iconPaths.arrowRight} className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#dc2626] group-hover:translate-x-1 transition-all" />
-                )}
-              </p>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">{t.desc}</p>
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* 3 tool gợi ý — chỉ hiện khi bấm "Xem chi tiết gợi ý"; xuất hiện lần lượt
+          (staggered). Desktop: cột dọc bên phải phủ vùng watermark shield.
+          Mobile/tablet: xếp dọc dưới khu chat. Mỗi tool dẫn sang route có thật. */}
+      {showTools && (
+        <>
+          <div className="hidden xl:flex absolute right-10 2xl:right-16 top-40 bottom-24 z-20 w-64 flex-col justify-between">
+            {tools.map((t, i) => (
+              <ToolCard key={t.key} tool={t} className="ss-tool-in" style={{ animationDelay: `${i * 0.14}s` }} />
+            ))}
+          </div>
+          <div className="xl:hidden relative z-10 grid gap-3 sm:grid-cols-3">
+            {tools.map((t, i) => (
+              <ToolCard key={t.key} tool={t} className="ss-tool-in" style={{ animationDelay: `${i * 0.14}s` }} />
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Tool 1 — Báo cáo tổng thể (in / lưu PDF tại chỗ) */}
       {reportOpen && (
@@ -549,6 +585,43 @@ type OverviewCounts = {
   limitedStudents: number;
   limitedReviewCases: number;
 };
+
+/* 3 tool gợi ý của EduSignal AI (Tổng quan). */
+type OverviewTool = {
+  key: string;
+  icon: string;
+  title: string;
+  desc: string;
+  gradient: string; // nền gradient sáng chói riêng cho từng tool
+  glow: string; // màu đổ bóng phát sáng
+  onClick?: () => void;
+  disabled?: boolean;
+};
+
+/** Thẻ tool "sáng chói" — nền gradient + glow, đọc rõ là công cụ hành động chứ không phải chip thông tin. */
+function ToolCard({ tool, className, style }: { tool: OverviewTool; className?: string; style?: CSSProperties }) {
+  return (
+    <button
+      onClick={tool.onClick}
+      disabled={tool.disabled}
+      title={tool.desc}
+      style={style}
+      className={`group relative flex w-full items-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-br ${tool.gradient} px-4 py-3.5 text-left text-white shadow-xl ${tool.glow} ring-1 ring-white/40 transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl disabled:cursor-not-allowed disabled:opacity-60 ${className ?? ""}`}
+    >
+      {/* đốm sáng góc + lớp loé khi hover cho cảm giác "sáng chói" */}
+      <span aria-hidden className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-white/25 blur-2xl" />
+      <span aria-hidden className="absolute inset-0 bg-white/0 transition-colors duration-200 group-hover:bg-white/10" />
+      <span className="relative flex shrink-0 items-center justify-center rounded-xl bg-white/25 p-2.5 shadow-inner backdrop-blur">
+        <Icon path={tool.icon} className="h-5 w-5" />
+      </span>
+      <span className="relative min-w-0 flex-1">
+        <span className="block text-sm font-bold">{tool.title}</span>
+        <span className="mt-0.5 block text-xs leading-snug text-white/85">{tool.desc}</span>
+      </span>
+      <Icon path={iconPaths.arrowRight} className="relative h-4 w-4 shrink-0 text-white/80 transition-transform group-hover:translate-x-1" />
+    </button>
+  );
+}
 
 function routeIntent(q: string, c: OverviewCounts): QuickAnswer {
   const s = q.toLowerCase();
@@ -647,7 +720,7 @@ function AiQuickChat({ counts, setTab }: { counts: OverviewCounts; setTab: (t: T
           onChange={(e) => setQ(e.target.value)}
           placeholder="Hỏi EduSignal AI… (vd: có bao nhiêu trường hợp ưu tiên hôm nay?)"
           aria-label="Hỏi nhanh EduSignal AI"
-          className="flex-1 min-w-0 bg-transparent text-sm outline-none placeholder:text-slate-400"
+          className="flex-1 min-w-0 bg-transparent text-base outline-none placeholder:text-slate-400"
         />
         <button
           type="submit"
@@ -657,9 +730,6 @@ function AiQuickChat({ counts, setTab }: { counts: OverviewCounts; setTab: (t: T
           <Icon path={iconPaths.arrowRight} className="w-4 h-4" />
         </button>
       </form>
-      <p className="text-[11px] text-slate-400 pl-2">
-        Trợ lý điều hướng (demo) — trả lời được tính từ dữ liệu đang hiển thị, chưa gọi model AI.
-      </p>
     </div>
   );
 }
@@ -680,25 +750,34 @@ function AnalyticsTab({
   const items = useMemo(() => (response && response.state !== "error" ? response.items : []), [response]);
   const counts = useMemo(() => computeCounts(items), [items]);
 
-  if (loading) return <ListSkeleton />;
+  if (loading && !response) return <ListSkeleton />;
   if (!response) return null;
   if (response.state === "error") return <ErrorCard onReload={onReload} />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-          <p className="mt-1 text-sm text-slate-500">Tập trung vào tín hiệu cần rà soát sớm và khối lượng đang chờ xử lý.</p>
+          <h1 className="text-3xl font-bold text-slate-800">Dashboard</h1>
+          <p className="mt-0.5 text-base text-slate-500">Tập trung vào tín hiệu cần rà soát sớm và khối lượng đang chờ xử lý.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setTab("reviews")}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#dc2626] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-red-600/20 transition-colors hover:bg-[#b91c1c]"
-        >
-          Mở danh sách rà soát
-          <Icon path={iconPaths.arrowRight} className="h-4 w-4" />
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={onReload}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-500 transition-colors hover:border-slate-300"
+          >
+            ↻ Tải lại dữ liệu
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("reviews")}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#dc2626] px-4 py-2 text-base font-semibold text-white shadow-sm shadow-red-600/20 transition-colors hover:bg-[#b91c1c]"
+          >
+            Mở danh sách rà soát
+            <Icon path={iconPaths.arrowRight} className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {response.state === "stale" && (
@@ -718,24 +797,24 @@ function AnalyticsTab({
       ) : (
         <>
           {/* Ba KPI duy nhất: một mục tiêu chính và hai tải công việc cần xử lý. */}
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
-            <section className="relative overflow-hidden rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 via-white to-white p-6 shadow-sm lg:col-span-3">
-              <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-red-100/60" aria-hidden />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+            <section className="relative overflow-hidden rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 via-white to-white p-5 shadow-sm lg:col-span-3">
+              <div className="absolute -right-10 -top-14 h-36 w-36 rounded-full bg-red-100/60" aria-hidden />
               <div className="relative">
-                <div className="flex items-center gap-2.5 text-sm font-semibold text-red-700">
-                  <span className="rounded-lg bg-red-100 p-2"><Icon path={iconPaths.sparkles} className="h-4 w-4" /></span>
+                <div className="flex items-center gap-2.5 text-base font-semibold text-red-700">
+                  <span className="rounded-lg bg-red-100 p-2"><Icon path={iconPaths.sparkles} className="h-5 w-5" /></span>
                   Tín hiệu cần rà soát sớm
                 </div>
-                <p className="mt-5 text-6xl font-bold tracking-tight text-slate-900 tabular-nums">{counts.earlyPriority}</p>
-                <p className="mt-2 text-sm text-slate-500">trên {counts.total} case của {counts.students} sinh viên trong lần tracking hiện tại</p>
-                <div className="mt-5 flex flex-wrap gap-x-4 gap-y-1 border-t border-red-100 pt-4 text-xs text-slate-400">
+                <p className="mt-3 text-7xl font-bold tracking-tight text-slate-900 tabular-nums">{counts.earlyPriority}</p>
+                <p className="mt-1 text-base text-slate-500">trên {counts.total} case của {counts.students} sinh viên trong lần tracking hiện tại</p>
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-red-100 pt-3 text-sm text-slate-500">
                   <span>{counts.limitedData} case có dữ liệu hạn chế</span>
                   <span>Chưa có API lịch sử để tính chênh lệch với lần trước</span>
                 </div>
               </div>
             </section>
 
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-1">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-1">
               <KpiCard
                 label="Trạng thái Tín hiệu mới"
                 value={counts.newSignals}
@@ -754,7 +833,7 @@ function AnalyticsTab({
           </div>
 
           {/* Một biểu đồ vận hành duy nhất; chi tiết priority/factor nằm ở danh sách. */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <ChartHeader title="Trạng thái xử lý" subtitle="Số case ở từng bước của quy trình hiện tại" icon={iconPaths.activity} />
             <BarRows rows={stateRows(items)} color="#dc2626" />
           </section>
@@ -776,11 +855,31 @@ function stateRows(items: ReviewCase[]) {
 type SortKey = "band" | "newest" | "ref" | "state";
 type BandFilter = "all" | "uu_tien_som" | "can_ra_soat" | "unassigned";
 
-function ReviewList({ response, onOpenCase }: { response: CaseListResponse; onOpenCase: (caseId: string) => void }) {
+function ReviewList({
+  response,
+  onOpenCase,
+  initialBand,
+  initialStateFilter,
+}: {
+  response: CaseListResponse;
+  onOpenCase: (caseId: string) => void;
+  initialBand?: string | null;
+  initialStateFilter?: string | null;
+}) {
+  const toBand = (b: string | null | undefined): BandFilter =>
+    b === "uu_tien_som" || b === "can_ra_soat" || b === "unassigned" ? b : "all";
+  const toState = (s: string | null | undefined): string => (s && s in CASE_STATE_LABEL ? s : "all");
+
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<SortKey>("band");
-  const [stateFilter, setStateFilter] = useState("all");
-  const [bandFilter, setBandFilter] = useState<BandFilter>("all");
+  const [stateFilter, setStateFilter] = useState(() => toState(initialStateFilter));
+  const [bandFilter, setBandFilter] = useState<BandFilter>(() => toBand(initialBand));
+
+  const [page, setPage] = useState(1);
+
+  // Đồng bộ khi mở từ badge Tổng quan (URL đổi mà component vẫn mounted).
+  useEffect(() => { setBandFilter(toBand(initialBand)); }, [initialBand]);
+  useEffect(() => { setStateFilter(toState(initialStateFilter)); }, [initialStateFilter]);
 
   const rows = useMemo(() => {
     if (response.state === "error") return [];
@@ -810,6 +909,16 @@ function ReviewList({ response, onOpenCase }: { response: CaseListResponse; onOp
       default: return [...list].sort((a, b) => bandRank(a) - bandRank(b) || b.calculated_at.localeCompare(a.calculated_at));
     }
   }, [bandFilter, q, response, sort, stateFilter]);
+
+  // Phân trang 10 dòng/trang. Về trang 1 khi tìm/lọc/sắp xếp đổi.
+  const PAGE_SIZE = 10;
+  const total = rows.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * PAGE_SIZE;
+  const end = Math.min(start + PAGE_SIZE, total);
+  const pageRows = rows.slice(start, end);
+  useEffect(() => { setPage(1); }, [q, sort, stateFilter, bandFilter]);
 
   if (response.state === "error") {
     return <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">Không tải được danh sách rà soát — máy chủ tạm thời không phản hồi.</div>;
@@ -881,7 +990,18 @@ function ReviewList({ response, onOpenCase }: { response: CaseListResponse; onOp
       {rows.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-center text-sm text-slate-600">Không có case nào khớp bộ lọc.</div>
       ) : (
-        <CaseRowsTable items={rows} onOpenCase={onOpenCase} />
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <CaseRowsTable items={pageRows} onOpenCase={onOpenCase} />
+          <QueuePagination
+            start={start}
+            end={end}
+            total={total}
+            page={safePage}
+            totalPages={totalPages}
+            noun="case"
+            onChange={setPage}
+          />
+        </div>
       )}
 
       <p className="text-xs text-slate-400">
@@ -895,23 +1015,20 @@ function ReviewList({ response, onOpenCase }: { response: CaseListResponse; onOp
 
 function CaseRowsTable({ items, onOpenCase }: { items: ReviewCase[]; onOpenCase: (caseId: string) => void }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[940px] border-collapse text-left">
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[820px] border-collapse text-left">
           <thead>
             <tr className="bg-slate-50/50 border-b border-slate-200">
               <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Mã SV</th>
               <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Mức ưu tiên rà soát</th>
               <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái</th>
               <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Yếu tố chính</th>
-              <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Dữ liệu</th>
               <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cập nhật</th>
             </tr>
           </thead>
           <tbody>
             {items.map((c) => {
               const factorLabels = c.contributing_factors.map((factor) => FACTOR_LABEL[factor.code] ?? factor.code);
-              const limited = c.data_state !== "ok" || c.limitations.length > 0;
               return (
                 <tr
                   key={c.case_id}
@@ -937,18 +1054,12 @@ function CaseRowsTable({ items, onOpenCase }: { items: ReviewCase[]; onOpenCase:
                     <span>{factorLabels[0] ?? "—"}</span>
                     {factorLabels.length > 1 && <span className="ml-1 text-xs text-slate-400">+{factorLabels.length - 1}</span>}
                   </td>
-                  <td className="p-4">
-                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${limited ? "border-amber-200 bg-amber-50 text-amber-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
-                      {limited ? "Dữ liệu hạn chế" : "Đủ căn cứ"}
-                    </span>
-                  </td>
                   <td className="p-4 text-sm tabular-nums text-slate-400">{new Date(c.calculated_at).toLocaleDateString("vi-VN")}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
-      </div>
     </div>
   );
 }
@@ -961,28 +1072,28 @@ function KpiCard({ label, value, sub, icon, color }: { label: string; value: num
     emerald: "bg-emerald-50 text-emerald-600",
   };
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-      <div className="flex items-center gap-2.5 mb-4">
+    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+      <div className="mb-2 flex items-center gap-2.5">
         <div className={`p-2 rounded-lg ${colors[color]}`}>
-          <Icon path={icon} className="w-4 h-4" />
+          <Icon path={icon} className="h-5 w-5" />
         </div>
-        <span className="text-sm text-slate-500">{label}</span>
+        <span className="text-base font-medium text-slate-600">{label}</span>
       </div>
-      <div className="text-4xl font-bold text-slate-800 tracking-tight">{value}</div>
-      <div className="text-xs text-slate-400 mt-2">{sub}</div>
+      <div className="text-5xl font-bold tracking-tight text-slate-800 tabular-nums">{value}</div>
+      <div className="mt-1 text-sm text-slate-500">{sub}</div>
     </div>
   );
 }
 
 function ChartHeader({ title, subtitle, icon }: { title: string; subtitle: string; icon: string }) {
   return (
-    <div className="flex items-center gap-3 mb-5">
+    <div className="mb-3 flex items-center gap-3">
       <div className="p-2 bg-slate-50 rounded-lg text-slate-400">
-        <Icon path={icon} className="w-4 h-4" />
+        <Icon path={icon} className="h-5 w-5" />
       </div>
       <div>
-        <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
-        <p className="text-xs text-slate-400">{subtitle}</p>
+        <h3 className="text-base font-semibold text-slate-800">{title}</h3>
+        <p className="text-sm text-slate-500">{subtitle}</p>
       </div>
     </div>
   );
@@ -998,17 +1109,17 @@ function BarRows({ rows, color }: { rows: { label: string; value: number }[]; co
     return <div className="text-sm text-slate-400 italic py-4 text-center">Chưa có dữ liệu.</div>;
   }
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {rows.map((r) => (
         <div key={r.label} className="flex items-center gap-3" title={`${r.label}: ${r.value}`}>
-          <span className="w-36 text-sm text-slate-600 truncate shrink-0">{r.label}</span>
+          <span className="w-40 shrink-0 truncate text-base text-slate-600">{r.label}</span>
           <div className="flex-1 h-5 bg-slate-50 rounded-r">
             <div
               className="h-full rounded-r"
               style={{ width: `${Math.max((r.value / max) * 100, r.value > 0 ? 3 : 0)}%`, backgroundColor: color }}
             />
           </div>
-          <span className="w-8 text-right text-sm font-semibold text-slate-800 tabular-nums shrink-0">{r.value}</span>
+          <span className="w-8 shrink-0 text-right text-base font-semibold text-slate-800 tabular-nums">{r.value}</span>
         </div>
       ))}
     </div>
@@ -1054,6 +1165,8 @@ const iconPaths: Record<string, string> = {
   fileText: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8",
   search: "M11 19a8 8 0 100-16 8 8 0 000 16z M21 21l-4.35-4.35",
   mail: "M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z M22 6l-10 7L2 6",
+  alert: "M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z M12 9v4 M12 17h.01",
+  info: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z M12 16v-4 M12 8h.01",
 };
 
 function Icon({ path, className }: { path: string; className?: string }) {

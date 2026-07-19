@@ -9,27 +9,34 @@ Usage (from backend/):
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from datetime import datetime, timezone
-from typing import Sequence, Tuple
+from typing import Optional, Sequence, Tuple
 
 from sqlalchemy.orm import Session
 
 from app.auth.models import AuthAccount, AuthAccountRole
 from app.auth.passwords import hash_password
+from app.cases.class_scope import LECTURER_CLASS_SCOPES
 from app.config import get_settings
 from app.database import get_session_factory, init_schemas
 
 SEED_ORG_SCOPE = "org-demo"
 SEED_ADVISOR_SCOPE = "a-240eb01d2805"
 
-# (username, actor_id, display_name, roles, advisor_scope)
-_SEED_ACCOUNTS: Tuple[Tuple[str, str, str, Tuple[str, ...], str | None], ...] = (
+# (username, actor_id, display_name, roles, advisor_scope, password_env)
+# ``password_env``: optional env var holding this account's own password; falls
+# back to AUTH_SEED_PASSWORD when unset. Never hard-code plaintext (RULES §3).
+_AccountRow = Tuple[str, str, str, Tuple[str, ...], Optional[str], Optional[str]]
+
+_SEED_ACCOUNTS: Tuple[_AccountRow, ...] = (
     (
         "quanly",
         "acct:quanly",
         "TS. Nam — Giám sát học tập",
         ("ban_quan_ly",),
+        None,
         None,
     ),
     (
@@ -38,27 +45,81 @@ _SEED_ACCOUNTS: Tuple[Tuple[str, str, str, Tuple[str, ...], str | None], ...] = 
         "CVHT Lan — K66-CNTT-A",
         ("gvcn",),
         SEED_ADVISOR_SCOPE,
+        None,
     ),
     (
         "demo",
         "acct:demo",
-        "Tài khoản trình diễn (2 vai)",
+        "Admin hệ thống",
         ("ban_quan_ly", "gvcn"),
         SEED_ADVISOR_SCOPE,
+        None,
     ),
 )
 
+# Four lecturer (gvcn) accounts — one class each. ``advisor_scope`` maps to the
+# class-roster overlay scope (app.cases.class_scope), so each lecturer sees only
+# the ~115 students in their own class on /review-cases. Login username is a
+# non-PII handle (``gv-<name>``); no real email/contact info in the repo (RULES §2-3).
+_LECTURER_ACCOUNTS: Tuple[_AccountRow, ...] = (
+    (
+        "gv-duy",
+        "acct:gv-duy",
+        "GVCN — Lớp 01",
+        ("gvcn",),
+        LECTURER_CLASS_SCOPES[0],
+        "AUTH_LECTURER_PW_DUY",
+    ),
+    (
+        "gv-hoang",
+        "acct:gv-hoang",
+        "GVCN — Lớp 02",
+        ("gvcn",),
+        LECTURER_CLASS_SCOPES[1],
+        "AUTH_LECTURER_PW_HOANG",
+    ),
+    (
+        "gv-trang",
+        "acct:gv-trang",
+        "GVCN — Lớp 03",
+        ("gvcn",),
+        LECTURER_CLASS_SCOPES[2],
+        "AUTH_LECTURER_PW_TRANG",
+    ),
+    (
+        "gv-giang",
+        "acct:gv-giang",
+        "GVCN — Lớp 04",
+        ("gvcn",),
+        LECTURER_CLASS_SCOPES[3],
+        "AUTH_LECTURER_PW_GIANG",
+    ),
+)
+
+ALL_SEED_ACCOUNTS: Tuple[_AccountRow, ...] = _SEED_ACCOUNTS + _LECTURER_ACCOUNTS
+
+
+def _resolve_password(default_password: str, password_env: Optional[str]) -> str:
+    """Per-account password from env when present, else the shared seed password."""
+    if password_env:
+        override = os.environ.get(password_env, "").strip()
+        if override:
+            return override
+    return default_password
+
 
 def seed_accounts(db: Session, password: str) -> list[str]:
-    """Upsert seed accounts idempotently. Returns usernames touched."""
+    """Upsert all seed + lecturer accounts idempotently. Returns usernames touched."""
     if not password:
         raise ValueError("AUTH_SEED_PASSWORD is required (non-empty)")
 
-    password_hash = hash_password(password)
     now = datetime.now(timezone.utc)
     touched: list[str] = []
 
-    for username, actor_id, display_name, roles, advisor_scope in _SEED_ACCOUNTS:
+    for username, actor_id, display_name, roles, advisor_scope, password_env in (
+        ALL_SEED_ACCOUNTS
+    ):
+        password_hash = hash_password(_resolve_password(password, password_env))
         account = db.get(AuthAccount, actor_id)
         if account is None:
             account = AuthAccount(

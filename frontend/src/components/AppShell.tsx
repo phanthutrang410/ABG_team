@@ -12,6 +12,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { AIThinkingOverlay } from "@/components/AIThinkingOverlay";
 import { initialsFromName, roleHome, splitAccountName, useSession } from "@/lib/session";
 import { ROLE_LABEL, type Role, type SessionAccount } from "@/lib/types";
 
@@ -23,16 +24,24 @@ import { ROLE_LABEL, type Role, type SessionAccount } from "@/lib/types";
 
 /* ---------- TopbarInfo: trang con bơm dữ liệu thật lên topbar của shell ---------- */
 
-type TopbarInfo = { updatedAt: string | null; alertCount: number };
+/** Một mục thông báo trong chuông topbar — nhấn để điều hướng tới trang tương ứng. */
+export type TopbarNotification = { key: string; label: string; count: number; href: string };
+type TopbarInfo = { updatedAt: string | null; alertCount: number; notifications: TopbarNotification[] };
 const TopbarInfoSetter = createContext<((info: TopbarInfo | null) => void) | null>(null);
 
-/** Gọi trong trang con để hiển thị "Cập nhật …" + badge chuông. Tự dọn khi rời trang. */
-export function useSetTopbarInfo(updatedAt: string | null, alertCount: number) {
+const NO_NOTIFICATIONS: TopbarNotification[] = [];
+
+/** Gọi trong trang con để hiển thị "Cập nhật …" + chuông thông báo. Tự dọn khi rời trang. */
+export function useSetTopbarInfo(
+  updatedAt: string | null,
+  alertCount: number,
+  notifications: TopbarNotification[] = NO_NOTIFICATIONS,
+) {
   const setInfo = useContext(TopbarInfoSetter);
   useEffect(() => {
-    setInfo?.({ updatedAt, alertCount });
+    setInfo?.({ updatedAt, alertCount, notifications });
     return () => setInfo?.(null);
-  }, [alertCount, setInfo, updatedAt]);
+  }, [alertCount, setInfo, updatedAt, notifications]);
 }
 
 /* ---------- Nav ---------- */
@@ -67,7 +76,7 @@ export function AppShell({ role, title, subtitle, children }: { role: Role; titl
   }, [ready, account, activeRole, role, router]);
 
   if (!ready || !account || activeRole !== role) {
-    return <div style={{ padding: "3rem", textAlign: "center", color: "#94a3b8" }}>Đang tải…</div>;
+    return <AIThinkingOverlay />;
   }
 
   const multi = account.roles.length > 1;
@@ -97,8 +106,8 @@ export function AppShell({ role, title, subtitle, children }: { role: Role; titl
             <div style={shieldCard}>
               <span style={shieldCardIcon} aria-hidden><ShieldHeartIcon /></span>
               <div style={{ minWidth: 0 }}>
-                <p style={{ margin: 0, fontWeight: 700, fontSize: 13.5, color: "#dc2626" }}>Silent Shield</p>
-                <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "#64748b", lineHeight: 1.35 }}>Hỗ trợ quan tâm sinh viên</p>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: 14.5, color: "#dc2626" }}>Silent Shield</p>
+                <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "#64748b", lineHeight: 1.35 }}>Hỗ trợ quan tâm sinh viên</p>
               </div>
             </div>
           </div>
@@ -109,18 +118,15 @@ export function AppShell({ role, title, subtitle, children }: { role: Role; titl
             <div style={{ minWidth: 0 }}>
               {title && (
                 <>
-                  <p style={{ margin: 0, color: "#94a3b8", fontSize: 12 }}>{ROLE_LABEL[role]}</p>
-                  <h1 style={{ margin: "0.1rem 0 0", fontSize: 19, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</h1>
+                  <p style={{ margin: 0, color: "#94a3b8", fontSize: 13 }}>{ROLE_LABEL[role]}</p>
+                  <h1 style={{ margin: "0.1rem 0 0", fontSize: 20, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</h1>
                 </>
               )}
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5, flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 {topInfo && (
-                  <button style={bellButton} title="Việc cần chú ý" aria-label={`${topInfo.alertCount} việc cần chú ý`}>
-                    <BellIcon />
-                    {topInfo.alertCount > 0 && <span style={bellDot} aria-hidden />}
-                  </button>
+                  <NotificationMenu info={topInfo} onNavigate={(href) => router.push(href)} />
                 )}
                 <UserMenu account={account} role={role} multi={multi} onChooseRole={onChooseRole} onLogout={onLogout} />
               </div>
@@ -176,6 +182,67 @@ function SideNav({ items }: { items: NavItem[] }) {
   );
 }
 
+/* ---------- Notification menu (chuông topbar) ---------- */
+
+function NotificationMenu({ info, onNavigate }: { info: TopbarInfo; onNavigate: (href: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const notifs = info.notifications ?? [];
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        style={bellButton}
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title="Thông báo"
+        aria-label={`Thông báo — ${info.alertCount} việc cần chú ý`}
+      >
+        <BellIcon />
+        {info.alertCount > 0 && <span style={bellDot} aria-hidden />}
+      </button>
+
+      {open && (
+        <div style={{ ...dropdownPanel, width: 320, top: "calc(100% + 8px)" }} role="menu">
+          <div style={{ padding: "4px 8px 8px" }}>
+            <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: "#0f172a" }}>Thông báo</p>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: "#94a3b8" }}>Nhấn một mục để mở trang tương ứng</p>
+          </div>
+          <div style={{ height: 1, background: "#f1f5f9", margin: "0 4px 6px" }} />
+          {notifs.length === 0 ? (
+            <p style={{ padding: "10px 10px 12px", margin: 0, fontSize: 13, color: "#94a3b8" }}>Không có thông báo mới.</p>
+          ) : (
+            notifs.map((n) => (
+              <button
+                key={n.key}
+                role="menuitem"
+                onClick={() => { setOpen(false); onNavigate(n.href); }}
+                style={notifItem}
+                onMouseEnter={(e) => Object.assign(e.currentTarget.style, notifItemHover)}
+                onMouseLeave={(e) => Object.assign(e.currentTarget.style, notifItem)}
+              >
+                <span style={notifCount}>{n.count}</span>
+                <span style={{ flex: 1, textAlign: "left", fontSize: 13, color: "#334155" }}>{n.label}</span>
+                <span aria-hidden style={{ display: "flex", color: "#cbd5e1" }}><ChevronRightIcon /></span>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------- User menu (chỉ hiển thị ở topbar) ---------- */
 
 function UserMenu({
@@ -210,8 +277,8 @@ function UserMenu({
       <button onClick={() => setOpen((o) => !o)} style={userTrigger} aria-haspopup="menu" aria-expanded={open}>
         <span style={avatar} aria-hidden>{initialsFromName(name)}</span>
         <span style={{ display: "grid", gap: 1, minWidth: 0, textAlign: "left" }}>
-          <span style={{ fontSize: 13.5, fontWeight: 600, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
-          <span style={{ fontSize: 11.5, color: "#94a3b8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{roleLine}</span>
+          <span style={{ fontSize: 14.5, fontWeight: 600, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
+          <span style={{ fontSize: 12.5, color: "#94a3b8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{roleLine}</span>
         </span>
         <span aria-hidden style={{ display: "flex", color: "#94a3b8", transform: open ? "rotate(180deg)" : undefined, transition: "transform 0.15s" }}><ChevronDownIcon /></span>
       </button>
@@ -293,7 +360,7 @@ const navLink: CSSProperties = {
   gap: 12,
   padding: "11px 14px",
   borderRadius: 12,
-  fontSize: 14,
+  fontSize: 15,
   fontWeight: 500,
   color: "#475569",
   textDecoration: "none",
@@ -367,7 +434,7 @@ const bellDot: CSSProperties = {
   border: "1.5px solid #fff",
   boxSizing: "border-box",
 };
-const updatedText: CSSProperties = { display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#64748b" };
+const updatedText: CSSProperties = { display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#64748b" };
 const dropdownPanel: CSSProperties = {
   position: "absolute",
   right: 0,
@@ -388,6 +455,33 @@ const roleSelect: CSSProperties = {
   fontWeight: 600,
   color: "#b91c1c",
   fontSize: 12.5,
+};
+const notifItem: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  width: "100%",
+  padding: "8px 10px",
+  borderRadius: 10,
+  border: "none",
+  background: "transparent",
+  cursor: "pointer",
+  transition: "background 0.15s",
+};
+const notifItemHover: CSSProperties = { ...notifItem, background: "#fef2f2" };
+const notifCount: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minWidth: 30,
+  height: 26,
+  padding: "0 8px",
+  borderRadius: 999,
+  background: "#fee2e2",
+  color: "#dc2626",
+  fontSize: 13,
+  fontWeight: 700,
+  flexShrink: 0,
 };
 const logoutItem: CSSProperties = {
   display: "flex",
@@ -460,6 +554,14 @@ function ChevronDownIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 6l6 6-6 6" />
     </svg>
   );
 }

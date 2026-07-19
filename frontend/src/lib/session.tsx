@@ -55,12 +55,25 @@ function rolesFromMe(roles: string[]): Role[] {
   return roles.filter((r): r is Role => VALID_ROLES.has(r));
 }
 
+/** Đổi nhãn hiển thị của tài khoản demo 2 vai thành "Admin hệ thống" (yêu cầu demo).
+ *  Bắt theo id (server: acct:demo · local: demo) và theo tên seed để chắc ăn cả khi
+ *  chạy với API live chưa re-seed. */
+const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
+  "acct:demo": "Admin hệ thống",
+  demo: "Admin hệ thống",
+};
+function resolveDisplayName(id: string, raw: string): string {
+  if (DISPLAY_NAME_OVERRIDES[id]) return DISPLAY_NAME_OVERRIDES[id];
+  if (raw.startsWith("Tài khoản trình diễn")) return "Admin hệ thống";
+  return raw;
+}
+
 function accountFromMe(me: AuthMeResponse): SessionAccount | null {
   const roles = rolesFromMe(me.roles);
   if (!roles.length) return null;
   return {
     id: me.account_id,
-    name: me.display_name,
+    name: resolveDisplayName(me.account_id, me.display_name),
     roles,
   };
 }
@@ -75,7 +88,7 @@ function readDemoStorage(): SessionState | null {
     const validRole =
       stored.activeRole && demo.roles.includes(stored.activeRole) ? stored.activeRole : null;
     return {
-      account: { id: demo.id, name: demo.name, roles: demo.roles },
+      account: { id: demo.id, name: resolveDisplayName(demo.id, demo.name), roles: demo.roles },
       activeRole: validRole,
       source: "demo",
     };
@@ -150,7 +163,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (acc && acc.password === password) {
         const activeRole = acc.roles.length === 1 ? acc.roles[0] : null;
         writeDemoStorage(acc.id, activeRole);
-        const account: SessionAccount = { id: acc.id, name: acc.name, roles: acc.roles };
+        const account: SessionAccount = { id: acc.id, name: resolveDisplayName(acc.id, acc.name), roles: acc.roles };
         setState({ account, activeRole, source: "demo" });
         return { ok: true, account, activeRole };
       }
