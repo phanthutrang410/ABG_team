@@ -444,16 +444,16 @@ hoặc `T05` đã Done.
 
 | Event | Data JSON | Quy tắc |
 |:--|:--|:--|
-| `status` | `{"phase":"guardrails|context|route|answer|tool|output_guard"}` | Chỉ là tên phase, không chứa prompt, facts hay chain-of-thought |
+| `status` | `{"phase":"guardrails|context|route|answer|tool|clarify|output_guard"}` | Chỉ là tên phase, không chứa prompt, facts hay chain-of-thought |
 | `delta` | `{"text":"..."}` | Chỉ phát cho response `status=ok`; text là các đoạn cắt từ `answer_vi` đã qua output guard |
 | `done` | Toàn bộ `AgentTurnResponse` | Event cuối của turn thành công, refused hoặc unavailable |
-| `error` | `{"code":"unavailable","message_vi":"..."}` | Fail-closed khi runtime lỗi trong iterator; không lộ exception/stack và không phát `done` sau đó |
+| `error` | `{"code":"unavailable","message_vi":"..."}` | Fail-closed khi runtime lỗi trước lúc phát frame; không lộ exception/stack và không phát `done` sau đó |
 
 Đây là **buffered/faux-token SSE**: backend chạy xong bounded DAG và output guard trước, sau đó mới
 phát lại các phase và chia câu trả lời thành `delta`. Nó không stream token trực tiếp từ OpenAI,
-không giảm provider time-to-first-token và không làm thay đổi giới hạn một model call. Lỗi xảy ra
-trước khi tạo stream (ví dụ dependency/context resolution) vẫn theo HTTP error contract thông
-thường.
+không giảm provider time-to-first-token và không làm thay đổi giới hạn một model call. Lỗi
+auth/schema từ dependency vẫn theo HTTP error contract; lỗi context/runtime bên trong handler
+được ghi log server và kết thúc bằng đúng một event `error` có kiểm soát.
 
 Không dùng OpenAI Conversations persistence ở phase đầu. Ứng dụng giữ state theo session ngắn,
 không memory xuyên case; route/role change reset context. Long-running weekly processing thuộc

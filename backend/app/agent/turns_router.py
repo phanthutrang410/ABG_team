@@ -146,6 +146,19 @@ def _stream_turn_events(
     "/turns/stream",
     summary="Global Agent turn (SSE) — status phases, faux answer deltas, then done",
     response_class=StreamingResponse,
+    responses={
+        200: {
+            "description": "Buffered SSE: status*, optional delta*, then one done or error",
+            "content": {
+                "text/event-stream": {
+                    "schema": {
+                        "type": "string",
+                        "description": "SSE frames using status, delta, done, and error events",
+                    }
+                }
+            },
+        }
+    },
 )
 def create_agent_turn_stream(
     body: AgentTurnRequest,

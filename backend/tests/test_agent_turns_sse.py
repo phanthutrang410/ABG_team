@@ -8,11 +8,18 @@ from typing import Any, Dict, List, Tuple
 import pytest
 from fastapi.testclient import TestClient
 
+from app.agent.model import ModelUnavailable
 from app.agent.sse import chunk_text, format_sse
 from app.agent.turns_router import get_turn_model
 from app.auth.principal import clear_access_audit_log, get_principal
 from app.main import app
 from tests.auth_helpers import DEFAULT_BAN_QUAN_LY
+
+
+class FailingModel:
+    def complete(self, *, system: str, user: str) -> str:
+        _ = (system, user)
+        raise ModelUnavailable("offline")
 
 
 @pytest.fixture(autouse=True)
@@ -57,6 +64,11 @@ def test_format_sse_and_chunk_helpers() -> None:
     assert frame.endswith("\n\n")
     assert list(chunk_text("abcdefghijklmnop", size=5)) == ["abcde", "fghij", "klmno", "p"]
     assert list(chunk_text("")) == []
+
+
+def test_stream_openapi_declares_event_stream_media_type() -> None:
+    response_contract = app.openapi()["paths"]["/agent/turns/stream"]["post"]["responses"]["200"]
+    assert "text/event-stream" in response_contract["content"]
 
 
 def test_stream_overview_happy_status_delta_done(client: TestClient) -> None:
@@ -113,6 +125,23 @@ def test_stream_refused_no_delta(client: TestClient) -> None:
     assert done["status"] == "refused"
     assert done["ui_actions"] == []
     assert done["refusal_reason"] == "forbidden_tool_requested"
+
+
+def test_stream_unavailable_keeps_cards_without_delta(client: TestClient) -> None:
+    app.dependency_overrides[get_principal] = lambda: DEFAULT_BAN_QUAN_LY
+    app.dependency_overrides[get_turn_model] = lambda: FailingModel()
+
+    response = client.post(
+        "/agent/turns/stream",
+        json={"surface": "overview", "question": "Tóm tắt Overview"},
+    )
+    assert response.status_code == 200
+    events = _parse_sse(response.text)
+    assert all(name != "delta" for name, _payload in events)
+    done = next(payload for name, payload in events if name == "done")
+    assert done["status"] == "unavailable"
+    assert done["selected_capability"] is None
+    assert done["ui_actions"]
 
 
 def test_stream_forbidden_extra_field_rejected(client: TestClient) -> None:
