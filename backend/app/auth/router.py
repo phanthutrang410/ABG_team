@@ -212,7 +212,7 @@ def set_active_role(
     )
 
 
-@router.post("/logout", status_code=204)
+@router.post("/logout", status_code=204, response_model=None)
 def logout(
     response: Response,
     principal: Principal = Depends(get_principal),

@@ -15,6 +15,10 @@ export const COPY = {
     "Cỡ mẫu nhóm chưa đủ để công bố metric công bằng.",
   "copy.partial_term_only":
     "Chỉ có tín hiệu điểm theo học kỳ; nhánh chuyên cần chưa sẵn sàng.",
+  "copy.grade_only_model":
+    "Mô hình hiện chỉ sử dụng dữ liệu kết quả học tập đã được phê duyệt; điểm danh không tham gia chấm mức ưu tiên.",
+  "copy.two_term_history":
+    "Lịch sử hiện có hai học kỳ, phù hợp cảnh báo ngắn hạn và không đại diện xu hướng dài hạn.",
 } as const;
 
 export type CopyKey = keyof typeof COPY;
@@ -26,6 +30,8 @@ export const REASON_CODE_TO_COPY_KEY = {
   insufficient_group_data: "copy.fairness_insufficient_group_data",
   /** Term-only evidence / attendance branch not ready (Data-ML §6). */
   partial_term_only: "copy.partial_term_only",
+  grade_only_model: "copy.grade_only_model",
+  two_term_history: "copy.two_term_history",
 } as const satisfies Record<string, CopyKey>;
 
 export type ReasonCodeWithCopy = keyof typeof REASON_CODE_TO_COPY_KEY;

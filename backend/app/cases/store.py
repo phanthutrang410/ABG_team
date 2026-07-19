@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from dataclasses import replace
 from datetime import datetime
 from threading import Lock
 from typing import Dict, Optional, Protocol, runtime_checkable
@@ -45,6 +46,8 @@ class CaseStorePort(Protocol):
     ) -> CaseSnapshot: ...
 
     def transition(self, case_id: str, command: TransitionCommand) -> CaseSnapshot: ...
+
+    def mark_viewed(self, case_id: str, now: datetime) -> CaseSnapshot: ...
 
 
 class InMemoryCaseStore:
@@ -114,6 +117,17 @@ class InMemoryCaseStore:
             self._cases[case_id] = updated
             return updated
 
+    def mark_viewed(self, case_id: str, now: datetime) -> CaseSnapshot:
+        with self._lock:
+            case = self._cases.get(case_id)
+            if case is None:
+                raise KeyError(case_id)
+            if case.viewed_at is None:
+                # CaseSnapshot is a frozen dataclass — replace, never mutate.
+                case = replace(case, viewed_at=now)
+                self._cases[case_id] = case
+            return case
+
 
 # Backward-compatible name used by fixtures (`CaseStore()`).
 CaseStore = InMemoryCaseStore
@@ -131,6 +145,7 @@ def _snapshot_from_row(row: CareReviewCase) -> CaseSnapshot:
         monitoring_until=row.monitoring_until,
         mapping_repair_queued=bool(row.mapping_repair_queued),
         updated_at=row.updated_at,
+        viewed_at=row.viewed_at,
     )
 
 
@@ -144,6 +159,7 @@ def _apply_snapshot_to_row(row: CareReviewCase, case: CaseSnapshot) -> None:
     row.monitoring_until = case.monitoring_until
     row.mapping_repair_queued = case.mapping_repair_queued
     row.updated_at = case.updated_at or datetime.utcnow()
+    row.viewed_at = case.viewed_at
 
 
 def _detail_json(case: CaseSnapshot, **extra: object) -> str:
@@ -341,6 +357,38 @@ class PostgresCaseStore:
         finally:
             session.close()
 
+    def mark_viewed(self, case_id: str, now: datetime) -> CaseSnapshot:
+        session = self._factory()()
+        try:
+            row = session.get(CareReviewCase, case_id, with_for_update=True)
+            if row is None:
+                raise KeyError(case_id)
+            if row.viewed_at is None:
+                row.viewed_at = now
+                session.add(
+                    CareCaseEvent(
+                        case_id=case_id,
+                        kind="viewed",
+                        actor="advisor",
+                        actor_kind="human",
+                        action=None,
+                        from_state=row.state,
+                        to_state=row.state,
+                        detail_json=json.dumps({"viewed_at": now.isoformat()}, default=str),
+                        occurred_at=now,
+                    )
+                )
+                session.commit()
+                session.refresh(row)
+            return _snapshot_from_row(row)
+        except KeyError:
+            raise
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
 
 _memory_store = InMemoryCaseStore()
 _postgres_store: Optional[PostgresCaseStore] = None
@@ -441,6 +489,9 @@ class _DelegatingCaseStore:
 
     def transition(self, case_id: str, command: TransitionCommand) -> CaseSnapshot:
         return get_case_store().transition(case_id, command)
+
+    def mark_viewed(self, case_id: str, now: datetime) -> CaseSnapshot:
+        return get_case_store().mark_viewed(case_id, now)
 
 
 store = _DelegatingCaseStore()

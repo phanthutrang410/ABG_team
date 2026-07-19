@@ -8,10 +8,12 @@ from typing import Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.auth.models import AuthAccount
 from app.auth.principal import Principal, require_roles
 from app.auth.rbac import audit, server_source_id
 from app.cases.advisor_draft import build_advisor_handoff_drafts
 from app.cases.store import store
+from app.config import get_settings
 from app.contracts.advisor_handoff_draft import AdvisorHandoffDraftListResponse
 from app.contracts.integration import IntegrationProblem
 from app.database import get_db
@@ -19,6 +21,31 @@ from app.dwh.read_adapter import ReadAdapterError, list_normalized_students
 from app.ml.scoring import DEFAULT_THRESHOLDS
 
 router = APIRouter(prefix="/advisor-handoff-drafts", tags=["advisor-handoff-drafts"])
+
+
+def _advisor_display_names(db: Session) -> dict[str, str]:
+    """Map advisor pseudonym (advisor_scope) → account display name, for BLĐ view.
+
+    Multiple accounts may share an advisor_scope (e.g. a multi-role demo account).
+    Prefer the dedicated advisor — an account whose only role is ``gvcn`` — so the
+    name is the homeroom teacher, not a demo/BLĐ account.
+    """
+    try:
+        accounts = db.query(AuthAccount).filter(AuthAccount.advisor_scope.isnot(None)).all()
+    except Exception:
+        return {}
+    names: dict[str, str] = {}
+    pure: set[str] = set()
+    for acc in accounts:
+        scope = acc.advisor_scope
+        if not scope:
+            continue
+        is_pure_advisor = {r.role for r in acc.roles} == {"gvcn"}
+        if scope not in names or (is_pure_advisor and scope not in pure):
+            names[scope] = acc.display_name
+        if is_pure_advisor:
+            pure.add(scope)
+    return names
 
 
 def _error(code: str = "upstream_unavailable", reason_codes: Optional[list] = None) -> AdvisorHandoffDraftListResponse:
@@ -74,4 +101,6 @@ def list_advisor_handoff_drafts(
         thresholds=DEFAULT_THRESHOLDS,
         calculated_at=datetime.now(timezone.utc),
         session=db,
+        advisor_names=_advisor_display_names(db),
+        base_url=get_settings().frontend_base_url,
     )

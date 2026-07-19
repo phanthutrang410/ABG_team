@@ -330,6 +330,7 @@ Deploy:   (H07 ✓ ∥ D3 ✓) → D4a ✓ → D4b ✓ → V07 + A05 → D4r →
 | M05b | P1 · sau M05a | **Approved source available** | **Done** [14-m05b…](14-m05b-semester-approval.md) · historical |
 | M06 | P1 · sau M05b | Fixture domain + attendance | **Done** · historical |
 | M02 | P1 · baseline | Baseline ML scoring | **Done** · historical |
+| M10 | Reality-460 · supervised | Train/evaluate grade-only logistic model and integrate scoring registry | **Done local/shadow:** 460 rows; OOF recall 71.74%, precision 67.35%, FPR 3.86%; artifact `m10-reality460-logreg-1.0`; [model card](../04-engineering/17-m10-reality460-model-card.md) · [evidence](26-m10-shadow-materialization-evidence.md) |
 | M07 | **FREEZE** · **owner Giang** | Nghiên cứu forecast/fusion | Không tranh slot MVP; chỉ sau submission |
 | M03 | P2 | Fairness gate FPR/ΔFPR/N hoặc `insufficient_data` | **Done** · historical |
 | M08 | **FREEZE** · **owner Giang** | Attendance forecasting + gated fusion | Post-MVP; không làm tới sau submission |

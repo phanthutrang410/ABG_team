@@ -72,8 +72,10 @@ export function AppShell({ role, title, subtitle, children }: { role: Role; titl
 
   const multi = account.roles.length > 1;
   const onChooseRole = async (next: Role) => {
-    const ok = await chooseRole(next);
-    if (ok) router.push(roleHome(next));
+    // Only update the authenticated session here. The current route guard owns
+    // the single redirect after activeRole changes; issuing another push here
+    // races with that replace and can leave /analysis stuck on its loading UI.
+    await chooseRole(next);
   };
   const onLogout = async () => {
     await logout();

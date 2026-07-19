@@ -16,6 +16,7 @@ from app.contracts.integration import (
     CaseListResponse,
     assert_no_forbidden_keys,
 )
+from app.contracts.review_overview import ReviewOverviewSummary
 from app.contracts.review_case import ReviewCase
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "integration"
@@ -48,6 +49,15 @@ def test_case_list_fixtures_validate(name: str) -> None:
     raw = _load(name)
     assert_no_forbidden_keys(raw)
     CaseListResponse.model_validate(raw)
+
+
+def test_review_overview_summary_fixture_validates() -> None:
+    raw = _load("review_overview_summary.ok.json")
+    assert_no_forbidden_keys(raw)
+    summary = ReviewOverviewSummary.model_validate(raw)
+    assert summary.total_students == 460
+    assert summary.review_case_count == 35
+    assert summary.new_since_previous_snapshot is None
 
 
 @pytest.mark.parametrize("name", DETAIL_FIXTURES)

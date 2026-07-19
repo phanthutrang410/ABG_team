@@ -94,11 +94,11 @@ export function AgentPanel({ caseId }: { caseId: string }) {
   );
 }
 
-const panel: CSSProperties = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "1.1rem 1.35rem" };
+const panel: CSSProperties = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 16, padding: "1.25rem", boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)" };
 const h2: CSSProperties = { margin: "0 0 0.6rem", fontSize: 13, color: "#64748b", letterSpacing: 0.3 };
 const input: CSSProperties = { flex: 1, padding: "8px 11px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 13, fontFamily: "inherit", minWidth: 0 };
-const askBtn: CSSProperties = { padding: "8px 16px", borderRadius: 8, border: "none", background: "#2a78d6", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" };
-const answerOk: CSSProperties = { background: "#eff6ff", border: "1px solid #dbeafe", borderRadius: 10, padding: "0.8rem 1rem", fontSize: 13.5, color: "#1e3a5f", lineHeight: 1.55 };
+const askBtn: CSSProperties = { padding: "8px 16px", borderRadius: 8, border: "none", background: "#dc2626", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" };
+const answerOk: CSSProperties = { background: "#fef2f2", border: "1px solid #fee2e2", borderRadius: 10, padding: "0.8rem 1rem", fontSize: 13.5, color: "#7f1d1d", lineHeight: 1.55 };
 const quiet: CSSProperties = { marginTop: 10, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: "0.8rem 1rem", fontSize: 13, color: "#475569", lineHeight: 1.5 };
 const factorChip: CSSProperties = { fontSize: 11.5, background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, padding: "2px 7px", color: "#475569" };
 const humanNote: CSSProperties = { background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "0.7rem 0.9rem", fontSize: 12.5, color: "#92400e", lineHeight: 1.5 };

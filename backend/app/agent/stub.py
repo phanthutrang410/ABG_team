@@ -32,11 +32,11 @@ from app.contracts.review_case import ReviewCase
 #: Neutral VI labels for known factor codes (Data-ML §4 features). Unknown
 #: codes fall back to the raw code — never to an invented explanation.
 _FACTOR_LABELS_VI = {
-    "grade_trend_declining": "xu hướng điểm trung bình theo học kỳ giảm",
+    "grade_trend_declining": "điểm trung bình giữa hai kỳ giảm",
     "grade_volatility_high": "điểm dao động mạnh giữa các học kỳ",
-    "grade_volatility_elevated": "điểm dao động mạnh giữa các học phần/kỳ",
+    "grade_volatility_elevated": "độ phân tán điểm học phần cao",
     "gpa_below_target": "điểm trung bình kỳ gần nhất thấp hơn ngưỡng hỗ trợ",
-    "failed_credits_elevated": "có môn không đạt làm tăng tổng tín chỉ chưa hoàn thành",
+    "failed_credits_elevated": "tín chỉ môn không đạt ở mức cao",
 }
 
 _BAND_LABELS_VI = {

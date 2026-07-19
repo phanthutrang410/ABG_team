@@ -1,24 +1,42 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CaseStateBadge } from "@/components/badges";
 import { QueuePagination } from "@/components/QueuePagination";
 import { useSetTopbarInfo } from "@/components/AppShell";
 import { AdvisorUnavailable } from "@/components/AdvisorUnavailable";
+import { AdvisorServerWorkspace } from "@/components/AdvisorServerWorkspace";
+import {
+  ActionButton,
+  BellIcon,
+  DataPoint,
+  FILTERS,
+  Hero,
+  STAT_CARDS,
+  StatCard,
+  defaultMonitorDate,
+  formatDate,
+  formatDateTime,
+  type Filter,
+} from "@/components/advisor-shared";
 import {
   advisorDemoStorageKey,
   allowedAdvisorDemoActions,
+  countOverdueHandoffs,
   generateAdvisorDemoCases,
+  handoffElapsedDays,
+  isHandoffOverdue,
+  markAdvisorDemoViewed,
   paginateAdvisorQueue,
   transitionAdvisorDemoCase,
+  HANDOFF_ACK_OVERDUE_DAYS,
   type AdvisorDemoAction,
   type AdvisorDemoCase,
 } from "@/lib/advisor-demo";
 import { isAdvisorLocalDemoEnabled } from "@/lib/advisor-routing";
+import { useSession } from "@/lib/session";
 import { FACTOR_LABEL } from "@/lib/factors";
 import { resolveLimitations } from "@/lib/limitations";
-
-type Filter = "all" | "needs_action" | "follow_up_in_progress" | "monitoring" | "resolved";
 
 type StoredDemo = {
   variant: number;
@@ -27,36 +45,22 @@ type StoredDemo = {
 
 const INITIAL_DEMO_NOW = new Date("2026-07-18T08:00:00+07:00");
 
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: "all", label: "Tất cả" },
-  { id: "needs_action", label: "Cần tiếp nhận" },
-  { id: "follow_up_in_progress", label: "Đang hỗ trợ" },
-  { id: "monitoring", label: "Đang theo dõi" },
-  { id: "resolved", label: "Đã hoàn tất" },
-];
-
-type StatTone = "red" | "amber" | "sky" | "emerald";
-
-const STAT_CARDS: { id: Exclude<Filter, "all">; label: string; sub: string; tone: StatTone; icon: ReactNode }[] = [
-  { id: "needs_action", label: "Cần tiếp nhận", sub: "Cần xác nhận", tone: "red", icon: <InboxIcon /> },
-  { id: "follow_up_in_progress", label: "Đang hỗ trợ", sub: "Đã tiếp nhận", tone: "amber", icon: <HandsIcon /> },
-  { id: "monitoring", label: "Đang theo dõi", sub: "Có thời hạn", tone: "sky", icon: <EyeIcon /> },
-  { id: "resolved", label: "Đã hoàn tất", sub: "Vòng hoàn tất", tone: "emerald", icon: <CheckIcon /> },
-];
-
-const TONE: Record<StatTone, { iconWrap: string; num: string; activeRing: string }> = {
-  red: { iconWrap: "bg-red-50 text-red-600", num: "text-red-600", activeRing: "border-red-300 ring-2 ring-red-100" },
-  amber: { iconWrap: "bg-amber-50 text-amber-600", num: "text-amber-600", activeRing: "border-amber-300 ring-2 ring-amber-100" },
-  sky: { iconWrap: "bg-sky-50 text-sky-600", num: "text-sky-600", activeRing: "border-sky-300 ring-2 ring-sky-100" },
-  emerald: { iconWrap: "bg-emerald-50 text-emerald-600", num: "text-emerald-600", activeRing: "border-emerald-300 ring-2 ring-emerald-100" },
-};
-
 export function AdvisorWorkspace({ accountId }: { accountId: string }) {
-  if (!isAdvisorLocalDemoEnabled()) {
-    return <AdvisorUnavailable surface="Hàng đợi case GVCN" />;
+  const { source } = useSession();
+
+  // Server-authenticated GVCN → real backend data, scoped by advisor_scope (H36).
+  // The queue, "đã xem" receipt and acceptance all hit the live API.
+  if (source === "server") {
+    return <AdvisorServerWorkspace />;
   }
 
-  return <AdvisorLocalDemoWorkspace accountId={accountId} />;
+  // Local/dev demo fixtures only when explicitly enabled (offline UI work);
+  // fail-closed to unavailable everywhere else so localStorage never ships live.
+  if (isAdvisorLocalDemoEnabled()) {
+    return <AdvisorLocalDemoWorkspace accountId={accountId} />;
+  }
+
+  return <AdvisorUnavailable surface="Hàng đợi case GVCN" />;
 }
 
 function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
@@ -71,6 +75,8 @@ function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [monitorDate, setMonitorDate] = useState(defaultMonitorDate());
   const [notice, setNotice] = useState<string | null>(null);
+  // Một mốc "bây giờ" ổn định cho một lần render để tính quá hạn không nhấp nháy.
+  const [now] = useState(() => new Date());
 
   useEffect(() => {
     try {
@@ -115,6 +121,7 @@ function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
     () => cases.reduce((latest, item) => item.updated_at > latest ? item.updated_at : latest, ""),
     [cases],
   );
+  const overdueCount = useMemo(() => countOverdueHandoffs(cases, now), [cases, now]);
   useSetTopbarInfo(latestUpdate || null, counts.needs_action);
 
   const visibleCases = useMemo(() => {
@@ -157,6 +164,25 @@ function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
 
   const selected = cases.find((item) => item.case_id === selectedId) ?? null;
 
+  // Mở 1 case = GVCN đã nhấp vào (từ danh sách hoặc từ link trong email) → ghi nhận "đã xem".
+  // Mở/đọc KHÁC với "đã tiếp nhận" — tiếp nhận vẫn là nút xác nhận riêng (accept).
+  function openCase(caseId: string) {
+    setSelectedId(caseId);
+    setCases((current) => current.map((item) => (item.case_id === caseId ? markAdvisorDemoViewed(item, new Date()) : item)));
+  }
+
+  // Link bàn giao từ email: /advisor?case=<id> — mở đúng sinh viên và ghi nhận đã xem.
+  // (Đăng nhập đã bị AppShell bắt buộc; đây là "login theo sự kiện", không phải mở dashboard hằng ngày.)
+  useEffect(() => {
+    if (!storageReady) return;
+    const target = new URLSearchParams(window.location.search).get("case");
+    if (target && cases.some((item) => item.case_id === target)) {
+      openCase(target);
+    }
+    // Chạy một lần sau khi store demo sẵn sàng; cố ý chỉ đọc case ở thời điểm tải.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageReady]);
+
   function regenerate(nextVariant: number) {
     const generated = generateAdvisorDemoCases(accountId, nextVariant, new Date());
     setVariant(nextVariant);
@@ -192,6 +218,16 @@ function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
         <div role="status" className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           <span>✓ {notice}</span>
           <button type="button" onClick={() => setNotice(null)} className="font-semibold text-emerald-700">Đóng</button>
+        </div>
+      )}
+
+      {overdueCount > 0 && (
+        <div role="status" className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span aria-hidden className="mt-0.5 flex-shrink-0 text-amber-500"><BellIcon /></span>
+          <p className="leading-5">
+            Khoa đề nghị Thầy/Cô xem và <strong>xác nhận tiếp nhận</strong> {overdueCount} case đang chờ quá {HANDOFF_ACK_OVERDUE_DAYS} ngày,
+            để kịp thời hỗ trợ sinh viên. Mở case để xem chi tiết bảo mật rồi bấm “Xác nhận tiếp nhận”.
+          </p>
         </div>
       )}
 
@@ -257,7 +293,8 @@ function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
                 key={item.case_id}
                 item={item}
                 selected={item.case_id === selectedId}
-                onSelect={() => setSelectedId(item.case_id)}
+                overdue={isHandoffOverdue(item, now)}
+                onSelect={() => openCase(item.case_id)}
               />
             ))}
           </div>
@@ -279,6 +316,7 @@ function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
           {selected ? (
             <CasePanel
               item={selected}
+              now={now}
               monitorDate={monitorDate}
               onMonitorDateChange={setMonitorDate}
               onAction={runAction}
@@ -294,63 +332,6 @@ function AdvisorLocalDemoWorkspace({ accountId }: { accountId: string }) {
   );
 }
 
-function Hero({ total }: { total: number }) {
-  return (
-    <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 to-red-700 p-6 text-white shadow-sm">
-      <div className="relative z-10 max-w-2xl">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-red-100">Không gian cố vấn</p>
-        <h2 className="mt-2 text-2xl font-bold leading-tight">Case đã được giao cho tôi</h2>
-        <p className="mt-3 text-sm leading-6 text-red-50">
-          Chỉ hiển thị lý do bàn giao và dữ liệu tối thiểu để bắt đầu hỗ trợ.
-          <br className="hidden sm:block" />
-          Không có bảng xếp hạng, raw score hay case chưa được phê duyệt.
-        </p>
-      </div>
-      <span className="absolute right-5 top-5 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white ring-1 ring-inset ring-white/25">
-        <ShieldIcon />
-        {total} case pseudonymous
-      </span>
-      <span aria-hidden className="pointer-events-none absolute -right-2 bottom-2 z-0 text-white/15">
-        <HeartHandsIcon />
-      </span>
-    </section>
-  );
-}
-
-function StatCard({
-  card,
-  count,
-  active,
-  onSelect,
-}: {
-  card: (typeof STAT_CARDS)[number];
-  count: number;
-  active: boolean;
-  onSelect: () => void;
-}) {
-  const tone = TONE[card.tone];
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={active}
-      className={`group flex items-center justify-between gap-3 rounded-2xl border bg-white px-4 py-4 text-left shadow-sm transition-colors ${
-        active ? tone.activeRing : "border-slate-200 hover:border-slate-300"
-      }`}
-    >
-      <div className="flex items-center gap-3">
-        <span className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl ${tone.iconWrap}`}>{card.icon}</span>
-        <div>
-          <p className={`text-2xl font-bold leading-none ${tone.num}`}>{count}</p>
-          <p className="mt-1.5 text-sm font-semibold text-slate-800">{card.label}</p>
-          <p className="text-[11px] text-slate-400">{card.sub}</p>
-        </div>
-      </div>
-      <span aria-hidden className="text-slate-300 transition-transform group-hover:translate-x-0.5">›</span>
-    </button>
-  );
-}
-
 function DemoBanner({ onReset, onRegenerate }: { onReset: () => void; onRegenerate: () => void }) {
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
@@ -360,6 +341,9 @@ function DemoBanner({ onReset, onRegenerate }: { onReset: () => void; onRegenera
           Bạn chỉ thấy case đã được Ban quản lý phê duyệt và bàn giao.
           <br className="hidden sm:block" />
           Cách tiếp cận sinh viên do bạn quyết định theo bối cảnh thực tế.
+        </p>
+        <p className="mt-1 text-[11px] leading-4 text-slate-500">
+          Bạn chỉ cần đăng nhập khi có sinh viên được gắn cờ (theo link trong email) — không phải mở dashboard mỗi ngày. Email là kênh chính.
         </p>
         <p className="mt-1 text-[11px] leading-4 text-slate-400">
           Dữ liệu sinh cục bộ, thao tác chỉ lưu trên trình duyệt — không ghi database và không chứng minh RBAC backend.
@@ -376,9 +360,10 @@ function DemoBanner({ onReset, onRegenerate }: { onReset: () => void; onRegenera
   );
 }
 
-function CaseRow({ item, selected, onSelect }: { item: AdvisorDemoCase; selected: boolean; onSelect: () => void }) {
+function CaseRow({ item, selected, overdue, onSelect }: { item: AdvisorDemoCase; selected: boolean; overdue: boolean; onSelect: () => void }) {
   const factor = item.contributing_factors[0];
   const factorLabel = factor ? FACTOR_LABEL[factor.code] ?? factor.code : "Xem chi tiết bàn giao";
+  const unseen = item.case_state === "assigned" && !item.viewed_at;
   return (
     <button
       type="button"
@@ -388,7 +373,10 @@ function CaseRow({ item, selected, onSelect }: { item: AdvisorDemoCase; selected
       }`}
     >
       <div>
-        <p className="font-mono text-sm font-bold text-slate-900">{item.student_ref}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-mono text-sm font-bold text-slate-900">{item.student_ref}</p>
+          {unseen && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">Chưa xem</span>}
+        </div>
         <p className="mt-1 text-xs text-slate-400">Giao {formatDate(item.assigned_at)}</p>
       </div>
       <div>
@@ -396,6 +384,7 @@ function CaseRow({ item, selected, onSelect }: { item: AdvisorDemoCase; selected
         <p className="mt-1 text-xs text-slate-400">{item.coverage.n_valid_terms} kỳ · {item.coverage.n_courses} học phần</p>
       </div>
       <div className="flex items-center justify-between gap-3 sm:justify-end">
+        {overdue && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">Quá hạn</span>}
         <CaseStateBadge state={item.case_state} />
         <span aria-hidden className="text-slate-300">›</span>
       </div>
@@ -405,11 +394,13 @@ function CaseRow({ item, selected, onSelect }: { item: AdvisorDemoCase; selected
 
 function CasePanel({
   item,
+  now,
   monitorDate,
   onMonitorDateChange,
   onAction,
 }: {
   item: AdvisorDemoCase;
+  now: Date;
   monitorDate: string;
   onMonitorDateChange: (value: string) => void;
   onAction: (action: AdvisorDemoAction) => void;
@@ -418,6 +409,9 @@ function CasePanel({
   const limitations = resolveLimitations(item.limitations);
   const factor = item.contributing_factors[0];
   const factorLabel = factor ? FACTOR_LABEL[factor.code] ?? factor.code : "Không có lý do bàn giao";
+  const awaitingAccept = item.case_state === "assigned";
+  const overdue = isHandoffOverdue(item, now);
+  const elapsedDays = handoffElapsedDays(item, now);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -435,6 +429,21 @@ function CasePanel({
       </div>
 
       <div className="space-y-5 p-5">
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs">
+          <span className="text-slate-500">Trạng thái xem</span>
+          {item.viewed_at
+            ? <span className="font-semibold text-emerald-700">Đã xem · {formatDateTime(item.viewed_at)}</span>
+            : <span className="font-semibold text-slate-500">Chưa ghi nhận lượt xem</span>}
+        </div>
+
+        {awaitingAccept && (
+          <div className={`rounded-xl border px-3 py-3 text-xs leading-5 ${overdue ? "border-amber-200 bg-amber-50 text-amber-900" : "border-sky-200 bg-sky-50 text-sky-800"}`}>
+            {overdue
+              ? <>Khoa đề nghị Thầy/Cô xác nhận tiếp nhận sớm — case đã chờ <strong>{elapsedDays} ngày</strong> (quá {HANDOFF_ACK_OVERDUE_DAYS} ngày) để kịp thời hỗ trợ sinh viên.</>
+              : <>Case vừa được bàn giao và <strong>chưa được tiếp nhận</strong>. Xem chi tiết rồi bấm “Xác nhận tiếp nhận” để đóng vòng bàn giao với khoa.</>}
+          </div>
+        )}
+
         <section>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Lý do trung lập</p>
           <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -471,7 +480,7 @@ function CasePanel({
           ) : (
             <div className="mt-3 space-y-3">
               {actions.includes("accept") && (
-                <ActionButton label="Xác nhận tiếp nhận" help="Chuyển case sang Đang hỗ trợ." onClick={() => onAction("accept")} primary />
+                <ActionButton label="Xác nhận tiếp nhận" help="Bước xác nhận rõ ràng — mở/đọc chưa tính là tiếp nhận. Chuyển case sang Đang hỗ trợ và báo khoa đã tiếp nhận." onClick={() => onAction("accept")} primary />
               )}
               {actions.includes("monitor") && (
                 <div className="rounded-xl border border-slate-200 p-3">
@@ -504,114 +513,10 @@ function CasePanel({
   );
 }
 
-function DataPoint({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-slate-100 bg-white px-3 py-2">
-      <dt className="text-[11px] text-slate-400">{label}</dt>
-      <dd className="mt-0.5 text-sm font-bold text-slate-800">{value}</dd>
-    </div>
-  );
-}
-
-function ActionButton({ label, help, onClick, primary = false }: { label: string; help: string; onClick: () => void; primary?: boolean }) {
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={onClick}
-        className={`w-full rounded-lg px-3 py-2.5 text-sm font-semibold ${
-          primary ? "bg-red-600 text-white hover:bg-red-700" : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-        }`}
-      >
-        {label}
-      </button>
-      <p className="mt-1.5 text-[11px] leading-4 text-slate-400">{help}</p>
-    </div>
-  );
-}
-
-function defaultMonitorDate(): string {
-  const date = new Date();
-  date.setDate(date.getDate() + 14);
-  return date.toISOString().slice(0, 10);
-}
-
 function actionNotice(action: AdvisorDemoAction): string {
   if (action === "accept") return "Đã xác nhận tiếp nhận case trong phiên demo.";
   if (action === "monitor") return "Đã chuyển case sang theo dõi có thời hạn trong phiên demo.";
   return "Đã hoàn tất vòng hỗ trợ trong phiên demo.";
-}
-
-function formatDate(value: string): string {
-  return new Date(value).toLocaleDateString("vi-VN");
-}
-
-function formatDateTime(value: string): string {
-  return new Date(value).toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-/* ---------- Icons (line style, inherit currentColor) ---------- */
-
-const statSvg = {
-  width: 22,
-  height: 22,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.8,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-
-function InboxIcon() {
-  return (
-    <svg {...statSvg}>
-      <path d="M22 12h-6l-2 3h-4l-2-3H2" />
-      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-    </svg>
-  );
-}
-
-function HandsIcon() {
-  return (
-    <svg {...statSvg}>
-      <path d="M20 11a2 2 0 0 0-2-2h-3l-1.5-5.5a1.5 1.5 0 0 0-3 .3V9" />
-      <path d="M4 13a2 2 0 0 1 2-2h2l2 4h4a2 2 0 0 1 0 4H9l-3-2H4z" />
-    </svg>
-  );
-}
-
-function EyeIcon() {
-  return (
-    <svg {...statSvg}>
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg {...statSvg}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="m8.5 12 2.5 2.5 4.5-5" />
-    </svg>
-  );
-}
-
-function ShieldIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
-  );
 }
 
 function ResetIcon() {
@@ -619,14 +524,6 @@ function ResetIcon() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
       <path d="M3 3v5h5" />
-    </svg>
-  );
-}
-
-function HeartHandsIcon() {
-  return (
-    <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 21s-6.5-4-9-8.5a4.2 4.2 0 0 1 7.2-4.2L12 9l1.8-.7A4.2 4.2 0 0 1 21 12.5C18.5 17 12 21 12 21z" fill="currentColor" fillOpacity="0.35" />
     </svg>
   );
 }

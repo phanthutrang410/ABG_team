@@ -44,12 +44,24 @@ export function WeeklyBriefingPanel() {
     report && typeof report.aggregates === "object" && report.aggregates
       ? (report.aggregates as Record<string, unknown>)
       : null;
+  const reportStatus = report && typeof report.status === "string" ? report.status : null;
   const message =
     briefing && typeof briefing.message_vi === "string"
       ? briefing.message_vi
       : briefing && typeof briefing.body_vi === "string"
         ? briefing.body_vi
         : null;
+
+  if (reportStatus === "empty") {
+    return (
+      <section aria-label="Bản tin tuần" style={{ marginBottom: 24 }}>
+        <h2 style={{ fontSize: 18, marginBottom: 8 }}>Bản tin tuần</h2>
+        <p style={{ color: "var(--ss-muted)", fontSize: 14 }}>
+          Chưa có bản tin tuần vì workflow so sánh chưa tạo dữ liệu. Hệ thống không diễn giải các giá trị 0 như số liệu thực tế.
+        </p>
+      </section>
+    );
+  }
 
   return (
     <section aria-label="Bản tin tuần" style={{ marginBottom: 24 }}>

@@ -10,11 +10,15 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-#: Feature-spec + estimator version (Data-ML §1). Bump when the formula changes.
-MODEL_VERSION = "m02-baseline-0.2"
+#: Explicit rollback target; never selected automatically on artifact failure.
+BASELINE_MODEL_VERSION = "m02-baseline-0.2"
+
+#: Active supervised Reality-460 model.
+MODEL_VERSION = "m10-reality460-logreg-1.0"
 
 #: Wiring-only threshold set — matches H08's DEFAULT_THRESHOLD_VERSION placeholder.
-THRESHOLD_CONFIG_VERSION = "thr-epu-0.1-uncalibrated"
+BASELINE_THRESHOLD_CONFIG_VERSION = "thr-epu-0.1-uncalibrated"
+THRESHOLD_CONFIG_VERSION = "thr-reality460-oof-recall70-v1"
 
 
 class ThresholdConfig(BaseModel):
@@ -33,7 +37,15 @@ class ThresholdConfig(BaseModel):
         return self
 
 
-#: Uncalibrated wiring default — do not cite as an operational FPR/TPR claim.
+#: OOF-selected Reality-460 thresholds. Raw score remains internal-only.
 DEFAULT_THRESHOLDS = ThresholdConfig(
-    version=THRESHOLD_CONFIG_VERSION, tau_case=0.35, tau_high=0.65
+    version=THRESHOLD_CONFIG_VERSION,
+    tau_case=0.46559848023232425,
+    tau_high=0.5502363412821223,
+)
+
+BASELINE_THRESHOLDS = ThresholdConfig(
+    version=BASELINE_THRESHOLD_CONFIG_VERSION,
+    tau_case=0.35,
+    tau_high=0.65,
 )

@@ -1,0 +1,52 @@
+{
+  "status": "promoted",
+  "artifact_sha256": "099265d2d7917014d7622685bf7fbe06a50cd41d726746d805a01ffb4b19febe",
+  "model_version": "m10-reality460-logreg-1.0",
+  "threshold_config_version": "thr-reality460-oof-recall70-v1",
+  "dataset_version": "v59-empty-program-students:73274079:epu-1",
+  "training_package_sha256": "73274079b30487f066cb2e1751c7ec70e2737ff794d6ae76e3e26ec4cf86df24",
+  "label_rule_version": "gt-epu-status-after-t2-v1",
+  "feature_set": "A",
+  "regularization_c": 0.01,
+  "thresholds": {
+    "tau_case": 0.46559848023232425,
+    "tau_high": 0.5502363412821223
+  },
+  "metrics": {
+    "n_students": 460.0,
+    "n_positive": 46.0,
+    "n_negative": 414.0,
+    "oof_average_precision": 0.7950794303358967,
+    "oof_brier": 0.09253641233902478,
+    "oof_tp": 33.0,
+    "oof_fp": 16.0,
+    "oof_tn": 398.0,
+    "oof_fn": 13.0,
+    "oof_precision": 0.673469387755102,
+    "oof_recall": 0.717391304347826,
+    "oof_fpr": 0.03864734299516908,
+    "oof_selection_rate": 0.10652173913043478,
+    "coefficient_sign_stability": 1.0,
+    "precision_ci_low": 0.5399615384615385,
+    "precision_ci_high": 0.8,
+    "recall_ci_low": 0.5833333333333334,
+    "recall_ci_high": 0.851063829787234,
+    "fpr_ci_low": 0.02173651755852843,
+    "fpr_ci_high": 0.05811138014527845
+  },
+  "baseline": {
+    "cases": 35,
+    "tp": 22,
+    "fp": 13,
+    "tn": 401,
+    "fn": 24,
+    "precision": 0.6285714285714286,
+    "recall": 0.4782608695652174,
+    "fpr": 0.03140096618357488
+  },
+  "disclaimers": [
+    "OOF metrics on one 460-student cohort; no external validation cohort.",
+    "Final model is fit on all 460 rows; in-sample metrics are not reported.",
+    "Grade-only two-term model; generated attendance is excluded."
+  ]
+}

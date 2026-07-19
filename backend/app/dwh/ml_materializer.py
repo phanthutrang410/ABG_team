@@ -18,13 +18,13 @@ from sqlalchemy.orm import Session
 
 from app.contracts.review_case import ContributingFactor
 from app.contracts.scoring import ScoringFeatures
-from app.dwh.models import MlTermSnapshot
+from app.dwh.models import MlTermSnapshot, SourceManifest
 from app.dwh.read_adapter import ReadAdapterError, list_normalized_students
 from app.ml.scoring import (
-    band_for_score,
-    compute_model_score,
-    contributing_factors,
-    score_student,
+    BASELINE_MODEL_VERSION,
+    active_artifact,
+    active_model_version,
+    score_record,
 )
 
 EXPLAIN_SCHEMA_VERSION = "agent-explain-v1"
@@ -76,6 +76,8 @@ def build_agent_explain_json(
     features: ScoringFeatures,
     review_priority_band: Optional[str],
     factors: list[ContributingFactor],
+    limitations: Optional[list[str]] = None,
+    artifact_sha256: Optional[str] = None,
 ) -> dict[str, Any]:
     """Rich agent-explain-v1 payload — never includes ``model_score``."""
     return {
@@ -89,6 +91,8 @@ def build_agent_explain_json(
         "threshold_config_version": features.threshold_config_version,
         "last_term_code": features.coverage.last_term_code,
         "features": rounded_feature_values(features),
+        "limitations": list(limitations or []),
+        "artifact_sha256": artifact_sha256,
     }
 
 
@@ -122,11 +126,15 @@ def _row_from_scored(
     model_score: Optional[float],
     review_priority_band: Optional[str],
     factors: list[ContributingFactor],
+    limitations: Optional[list[str]] = None,
+    artifact_sha256: Optional[str] = None,
 ) -> MlTermSnapshot:
     explain = build_agent_explain_json(
         features=features,
         review_priority_band=review_priority_band,
         factors=factors,
+        limitations=limitations,
+        artifact_sha256=artifact_sha256,
     )
     factor_codes = [f.code for f in factors]
     return MlTermSnapshot(
@@ -156,6 +164,7 @@ def _row_from_scored(
             separators=(",", ":"),
         ),
         model_score=_decimal_opt(model_score, 4),
+        artifact_sha256=artifact_sha256,
         explain_schema_version=EXPLAIN_SCHEMA_VERSION,
         agent_explain_json=json.dumps(explain, ensure_ascii=False, separators=(",", ":")),
         evidence_fingerprint=evidence_fingerprint(
@@ -193,20 +202,57 @@ def materialize_ml_term_snapshot(session: Session, source_id: str) -> Materializ
             detail=exc.detail or str(exc),
         )
 
+    try:
+        model_version = active_model_version()
+        if model_version != BASELINE_MODEL_VERSION:
+            artifact = active_artifact()
+            manifest = session.get(SourceManifest, sid)
+            dataset_versions = {record.dataset_version for record in records}
+            if (
+                manifest is None
+                or manifest.snapshot_sha256 != artifact.training_package_sha256
+                or dataset_versions != {artifact.dataset_version}
+                or len(records) != 460
+            ):
+                return MaterializeResult(
+                    status="rejected",
+                    source_id=sid,
+                    reason_codes=["model_dataset_mismatch"],
+                    detail="DWH source/count/version does not match the promoted artifact",
+                )
+    except (OSError, ValueError) as exc:
+        return MaterializeResult(
+            status="rejected",
+            source_id=sid,
+            reason_codes=["model_artifact_invalid"],
+            detail=str(exc),
+        )
+
     rows: list[MlTermSnapshot] = []
-    for record in records:
-        features = score_student(record)
-        score = compute_model_score(features)
-        band = band_for_score(score)
-        factors = contributing_factors(features)
-        rows.append(
-            _row_from_scored(
-                source_id=sid,
-                features=features,
-                model_score=score,
-                review_priority_band=band,
-                factors=factors,
+    try:
+        for record in records:
+            scored = score_record(record)
+            features = scored.features
+            score = scored.model_score
+            band = scored.review_priority_band
+            factors = scored.factors
+            rows.append(
+                _row_from_scored(
+                    source_id=sid,
+                    features=features,
+                    model_score=score,
+                    review_priority_band=band,
+                    factors=factors,
+                    limitations=scored.limitations,
+                    artifact_sha256=scored.artifact_sha256,
+                )
             )
+    except (OSError, ValueError) as exc:
+        return MaterializeResult(
+            status="rejected",
+            source_id=sid,
+            reason_codes=["model_artifact_invalid"],
+            detail=str(exc),
         )
 
     session.execute(delete(MlTermSnapshot).where(MlTermSnapshot.source_id == sid))

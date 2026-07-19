@@ -6,6 +6,7 @@ from app.main import app
 CRITICAL_ROUTE_METHODS = {
     "/health": {"get"},
     "/review-cases": {"get"},
+    "/review-cases/summary": {"get"},
     "/review-cases/{case_id}": {"get"},
     "/review-cases/{case_id}/explanation": {"post"},
     "/cases/{case_id}/transitions": {"post"},

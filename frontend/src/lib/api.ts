@@ -8,6 +8,7 @@ import type {
   CaseListResponse,
   FairnessReport,
   PublicThresholdConfig,
+  ReviewOverviewSummary,
   ThresholdImpactResponse,
   TransitionErrorBody,
   TransitionResponse,
@@ -192,6 +193,38 @@ export async function fetchReviewCases(signal?: AbortSignal): Promise<CaseListRe
 }
 
 /**
+ * Organization aggregate for /overview. null is fail-closed: the caller must
+ * not derive the roster denominator from the review-case list.
+ */
+export async function fetchReviewOverviewSummary(
+  signal?: AbortSignal,
+): Promise<ReviewOverviewSummary | null> {
+  try {
+    const res = await fetch(`${API_BASE}/review-cases/summary`, { ...CREDENTIALS, signal });
+    if (!res.ok) return null;
+    const body = (await res.json()) as ReviewOverviewSummary;
+    if (
+      !body ||
+      typeof body.state !== "string" ||
+      body.scope !== "organization" ||
+      typeof body.source_id !== "string" ||
+      typeof body.total_students !== "number" ||
+      typeof body.review_case_count !== "number" ||
+      typeof body.review_student_count !== "number" ||
+      !body.priority_band_counts ||
+      !body.case_state_counts ||
+      !body.student_coverage_counts ||
+      !body.review_data_state_counts
+    ) {
+      return null;
+    }
+    return body;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * G03 — POST /cases/{id}/transitions (H03 care workflow).
  * Server derives the trusted actor (app/cases/auth.py) — we do NOT send
  * actor/actor_kind, and never send advisor_ref (assign resolves via H08).
@@ -315,6 +348,53 @@ export async function fetchAdvisorHandoffDrafts(
     return body;
   } catch {
     return UPSTREAM_UNAVAILABLE_HANDOFF;
+  }
+}
+
+/**
+ * GVCN advisor flow — GET /cases/{id} returns the narrow workflow surface
+ * (state + viewed_at + updated_at), NOT the public ReviewCase. null is
+ * fail-closed: 404/403/transport failure → caller shows no receipt/actions.
+ */
+export async function fetchCaseWorkflow(
+  caseId: string,
+  signal?: AbortSignal,
+): Promise<TransitionResponse | null> {
+  try {
+    const res = await fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}`, {
+      ...CREDENTIALS,
+      signal,
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as TransitionResponse;
+    if (!body || typeof body.case_id !== "string" || typeof body.state !== "string") return null;
+    return body;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * POST /cases/{id}/viewed — GVCN-only, idempotent "đã xem" receipt logged when the
+ * advisor opens the secured detail. Distinct from acceptance (accept transition).
+ * null when 403 (not gvcn) / 404 (out of scope) / transport failure — never a state change.
+ */
+export async function postCaseViewed(
+  caseId: string,
+  signal?: AbortSignal,
+): Promise<TransitionResponse | null> {
+  try {
+    const res = await fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}/viewed`, {
+      ...CREDENTIALS,
+      method: "POST",
+      signal,
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as TransitionResponse;
+    if (!body || typeof body.case_id !== "string" || typeof body.state !== "string") return null;
+    return body;
+  } catch {
+    return null;
   }
 }
 

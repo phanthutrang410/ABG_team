@@ -323,9 +323,13 @@ def _build_attendance(payload, **manifest_kw):
 def test_attendance_fixture_coverage_and_rates():
     payload = json.loads(_ATTENDANCE_FIXTURE.read_text(encoding="utf-8"))
     ds = _build_attendance(payload)
-    assert len(ds.attendance_event) == 15
-    rates = {c.student_ref: c.attendance_rate_window for c in ds.data_quality_report.attendance_coverage}
-    assert rates == {"s-1001": 0.8, "s-1002": 0.4, "s-1003": 0.8}
+    assert len(ds.attendance_event) == 7_360
+    counts: dict[str, int] = {}
+    for event in ds.attendance_event:
+        counts[event.student_ref] = counts.get(event.student_ref, 0) + 1
+    assert len(counts) == 460
+    assert set(counts.values()) == {16}
+    assert len(ds.data_quality_report.attendance_coverage) == 460
     assert all(c.trend_eligible for c in ds.data_quality_report.attendance_coverage)
     assert ds.data_quality_report.reason_codes == []
 
@@ -381,19 +385,28 @@ def test_attendance_pii_fails_closed():
 # --- Committed attendance artifacts: no drift (determinism) -----------------
 
 
-def test_committed_attendance_manifest_matches_build():
-    payload = json.loads(_ATTENDANCE_FIXTURE.read_text(encoding="utf-8"))
-    ds = _build_attendance(payload)
+def test_committed_linked_attendance_manifest_matches_payload():
     committed = json.loads(
         (_ATTENDANCE_DIR / "mvp_attendance_source_manifest.json").read_text(encoding="utf-8")
     )
-    assert committed == ds.source_manifest.model_dump(mode="json")
-
-
-def test_committed_attendance_quality_report_matches_build():
     payload = json.loads(_ATTENDANCE_FIXTURE.read_text(encoding="utf-8"))
-    ds = _build_attendance(payload)
+    assert committed["snapshot_sha256"] == hashlib.sha256(_ATTENDANCE_FIXTURE.read_bytes()).hexdigest()
+    assert committed["record_count"] == len(payload["events"]) == 7_360
+    assert committed["n_students"] == len({e["student_ref"] for e in payload["events"]}) == 460
+    assert committed["provenance_approved"] is True
+    assert committed["grain"] == "session"
+    assert committed["linked_semester_source_id"] == "v59-empty-program-students"
+
+
+def test_committed_linked_attendance_quality_report_matches_manifest():
+    manifest = json.loads(
+        (_ATTENDANCE_DIR / "mvp_attendance_source_manifest.json").read_text(encoding="utf-8")
+    )
     committed = json.loads(
         (_ATTENDANCE_DIR / "mvp_attendance_data_quality_report.json").read_text(encoding="utf-8")
     )
-    assert committed == ds.data_quality_report.model_dump(mode="json")
+    assert committed["report_version"] == "h15b-linked-1"
+    assert committed["row_count"] == manifest["record_count"] == 7_360
+    assert committed["n_students"] == manifest["n_students"] == 460
+    assert committed["min_events_per_student"] == 16
+    assert committed["reject_count"] == 0

@@ -27,6 +27,8 @@ backend/ml_artifacts/
 # Node
 node_modules/
 frontend/.next/
+frontend/.next-dev/
+frontend/.next-e2e/
 frontend/.next-system/
 frontend/out/
 frontend/coverage/

@@ -154,7 +154,7 @@ def test_project_review_case_prefers_snapshot_without_live_score(
         calls["score_student"] += 1
         raise AssertionError("live score_student must not run when snapshot exists")
 
-    monkeypatch.setattr(rp, "score_student", _boom)
+    monkeypatch.setattr(rp, "score_record", _boom)
     monkeypatch.setattr(
         rp,
         "get_ml_term_projection",

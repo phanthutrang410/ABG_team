@@ -64,7 +64,7 @@ class FakeModel:
 def _structured_plan(**overrides: object) -> str:
     payload = {
         "template_key": "explain_review_priority",
-        "used_factor_codes": ["grade_trend_declining"],
+        "used_factor_codes": ["gpa_below_target"],
         "limitation_keys": ["attendance_source_unapproved"],
         "draft_variant_key": None,
     }
@@ -105,8 +105,8 @@ def _declining_grades() -> List[NormalizedTermGrade]:
     return [
         NormalizedTermGrade(term_code="20241", course_ref="c1", credits=3.0, final_grade=9.0),
         NormalizedTermGrade(term_code="20241", course_ref="c2", credits=3.0, final_grade=8.5),
-        NormalizedTermGrade(term_code="20251", course_ref="c1", credits=3.0, final_grade=4.0),
-        NormalizedTermGrade(term_code="20251", course_ref="c2", credits=3.0, final_grade=3.5),
+        NormalizedTermGrade(term_code="20251", course_ref="c1", credits=3.0, final_grade=4.0, grade_status="Không đạt"),
+        NormalizedTermGrade(term_code="20251", course_ref="c2", credits=3.0, final_grade=3.5, grade_status="Không đạt"),
     ]
 
 

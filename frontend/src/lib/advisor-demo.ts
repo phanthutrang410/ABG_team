@@ -12,6 +12,10 @@ export type AdvisorDemoCase = ReviewCase & {
   assigned_at: string;
   updated_at: string;
   monitoring_until: string | null;
+  // Loop-closing signal between khoa and GVCN (client demo only, never a real receipt):
+  // null = GVCN has not opened the secured detail yet; timestamp = "đã xem" logged on open.
+  // Acknowledgement ("đã tiếp nhận") is a separate, explicit step: case_state assigned → follow_up_in_progress.
+  viewed_at: string | null;
 };
 
 export type AdvisorDemoAction = "accept" | "monitor" | "resolve";
@@ -180,6 +184,9 @@ export function generateAdvisorDemoCases(
     const monitoringUntil = caseState === "monitoring"
       ? isoOffset(now, 7 + Math.floor(random() * 8))
       : null;
+    // A case still in `assigned` has not been opened by the GVCN yet ("chưa xem");
+    // once it moved past assigned, the GVCN had already viewed it (~its update time).
+    const viewedAt = caseState === "assigned" ? null : updatedAt;
 
     return {
       case_id: `demo-assignment-${variant}-${index + 1}-${studentRef.slice(-8)}`,
@@ -212,8 +219,47 @@ export function generateAdvisorDemoCases(
       assigned_at: assignedAt,
       updated_at: updatedAt,
       monitoring_until: monitoringUntil,
+      viewed_at: viewedAt,
     };
   });
+}
+
+/**
+ * Ngưỡng nhắc "chưa tiếp nhận": case còn kẹt ở `assigned` (khoa đã gửi mail bàn giao
+ * nhưng GVCN chưa xác nhận tiếp nhận) quá số ngày này thì được coi là quá hạn.
+ * Ở bản demo, đây chỉ là mốc hiển thị/nhắc trên UI — không thay cho cron/mail thật.
+ */
+export const HANDOFF_ACK_OVERDUE_DAYS = 3;
+
+/** Ghi nhận "đã xem" khi GVCN mở chi tiết bảo mật lần đầu (không ghi đè lần xem trước). */
+export function markAdvisorDemoViewed(item: AdvisorDemoCase, now: Date = new Date()): AdvisorDemoCase {
+  if (item.viewed_at) return item;
+  return { ...item, viewed_at: now.toISOString() };
+}
+
+/** Số ngày trọn kể từ lúc khoa bàn giao (assigned_at). */
+export function handoffElapsedDays(item: AdvisorDemoCase, now: Date = new Date()): number {
+  const assigned = new Date(item.assigned_at).getTime();
+  if (Number.isNaN(assigned)) return 0;
+  return Math.max(0, Math.floor((now.getTime() - assigned) / 86_400_000));
+}
+
+/** Case đã bàn giao nhưng GVCN chưa tiếp nhận (còn ở `assigned`) quá ngưỡng ngày. */
+export function isHandoffOverdue(
+  item: AdvisorDemoCase,
+  now: Date = new Date(),
+  thresholdDays: number = HANDOFF_ACK_OVERDUE_DAYS,
+): boolean {
+  return item.case_state === "assigned" && handoffElapsedDays(item, now) >= thresholdDays;
+}
+
+/** Số case "chưa tiếp nhận quá hạn" — dùng cho nhắc nhở GVCN và giám sát phía khoa. */
+export function countOverdueHandoffs(
+  cases: readonly AdvisorDemoCase[],
+  now: Date = new Date(),
+  thresholdDays: number = HANDOFF_ACK_OVERDUE_DAYS,
+): number {
+  return cases.reduce((total, item) => (isHandoffOverdue(item, now, thresholdDays) ? total + 1 : total), 0);
 }
 
 export function allowedAdvisorDemoActions(caseState: CaseState): AdvisorDemoAction[] {

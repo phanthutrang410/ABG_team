@@ -15,7 +15,11 @@ from app.contracts.threshold_public import PublicThresholdConfig, ThresholdImpac
 from app.database import get_db
 from app.dwh.read_adapter import ReadAdapterError, list_normalized_students
 from app.ml.fairness import build_fairness_report
-from app.ml.scoring import DEFAULT_THRESHOLDS, MODEL_VERSION, ThresholdConfig
+from app.ml.scoring import (
+    ThresholdConfig,
+    active_model_version,
+    active_thresholds,
+)
 
 router = APIRouter(tags=["config"])
 
@@ -28,7 +32,7 @@ def _public_from(thresholds: ThresholdConfig) -> PublicThresholdConfig:
         threshold_config_version=thresholds.version,
         tau_case=thresholds.tau_case,
         tau_high=thresholds.tau_high,
-        model_version=MODEL_VERSION,
+        model_version=active_model_version(),
     )
 
 
@@ -44,22 +48,25 @@ def get_thresholds(
         allowed=True,
         db=db,
     )
-    return _public_from(DEFAULT_THRESHOLDS)
+    return _public_from(active_thresholds())
 
 
 @router.get("/config/thresholds/impact", response_model=ThresholdImpactResponse)
 def get_threshold_impact(
-    tau_case: float = Query(default=DEFAULT_THRESHOLDS.tau_case, ge=0.0, le=1.0),
-    tau_high: float = Query(default=DEFAULT_THRESHOLDS.tau_high, ge=0.0, le=1.0),
+    tau_case: float | None = Query(default=None, ge=0.0, le=1.0),
+    tau_high: float | None = Query(default=None, ge=0.0, le=1.0),
     principal: Principal = Depends(require_roles("ban_quan_ly")),
     db: Session = Depends(get_db),
 ) -> ThresholdImpactResponse:
     """Aggregate counts only — no per-student model_score in the response."""
     source_id = server_source_id()
+    active = active_thresholds()
+    tau_case = active.tau_case if tau_case is None else tau_case
+    tau_high = active.tau_high if tau_high is None else tau_high
     if tau_high < tau_case:
         tau_high = tau_case
     thresholds = ThresholdConfig(
-        version=DEFAULT_THRESHOLDS.version,
+        version=active.version,
         tau_case=tau_case,
         tau_high=tau_high,
     )
@@ -98,7 +105,7 @@ def get_threshold_impact(
         threshold_config_version=thresholds.version,
         tau_case=thresholds.tau_case,
         tau_high=thresholds.tau_high,
-        model_version=MODEL_VERSION,
+        model_version=active_model_version(),
         n_scored=n_scored,
         n_can_ra_soat=n_can,
         n_uu_tien_som=n_uu,
@@ -130,8 +137,8 @@ def get_fairness_report(
     )
     return build_fairness_report(
         dataset_version=dataset_version,
-        model_version=MODEL_VERSION,
-        threshold_config_version=DEFAULT_THRESHOLDS.version,
+        model_version=active_model_version(),
+        threshold_config_version=active_thresholds().version,
         label_rule_version=LABEL_RULE_VERSION,
         computed_at=datetime.now(timezone.utc),
         audit_attribute=None,

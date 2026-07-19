@@ -4,10 +4,11 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AppShell, useSetTopbarInfo } from "@/components/AppShell";
 import { BandBadge, CaseStateBadge } from "@/components/badges";
+import { CaseDetailDialog } from "@/components/CaseDetailPage";
 import { ReportModal } from "@/components/ReportModal";
 import { ThresholdPanel } from "@/components/ThresholdPanel";
 import { WeeklyBriefingPanel } from "@/components/WeeklyBriefingPanel";
-import { fetchReviewCases } from "@/lib/api";
+import { fetchReviewCases, fetchReviewOverviewSummary } from "@/lib/api";
 import { FACTOR_LABEL } from "@/lib/factors";
 import { splitAccountName, useSession } from "@/lib/session";
 import {
@@ -15,6 +16,7 @@ import {
   CASE_STATE_LABEL,
   type CaseListResponse,
   type ReviewCase,
+  type ReviewOverviewSummary,
 } from "@/lib/types";
 
 /**
@@ -75,32 +77,53 @@ function DashboardBody() {
 
   const [loading, setLoading] = useState(true);
   const [response, setResponse] = useState<CaseListResponse | null>(null);
+  const [summary, setSummary] = useState<ReviewOverviewSummary | null>(null);
+  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
     const controller = new AbortController();
-    fetchReviewCases(controller.signal).then((r) => {
-      setResponse(r);
+    Promise.all([
+      fetchReviewCases(controller.signal),
+      isAnalysisRoute
+        ? Promise.resolve<ReviewOverviewSummary | null>(null)
+        : fetchReviewOverviewSummary(controller.signal),
+    ]).then(([caseResponse, overviewSummary]) => {
+      setResponse(caseResponse);
+      setSummary(overviewSummary);
       setLoading(false);
     });
     return controller;
-  }, []);
+  }, [isAnalysisRoute]);
 
   useEffect(() => {
     const controller = load();
     return () => controller.abort();
   }, [load]);
 
-  const openCase = useCallback((id: string) => router.push(`/analysis/${id}`), [router]);
+  const openCase = useCallback((id: string) => setSelectedCaseId(id), []);
+  const handleCaseStateChange = useCallback((caseId: string, next: ReviewCase["case_state"]) => {
+    setResponse((previous) => previous
+      ? {
+          ...previous,
+          items: previous.items.map((item) =>
+            item.case_id === caseId ? { ...item, case_state: next } : item,
+          ),
+        }
+      : previous,
+    );
+  }, []);
 
-  // Bơm dữ liệu thật lên topbar (thời điểm cập nhật = calculated_at mới nhất;
-  // badge = số case Ưu tiên sớm). Không hardcode.
+  // Tổng quan dùng freshness của nguồn roster; trang phân tích chưa cần summary
+  // nên tiếp tục dùng calculated_at của review queue.
   const topInfo = useMemo(() => {
     const items = response?.items ?? [];
-    const updatedAt = items.reduce((m, c) => (c.calculated_at > m ? c.calculated_at : m), "");
-    const alertCount = items.filter((c) => c.review_priority_band === "uu_tien_som").length;
+    const latestCaseAt = items.reduce((m, c) => (c.calculated_at > m ? c.calculated_at : m), "");
+    const updatedAt = summary?.source_extracted_at ?? latestCaseAt;
+    const alertCount = summary?.priority_band_counts.uu_tien_som
+      ?? items.filter((c) => c.review_priority_band === "uu_tien_som").length;
     return { updatedAt: updatedAt || null, alertCount };
-  }, [response]);
+  }, [response, summary]);
   useSetTopbarInfo(topInfo.updatedAt, topInfo.alertCount);
 
   return (
@@ -121,7 +144,14 @@ function DashboardBody() {
 
       {tab === "overview" && (
         <>
-          <OverviewHeader loading={loading} response={response} setTab={setTab} onReload={load} onOpenCase={openCase} />
+          <OverviewHeader
+            loading={loading}
+            response={response}
+            summary={summary}
+            setTab={setTab}
+            onReload={load}
+            onOpenCase={openCase}
+          />
           <WeeklyBriefingPanel />
         </>
       )}
@@ -139,6 +169,14 @@ function DashboardBody() {
           Dữ liệu và hành động đi thẳng API — không hiển thị điểm số nội bộ của model.
           Scoping theo khoa/lớp và danh sách toàn bộ SV chờ API bổ sung (design spec §9).
         </p>
+      )}
+
+      {selectedCaseId && (
+        <CaseDetailDialog
+          caseId={selectedCaseId}
+          onClose={() => setSelectedCaseId(null)}
+          onCaseStateChange={handleCaseStateChange}
+        />
       )}
     </div>
   );
@@ -210,12 +248,14 @@ function ErrorCard({ onReload }: { onReload: () => void }) {
 function OverviewHeader({
   loading,
   response,
+  summary,
   setTab,
   onReload,
   onOpenCase,
 }: {
   loading: boolean;
   response: CaseListResponse | null;
+  summary: ReviewOverviewSummary | null;
   setTab: (t: Tab) => void;
   onReload: () => void;
   onOpenCase: (caseId: string) => void;
@@ -224,9 +264,6 @@ function OverviewHeader({
   const { account } = useSession();
   const { name: shortName } = splitAccountName(account?.name ?? "thầy/cô");
   const items = useMemo(() => (response && response.state !== "error" ? response.items : []), [response]);
-  const counts = useMemo(() => computeCounts(items), [items]);
-  // Thời điểm AI "phân tích" = calculated_at mới nhất từ response — không hardcode.
-  const analyzedAt = useMemo(() => items.reduce((m, c) => (c.calculated_at > m ? c.calculated_at : m), ""), [items]);
   // Tool 1 — modal "Báo cáo tổng thể" (plan.md §3.2); mở tại chỗ, không rời trang.
   const [reportOpen, setReportOpen] = useState(false);
 
@@ -251,30 +288,43 @@ function OverviewHeader({
       </div>
     );
   }
-  if (!response) return null;
-  if (response.state === "error") return <ErrorCard onReload={onReload} />;
+  if (!response || !summary) return <ErrorCard onReload={onReload} />;
+  if (response.state === "error" || summary.state === "error") return <ErrorCard onReload={onReload} />;
 
-  // Một thông báo duy nhất (plan.md §3.2): ghép các vế có số thật > 0 thành 1 đoạn
-  // bản tin — không bịa mục, không so sánh "tuần trước" (chưa có API lịch sử, §6 #5).
-  const isStale = response.state === "stale";
+  // Một thông báo duy nhất: denominator và aggregate lấy từ summary backend,
+  // không suy ra roster từ review queue và không biến workflow state thành delta.
+  const isStale = response.state === "stale" || summary.state === "stale";
   const latest = items.length > 0 ? items.reduce((m, c) => (c.calculated_at > m.calculated_at ? c : m)) : null;
+  const overviewCounts: OverviewCounts = {
+    totalStudents: summary.total_students,
+    reviewCases: summary.review_case_count,
+    reviewStudents: summary.review_student_count,
+    workflowNew: summary.case_state_counts.new_signal,
+    pending: summary.case_state_counts.pending_review,
+    active:
+      summary.case_state_counts.assigned
+      + summary.case_state_counts.follow_up_in_progress
+      + summary.case_state_counts.monitoring,
+    earlyPriority: summary.priority_band_counts.uu_tien_som,
+    limitedStudents: summary.limited_student_count,
+    limitedReviewCases: summary.limited_review_case_count,
+  };
   const segments: { strong: string; text: string }[] = [];
-  if (counts.earlyPriority > 0) segments.push({ strong: `${counts.earlyPriority} trường hợp`, text: "nên được ưu tiên rà soát trước" });
-  if (counts.newSignals > 0) segments.push({ strong: `${counts.newSignals} tín hiệu mới`, text: "được phát hiện" });
-  if (counts.pending > 0) segments.push({ strong: `${counts.pending} case`, text: "đang chờ thầy/cô duyệt" });
-  if (counts.active > 0) segments.push({ strong: `${counts.active} case`, text: "đang được theo dõi / hỗ trợ" });
-  if (counts.limitedData > 0) segments.push({ strong: `${counts.limitedData} case`, text: "dữ liệu còn hạn chế — hệ thống không kết luận khi thiếu dữ liệu" });
+  if (overviewCounts.earlyPriority > 0) segments.push({ strong: `${overviewCounts.earlyPriority} case`, text: "ở mức Ưu tiên sớm" });
+  if (overviewCounts.workflowNew > 0) segments.push({ strong: `${overviewCounts.workflowNew} case`, text: "đang ở trạng thái Tín hiệu mới" });
+  if (overviewCounts.pending > 0) segments.push({ strong: `${overviewCounts.pending} case`, text: "đang chờ thầy/cô duyệt" });
+  if (overviewCounts.active > 0) segments.push({ strong: `${overviewCounts.active} case`, text: "đang được theo dõi / hỗ trợ" });
+  if (overviewCounts.limitedReviewCases > 0) segments.push({ strong: `${overviewCounts.limitedReviewCases} case`, text: "có dữ liệu hạn chế — hệ thống không kết luận khi thiếu dữ liệu" });
+  if (overviewCounts.limitedStudents > 0) segments.push({ strong: `${overviewCounts.limitedStudents} sinh viên`, text: "có độ phủ dữ liệu hạn chế trong toàn cohort" });
 
   // 3 tool của EduSignal AI (plan.md §3.2). Các tool chỉ điều hướng tới route
   // đã có thật; trang Tổng quan không tự tính thêm band hay dữ liệu sinh viên.
-  const watched = items.filter((c) => c.case_state !== "dismissed" && c.case_state !== "resolved");
-  const watchStudents = new Set(watched.map((c) => c.student_ref)).size;
   const tools: { key: string; icon: string; title: string; desc: string; accent: string; onClick?: () => void; disabled?: boolean }[] = [
     {
       key: "report",
       icon: iconPaths.fileText,
       title: "Xuất báo cáo tổng thể",
-      desc: `${watchStudents} SV trong diện theo dõi · ${counts.newSignals} phát hiện mới — xem, in / lưu PDF`,
+      desc: `${overviewCounts.active} case đang theo dõi / hỗ trợ · ${overviewCounts.reviewCases} case trong hàng rà soát — xem, in / lưu PDF`,
       accent: "bg-[#fee2e2] text-[#dc2626]",
       onClick: () => setReportOpen(true),
     },
@@ -282,7 +332,7 @@ function OverviewHeader({
       key: "analyze",
       icon: iconPaths.search,
       title: "Danh sách rà soát",
-      desc: `${counts.total} case trên ${counts.students} sinh viên — lọc và mở phân tích chi tiết`,
+      desc: `${overviewCounts.reviewCases} case của ${overviewCounts.reviewStudents} sinh viên trên tổng ${overviewCounts.totalStudents} sinh viên`,
       accent: "bg-emerald-50 text-emerald-600",
       onClick: () => router.push("/analysis?tab=reviews"),
     },
@@ -332,17 +382,17 @@ function OverviewHeader({
             Chào <span className="text-[#dc2626]">{shortName}</span> 👋
           </h1>
           <p className="mt-2 text-slate-500 md:text-[15px]">
-            Chúc thầy/cô một ngày làm việc hiệu quả. EduSignal đã hoàn tất rà soát dữ liệu mới nhất.
+            Chúc thầy/cô một ngày làm việc hiệu quả. EduSignal đã tải bản tổng hợp từ snapshot được phê duyệt.
           </p>
           <p className="mt-1 text-slate-400 text-sm">
             Hệ thống <strong className="font-semibold text-slate-600">chỉ gợi ý</strong> — mọi quyết định do thầy/cô thực hiện.
           </p>
         </div>
-        {analyzedAt && (
+        {summary.source_extracted_at && (
           <span className="inline-flex items-center gap-2 self-start bg-white/80 border border-emerald-100 rounded-full px-4 py-2 shadow-sm shrink-0">
             <span className="ss-live-dot w-2 h-2 rounded-full bg-emerald-500 inline-block" aria-hidden />
             <span className="text-xs text-slate-600">
-              <strong className="font-semibold text-emerald-600">EduSignal AI</strong> · Đã phân tích dữ liệu lúc {formatAnalyzedAt(analyzedAt)}
+              <strong className="font-semibold text-emerald-600">EduSignal AI</strong> · Nguồn dữ liệu được trích xuất lúc {formatAnalyzedAt(summary.source_extracted_at)}
             </span>
           </span>
         )}
@@ -380,11 +430,13 @@ function OverviewHeader({
               </p>
               <p className="text-xl md:text-2xl font-bold text-slate-800 mt-3">Xin chào {shortName} 👋</p>
               {/* Bản tin duy nhất về kỳ dữ liệu — một đoạn, mọi số từ response */}
-              {counts.total > 0 ? (
+              {overviewCounts.totalStudents > 0 ? (
                 <p className="mt-2.5 text-[15px] text-slate-600 leading-relaxed">
-                  Trong kỳ dữ liệu này, tôi ghi nhận{" "}
-                  <strong className="font-semibold text-[#dc2626]">{counts.total} tín hiệu</strong> trên{" "}
-                  <strong className="font-semibold text-[#dc2626]">{counts.students} sinh viên</strong>
+                  Snapshot đã phê duyệt có{" "}
+                  <strong className="font-semibold text-[#dc2626]">{overviewCounts.totalStudents} sinh viên</strong>.{" "}
+                  Hệ thống đưa{" "}
+                  <strong className="font-semibold text-[#dc2626]">{overviewCounts.reviewCases} case</strong> của{" "}
+                  <strong className="font-semibold text-[#dc2626]">{overviewCounts.reviewStudents} sinh viên</strong> vào danh sách rà soát
                   {segments.length > 0 ? ": " : "."}
                   {segments.map((s, i) => (
                     <span key={s.strong + s.text}>
@@ -395,7 +447,7 @@ function OverviewHeader({
                 </p>
               ) : (
                 <p className="text-sm text-slate-500 mt-1.5">
-                  Chưa có tín hiệu mới cần chú ý trong kỳ dữ liệu này — tôi sẽ tiếp tục theo dõi.
+                  Snapshot hiện không có sinh viên để tổng hợp. Hệ thống không suy diễn số liệu thay thế.
                 </p>
               )}
               {isStale && (
@@ -411,16 +463,17 @@ function OverviewHeader({
                 <Icon path={iconPaths.arrowRight} className="w-4 h-4" />
               </button>
               {/* Nguồn của bản tin — snapshot/version thật từ response, không suy đoán */}
-              {latest && (
+              {summary.dataset_version && (
                 <p className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
-                  Snapshot {formatAnalyzedAt(analyzedAt)} · dataset {latest.dataset_version} · model {latest.model_version} — bản tin tính trực tiếp từ dữ liệu, chưa gọi model AI.
+                  Nguồn trích xuất {summary.source_extracted_at ? formatAnalyzedAt(summary.source_extracted_at) : "không có thời điểm"} · dataset {summary.dataset_version}
+                  {latest ? ` · model ${latest.model_version}` : ""} — bản tin tổng hợp trực tiếp từ API, chưa gọi model AI; chưa có dữ liệu so sánh với snapshot trước.
                 </p>
               )}
             </div>
           </div>
 
           {/* Ô hỏi nhanh — rule-based trên dữ liệu đã tải, KHÔNG gọi model (chat LLM là task lane Agent) */}
-          <AiQuickChat counts={counts} setTab={setTab} />
+          <AiQuickChat counts={overviewCounts} setTab={setTab} />
         </div>
       </div>
 
@@ -454,7 +507,16 @@ function OverviewHeader({
       </div>
 
       {/* Tool 1 — Báo cáo tổng thể (in / lưu PDF tại chỗ) */}
-      {reportOpen && <ReportModal items={items} onClose={() => setReportOpen(false)} onOpenCase={onOpenCase} />}
+      {reportOpen && (
+        <ReportModal
+          items={items}
+          onClose={() => setReportOpen(false)}
+          onOpenCase={(caseId) => {
+            setReportOpen(false);
+            onOpenCase(caseId);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -476,13 +538,25 @@ function formatAnalyzedAt(iso: string): string {
 
 type QuickAnswer = { a: string; action?: { label: string; tab: Tab } };
 
-function routeIntent(q: string, c: ReturnType<typeof computeCounts>): QuickAnswer {
+type OverviewCounts = {
+  totalStudents: number;
+  reviewCases: number;
+  reviewStudents: number;
+  workflowNew: number;
+  pending: number;
+  active: number;
+  earlyPriority: number;
+  limitedStudents: number;
+  limitedReviewCases: number;
+};
+
+function routeIntent(q: string, c: OverviewCounts): QuickAnswer {
   const s = q.toLowerCase();
   const has = (re: RegExp) => re.test(s);
 
   if (has(/ưu tiên|uu tien/)) {
     return {
-      a: `Hiện có ${c.earlyPriority} trường hợp ở mức Ưu tiên sớm (trên tổng ${c.total} tín hiệu).`,
+      a: `Hiện có ${c.earlyPriority} case ở mức Ưu tiên sớm (trên tổng ${c.reviewCases} case trong danh sách rà soát).`,
       action: { label: "Mở danh sách rà soát", tab: "reviews" },
     };
   }
@@ -494,7 +568,7 @@ function routeIntent(q: string, c: ReturnType<typeof computeCounts>): QuickAnswe
   }
   if (has(/mới|moi/)) {
     return {
-      a: `Kỳ này có ${c.newSignals} tín hiệu mới${c.newEarly > 0 ? `, trong đó ${c.newEarly} ở mức Ưu tiên sớm` : ""}.`,
+      a: `Có ${c.workflowNew} case đang ở trạng thái Tín hiệu mới. Chưa có snapshot so sánh nên không thể kết luận đây là số mới phát sinh trong kỳ.`,
       action: { label: "Mở danh sách rà soát", tab: "reviews" },
     };
   }
@@ -507,7 +581,7 @@ function routeIntent(q: string, c: ReturnType<typeof computeCounts>): QuickAnswe
   if (has(/sinh viên|sinh vien|\bsv\b|lớp|lop/)) {
     const note = has(/lớp|lop/) ? " Lọc theo lớp/khoa chưa có API — hiện tra cứu được theo mã SV." : "";
     return {
-      a: `Có ${c.students} sinh viên đang có tín hiệu trong kỳ này.${note}`,
+      a: `Snapshot có ${c.totalStudents} sinh viên; ${c.reviewStudents} sinh viên có case trong danh sách rà soát.${note}`,
       action: { label: "Mở danh sách rà soát", tab: "reviews" },
     };
   }
@@ -519,16 +593,16 @@ function routeIntent(q: string, c: ReturnType<typeof computeCounts>): QuickAnswe
   }
   if (has(/tín hiệu|tin hieu|theo dõi|theo doi|hỗ trợ|ho tro/)) {
     return {
-      a: `Tổng quan hiện tại: ${c.total} tín hiệu · ${c.newSignals} mới · ${c.pending} chờ duyệt · ${c.active} đang theo dõi/hỗ trợ.`,
+      a: `Tổng quan hiện tại: ${c.reviewCases} case cần rà soát trên ${c.totalStudents} sinh viên · ${c.pending} chờ duyệt · ${c.active} đang theo dõi/hỗ trợ.`,
       action: { label: "Mở danh sách rà soát", tab: "reviews" },
     };
   }
   return {
-    a: "Tôi chưa hỗ trợ câu này trong bản demo. Thử hỏi về: trường hợp ưu tiên, tín hiệu mới, case chờ duyệt, danh sách rà soát, dashboard hoặc ngưỡng.",
+    a: "Tôi chưa hỗ trợ câu này trong bản demo. Thử hỏi về: trường hợp ưu tiên, trạng thái case, case chờ duyệt, danh sách rà soát, dashboard hoặc ngưỡng.",
   };
 }
 
-function AiQuickChat({ counts, setTab }: { counts: ReturnType<typeof computeCounts>; setTab: (t: Tab) => void }) {
+function AiQuickChat({ counts, setTab }: { counts: OverviewCounts; setTab: (t: Tab) => void }) {
   const [q, setQ] = useState("");
   const [exchange, setExchange] = useState<{ q: string; answer: QuickAnswer } | null>(null);
 
@@ -663,9 +737,9 @@ function AnalyticsTab({
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-1">
               <KpiCard
-                label="Tín hiệu mới"
+                label="Trạng thái Tín hiệu mới"
                 value={counts.newSignals}
-                sub={counts.newEarly > 0 ? `${counts.newEarly} cần rà soát sớm` : "không có mức ưu tiên sớm"}
+                sub={counts.newEarly > 0 ? `${counts.newEarly} case ở mức Ưu tiên sớm` : "case đang ở bước đầu workflow"}
                 icon={iconPaths.activity}
                 color="amber"
               />
@@ -842,8 +916,16 @@ function CaseRowsTable({ items, onOpenCase }: { items: ReviewCase[]; onOpenCase:
                 <tr
                   key={c.case_id}
                   onClick={() => onOpenCase(c.case_id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onOpenCase(c.case_id);
+                    }
+                  }}
+                  tabIndex={0}
+                  aria-label={`Mở chi tiết case ${c.case_id} của ${c.student_ref}`}
                   title="Mở chi tiết case"
-                  className="cursor-pointer border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50/70"
+                  className="cursor-pointer border-b border-slate-100 transition-colors last:border-0 hover:bg-red-50/40 focus:bg-red-50/40 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-300"
                 >
                   <td className="p-4">
                     <span className="block text-sm font-semibold text-[#dc2626]">{c.student_ref}</span>

@@ -47,10 +47,10 @@ const ACTION_LABEL: Record<CaseAction, string> = {
 /** Dòng giải thích ngắn dưới mỗi nút (theo design 18/7) — trung lập, không phán xét. */
 const ACTION_HELP: Record<CaseAction, string> = {
   queue_for_review: "Chuyển tín hiệu vào hàng chờ để rà soát.",
-  approve: "Xác nhận đây là trường hợp cần hỗ trợ.",
+  approve: "Xác nhận đây là trường hợp cần hỗ trợ — bước trước khi gửi thông báo cho GVCN.",
   dismiss: "Xác nhận không cần hỗ trợ và lưu lý do chuẩn hóa.",
   defer: "Tạm hoãn rà soát; chọn thời điểm xem lại.",
-  assign: "Hệ thống tự tra cố vấn phụ trách từ nguồn đã duyệt.",
+  assign: "Bàn giao cho GVCN; hệ thống tự tra cố vấn phụ trách. Bước tiếp theo: soạn thông báo qua email kèm link đăng nhập.",
   accept: "Xác nhận đã tiếp nhận case được bàn giao.",
   resolve: "Kết thúc vòng hỗ trợ hiện tại.",
   monitor: "Chuyển sang theo dõi có thời hạn.",
@@ -133,8 +133,11 @@ export function CareActions({
   return (
     <aside style={panel}>
       <h2 style={h2}>THAO TÁC</h2>
-      <p style={{ margin: "0 0 0.85rem", fontSize: 12.5, color: "#94a3b8" }}>
+      <p style={{ margin: "0 0 0.6rem", fontSize: 12.5, color: "#94a3b8" }}>
         Trạng thái: <strong style={{ color: "#334155" }}>{CASE_STATE_LABEL[caseState]}</strong> · Ban quản lý
+      </p>
+      <p style={{ margin: "0 0 0.85rem", padding: "0.55rem 0.7rem", borderRadius: 8, background: "#f8fafc", border: "1px solid #eef2f7", fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>
+        Với Ban quản lý, một tín hiệu chỉ có hai kết cục: <strong style={{ color: "#b91c1c" }}>gửi thông báo cho GVCN</strong> (duyệt → bàn giao → soạn email) hoặc <strong style={{ color: "#334155" }}>loại</strong>. GVCN nhận email và tự quyết cách hỗ trợ.
       </p>
 
       {allowed.length === 0 && (
@@ -269,10 +272,10 @@ function describeError(err: TransitionErrorBody | null): string {
   }
 }
 
-const panel: CSSProperties = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "1.1rem 1.35rem", alignSelf: "start" };
+const panel: CSSProperties = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 16, padding: "1.25rem", alignSelf: "start", boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)" };
 const h2: CSSProperties = { margin: "0 0 0.4rem", fontSize: 13, color: "#64748b", letterSpacing: 0.3 };
 const btn: CSSProperties = { flexShrink: 0, minWidth: 128, padding: "9px 14px", borderRadius: 8, border: "1px solid #cbd5e1", background: "#fff", fontSize: 13.5, fontWeight: 600, cursor: "pointer", textAlign: "center", color: "#334155" };
-const btnPrimary: CSSProperties = { ...btn, border: "1px solid #2a78d6", background: "#2a78d6", color: "#fff" };
+const btnPrimary: CSSProperties = { ...btn, border: "1px solid #dc2626", background: "#dc2626", color: "#fff", boxShadow: "0 4px 10px rgba(220, 38, 38, 0.18)" };
 const input: CSSProperties = { width: "100%", maxWidth: 220, padding: "6px 9px", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: 13, fontFamily: "inherit" };
 const noticeWarn: CSSProperties = { marginTop: "0.75rem", padding: "0.7rem 0.9rem", borderRadius: 8, background: "#fffbeb", border: "1px solid #fde68a", color: "#92400e", fontSize: 13 };
 const noticeErr: CSSProperties = { marginTop: "0.75rem", padding: "0.7rem 0.9rem", borderRadius: 8, background: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", fontSize: 13 };

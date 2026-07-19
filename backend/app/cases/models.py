@@ -25,6 +25,8 @@ class CareReviewCase(AppBase):
         DateTime(timezone=True), nullable=True
     )
     mapping_repair_queued: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # GVCN "đã xem" receipt (H36 loop-closing); null until first opened.
+    viewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

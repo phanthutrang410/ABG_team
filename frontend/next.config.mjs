@@ -1,24 +1,27 @@
 /** @type {import('next').NextConfig} */
 
-// H27: on Vercel (HTTPS) the browser must not call the EC2 HTTP API directly
-// (mixed content). Empty NEXT_PUBLIC_API_BASE → same-origin fetch; rewrites
-// proxy to BACKEND_URL (or the known Live API host when unset on Vercel).
+// H27: browser calls stay same-origin locally and on Vercel. Rewrites proxy
+// to BACKEND_URL, avoiding mixed content and localhost/127.0.0.1 cookie drift.
 const isVercel = Boolean(process.env.VERCEL);
 const liveApiDefault = "http://52.74.255.88:8000";
+const localApiDefault = "http://localhost:8000";
 const backendUrl = (
-  process.env.BACKEND_URL || (isVercel ? liveApiDefault : "")
+  process.env.BACKEND_URL || (isVercel ? liveApiDefault : localApiDefault)
 ).replace(/\/+$/, "");
 
 const publicApiBase = (
   process.env.NEXT_PUBLIC_API_BASE !== undefined
     ? process.env.NEXT_PUBLIC_API_BASE
-    : isVercel
-      ? ""
-      : "http://localhost:8000"
+    : ""
 ).replace(/\/+$/, "");
+
+const distDir =
+  process.env.NEXT_DIST_DIR ||
+  (process.env.NODE_ENV === "development" ? ".next-dev" : ".next");
 
 const nextConfig = {
   reactStrictMode: true,
+  distDir,
   // Bake public API base at build time (client bundle).
   env: {
     NEXT_PUBLIC_API_BASE: publicApiBase,

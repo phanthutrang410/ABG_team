@@ -28,10 +28,7 @@ from app.ml.scoring import (
     DEFAULT_THRESHOLDS,
     MODEL_VERSION,
     ThresholdConfig,
-    band_for_score,
-    compute_model_score,
-    contributing_factors,
-    score_student,
+    score_record,
 )
 from app.ml.source_gate.gate import SOURCE_ALLOWLIST
 
@@ -183,15 +180,13 @@ def build_observations_mode_b(
             )
             continue
 
-        features = score_student(
+        scored = score_record(
             record,
             calculated_at=snapshot.extracted_at,
-            model_version=model_version,
-            threshold_config_version=thresholds.version,
+            thresholds=thresholds,
         )
-        score = compute_model_score(features)
-        band = band_for_score(score, thresholds)
-        factors = [f.code for f in contributing_factors(features)] if band is not None else []
+        band = scored.review_priority_band
+        factors = [factor.code for factor in scored.factors] if band is not None else []
         observations.append(
             SignalObservation(
                 snapshot_id=snapshot_id,
@@ -208,7 +203,7 @@ def build_observations_mode_b(
                     factor_codes=factors,
                     coverage_status=record.coverage.status,
                 ),
-                model_version=model_version,
+                model_version=scored.features.model_version,
             )
         )
     return observations

@@ -55,6 +55,8 @@ def _line_from_projection(
 
     if record is not None:
         class_code = record.class_code
+        coverage_status = record.coverage.status
+        coverage_reason_codes = list(record.coverage.reason_codes)
         projected = project_review_case(
             record,
             store,
@@ -83,7 +85,20 @@ def _line_from_projection(
     )
 
 
-def build_draft_text(cases: Sequence[HandoffDraftCaseLine]) -> AdvisorHandoffDraft:
+def _case_link(base_url: str, case_id: str) -> Optional[str]:
+    base = (base_url or "").rstrip("/")
+    if not base:
+        return None
+    # Login-gated deep link to the secured student detail (GVCN scope). The email
+    # body stays pseudonymous; the real data lives behind auth at this link.
+    return f"{base}/advisor?case={case_id}"
+
+
+def build_draft_text(
+    cases: Sequence[HandoffDraftCaseLine],
+    *,
+    base_url: str = "",
+) -> AdvisorHandoffDraft:
     lines: List[str] = [
         "Kính gửi Thầy/Cô,",
         "",
@@ -97,6 +112,17 @@ def build_draft_text(cases: Sequence[HandoffDraftCaseLine]) -> AdvisorHandoffDra
         factors = ", ".join(line.contributing_factor_codes) if line.contributing_factor_codes else "—"
         lines.append(
             f"- {line.student_ref}{class_part} · mức ưu tiên: {band} · tín hiệu: {factors}"
+        )
+        link = _case_link(base_url, line.case_id)
+        if link:
+            lines.append(f"  Xem chi tiết (đăng nhập): {link}")
+    if any(_case_link(base_url, c.case_id) for c in cases):
+        lines.extend(
+            [
+                "",
+                "Khoa đề nghị Thầy/Cô đăng nhập theo liên kết để xem thông tin sinh viên "
+                "và xác nhận tiếp nhận, nhằm hỗ trợ sinh viên kịp thời.",
+            ]
         )
     lines.extend(["", _FOOTER])
     body = "\n".join(lines)
@@ -114,6 +140,8 @@ def build_advisor_handoff_drafts(
     thresholds: ThresholdConfig = DEFAULT_THRESHOLDS,
     calculated_at: Optional[datetime] = None,
     session: Optional[Session] = None,
+    advisor_names: Optional[Dict[str, str]] = None,
+    base_url: str = "",
 ) -> AdvisorHandoffDraftListResponse:
     """Group eligible CaseStore snapshots by H08 advisor_ref (server-side)."""
     calc_at = calculated_at or datetime.now(timezone.utc)
@@ -164,15 +192,17 @@ def build_advisor_handoff_drafts(
         else:
             by_advisor[advisor].append(line)
 
+    names = advisor_names or {}
     bundles: List[AdvisorHandoffDraftBundle] = []
     for advisor_ref in sorted(by_advisor.keys()):
         cases = by_advisor[advisor_ref]
         bundles.append(
             AdvisorHandoffDraftBundle(
                 advisor_ref=advisor_ref,
+                advisor_display_name=names.get(advisor_ref),
                 case_count=len(cases),
                 cases=cases,
-                draft=build_draft_text(cases),
+                draft=build_draft_text(cases, base_url=base_url),
                 limitations=[_LIMITATION_NO_CONTACT],
             )
         )

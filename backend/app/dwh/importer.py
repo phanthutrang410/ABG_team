@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -103,7 +104,12 @@ def _domain_manifest(approval: ApprovalArtifact) -> DomainSourceManifest:
     )
 
 
-def _check_idempotent(session: Session, approval: ApprovalArtifact) -> Optional[ImportResult]:
+def _check_idempotent(
+    session: Session,
+    approval: ApprovalArtifact,
+    *,
+    equivalent_snapshot_sha256: Optional[str] = None,
+) -> Optional[ImportResult]:
     existing = session.get(SourceManifest, approval.source_id)
     if existing is None:
         return None
@@ -114,6 +120,19 @@ def _check_idempotent(session: Session, approval: ApprovalArtifact) -> Optional[
             snapshot_sha256=existing.snapshot_sha256,
             row_counts=_count_tables(session, approval.source_id),
             detail="same source_id+hash already loaded",
+        )
+    if (
+        equivalent_snapshot_sha256
+        and existing.snapshot_sha256 == equivalent_snapshot_sha256
+    ):
+        existing.snapshot_sha256 = approval.normalized_sha256
+        session.commit()
+        return ImportResult(
+            status="idempotent_skip",
+            source_id=approval.source_id,
+            snapshot_sha256=approval.normalized_sha256,
+            row_counts=_count_tables(session, approval.source_id),
+            detail="canonicalized equivalent CRLF package hash to approved LF hash",
         )
     return ImportResult(
         status="rejected",
@@ -201,8 +220,13 @@ def _persist_semester_dataset(
     *,
     approval: ApprovalArtifact,
     dataset: SemesterDataset,
+    equivalent_snapshot_sha256: Optional[str] = None,
 ) -> ImportResult:
-    conflict = _check_idempotent(session, approval)
+    conflict = _check_idempotent(
+        session,
+        approval,
+        equivalent_snapshot_sha256=equivalent_snapshot_sha256,
+    )
     if conflict is not None:
         return conflict
     session.rollback()
@@ -432,8 +456,12 @@ def import_semester(
     if isinstance(raw_payload, dict) and "student_dimension" in raw_payload:
         students = raw_payload.get("student_dimension")
         observed = len(students) if isinstance(students, list) else -1
+        # The approved package is a Git text artifact with LF bytes. Windows
+        # checkouts may materialize CRLF despite equivalent JSON content; gate
+        # the canonical repository byte form so provenance is cross-platform.
+        gate_bytes = raw_bytes.replace(b"\r\n", b"\n")
         snap_gate = evaluate_snapshot_bytes(
-            raw_bytes, use_approval, observed_record_count=observed
+            gate_bytes, use_approval, observed_record_count=observed
         )
         if not snap_gate.admitted:
             return _reject(use_approval.source_id, snap_gate)
@@ -457,7 +485,10 @@ def import_semester(
         factory = _session_factory(database_url)
         with factory() as session:
             return _persist_semester_dataset(
-                session, approval=use_approval, dataset=dataset
+                session,
+                approval=use_approval,
+                dataset=dataset,
+                equivalent_snapshot_sha256=hashlib.sha256(raw_bytes).hexdigest(),
             )
 
     # --- Raw V59 array (optional owner path / unit tests) -----------------------

@@ -6,14 +6,20 @@ Browser must not choose ``source_id`` / org / advisor scope — server derives t
 
 from __future__ import annotations
 
+from collections import Counter
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.auth.principal import Principal, require_active_role
-from app.auth.rbac import audit, principal_can_view_care_case, server_source_id
+from app.auth.principal import Principal, require_active_role, require_roles
+from app.auth.rbac import (
+    DEFAULT_CASE_ORG_SCOPE,
+    audit,
+    principal_can_view_care_case,
+    server_source_id,
+)
 from app.cases.review_projection import (
     is_snapshot_stale,
     project_list_items,
@@ -26,15 +32,19 @@ from app.contracts.integration import (
     CaseListResponse,
     IntegrationProblem,
 )
+from app.contracts.review_overview import ReviewOverviewSummary
 from app.contracts.review_case import ReviewCase
 from app.database import get_db
 from app.dwh.read_adapter import ReadAdapterError, get_normalized_student, list_normalized_students
+from app.dwh.models import SourceManifest
 from app.ml.scoring import DEFAULT_THRESHOLDS
 
 router = APIRouter(prefix="/review-cases", tags=["review-cases"])
 
 
-def _list_error(code: str = "upstream_unavailable", reason_codes: Optional[list] = None) -> CaseListResponse:
+def _list_error(
+    code: str = "upstream_unavailable", reason_codes: Optional[list] = None
+) -> CaseListResponse:
     return CaseListResponse(
         items=[],
         state="error",
@@ -45,7 +55,9 @@ def _list_error(code: str = "upstream_unavailable", reason_codes: Optional[list]
     )
 
 
-def _detail_error(code: str = "upstream_unavailable", reason_codes: Optional[list] = None) -> CaseDetailResponse:
+def _detail_error(
+    code: str = "upstream_unavailable", reason_codes: Optional[list] = None
+) -> CaseDetailResponse:
     return CaseDetailResponse(
         case=None,
         state="error",
@@ -69,6 +81,33 @@ def _filter_visible(principal: Principal, items: List[ReviewCase]) -> List[Revie
         ):
             visible.append(item)
     return visible
+
+
+def _source_extracted_at(db: Session, source_id: str) -> Optional[datetime]:
+    manifest = db.get(SourceManifest, source_id)
+    return manifest.extracted_at if manifest is not None else None
+
+
+def _summary_error(
+    source_id: str,
+    generated_at: datetime,
+    *,
+    reason_codes: Optional[list[str]] = None,
+) -> ReviewOverviewSummary:
+    return ReviewOverviewSummary(
+        state="error",
+        source_id=source_id,
+        generated_at=generated_at,
+        total_students=0,
+        review_case_count=0,
+        review_student_count=0,
+        limited_student_count=0,
+        limited_review_case_count=0,
+        problem=IntegrationProblem(
+            code="upstream_unavailable",
+            reason_codes=list(reason_codes or []),
+        ),
+    )
 
 
 @router.get("", response_model=CaseListResponse)
@@ -136,6 +175,160 @@ def list_review_cases(
             problem=IntegrationProblem(code="empty", reason_codes=[]),
         )
     return CaseListResponse(items=items, state="ok", problem=None)
+
+
+@router.get("/summary", response_model=ReviewOverviewSummary)
+def get_review_overview_summary(
+    principal: Principal = Depends(require_roles("ban_quan_ly")),
+    db: Session = Depends(get_db),
+) -> ReviewOverviewSummary:
+    """Organization snapshot denominator separated from the scoped review queue.
+
+    ``case_state=new_signal`` is reported only as a workflow-state count.  It is
+    never projected as a temporal "new since last snapshot" metric; that field
+    remains null until a real weekly delta is joined by a future contract.
+    """
+    source_id = server_source_id()
+    generated_at = datetime.now(timezone.utc)
+
+    if principal.org_scope != DEFAULT_CASE_ORG_SCOPE:
+        audit(
+            principal,
+            action="review_cases.summary",
+            resource_handle="review-cases/summary",
+            allowed=False,
+            db=db,
+        )
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "not_found", "message": "summary not found in scope"},
+        )
+
+    try:
+        records = list_normalized_students(db, source_id)
+        source_extracted_at = _source_extracted_at(db, source_id)
+    except ReadAdapterError as err:
+        audit(
+            principal,
+            action="review_cases.summary",
+            resource_handle="review-cases/summary",
+            allowed=False,
+            db=db,
+        )
+        return _summary_error(source_id, generated_at, reason_codes=err.reason_codes)
+    except Exception:
+        audit(
+            principal,
+            action="review_cases.summary",
+            resource_handle="review-cases/summary",
+            allowed=False,
+            db=db,
+        )
+        return _summary_error(source_id, generated_at)
+
+    if source_extracted_at is None:
+        audit(
+            principal,
+            action="review_cases.summary",
+            resource_handle="review-cases/summary",
+            allowed=False,
+            db=db,
+        )
+        return _summary_error(
+            source_id,
+            generated_at,
+            reason_codes=["source_manifest_missing"],
+        )
+
+    dataset_versions = {record.dataset_version for record in records}
+    if len(dataset_versions) > 1:
+        audit(
+            principal,
+            action="review_cases.summary",
+            resource_handle="review-cases/summary",
+            allowed=False,
+            db=db,
+        )
+        return _summary_error(
+            source_id,
+            generated_at,
+            reason_codes=["mixed_dataset_version"],
+        )
+
+    items = project_list_items(
+        records,
+        store,
+        thresholds=DEFAULT_THRESHOLDS,
+        calculated_at=generated_at,
+        session=db,
+    )
+    items = _filter_visible(principal, items)
+
+    coverage_counts = Counter(record.coverage.status for record in records)
+    priority_counts = Counter(item.review_priority_band for item in items)
+    case_state_counts = Counter(item.case_state for item in items)
+    review_data_counts = Counter(item.data_state for item in items)
+
+    source_is_stale = is_snapshot_stale(source_extracted_at)
+    projection_is_stale = any(is_snapshot_stale(item.calculated_at) for item in items)
+    stale = source_is_stale or projection_is_stale
+
+    audit(
+        principal,
+        action="review_cases.summary",
+        resource_handle="review-cases/summary",
+        allowed=True,
+        db=db,
+    )
+
+    state = "empty" if not records else "stale" if stale else "ok"
+    problem = (
+        IntegrationProblem(code="stale_snapshot", reason_codes=["stale_snapshot"])
+        if stale
+        else None
+    )
+    return ReviewOverviewSummary(
+        state=state,
+        source_id=source_id,
+        dataset_version=next(iter(dataset_versions), None),
+        source_extracted_at=source_extracted_at,
+        generated_at=generated_at,
+        total_students=len(records),
+        review_case_count=len(items),
+        review_student_count=len({item.student_ref for item in items}),
+        limited_student_count=sum(1 for record in records if record.coverage.status != "ok"),
+        limited_review_case_count=sum(1 for item in items if item.data_state != "ok"),
+        priority_band_counts={
+            "uu_tien_som": priority_counts["uu_tien_som"],
+            "can_ra_soat": priority_counts["can_ra_soat"],
+        },
+        case_state_counts={
+            state_code: case_state_counts[state_code]
+            for state_code in (
+                "new_signal",
+                "pending_review",
+                "approved_for_follow_up",
+                "dismissed",
+                "assigned",
+                "follow_up_in_progress",
+                "resolved",
+                "monitoring",
+            )
+        },
+        student_coverage_counts={
+            "ok": coverage_counts["ok"],
+            "partial": coverage_counts["partial"],
+            "insufficient": coverage_counts["insufficient"],
+        },
+        review_data_state_counts={
+            "ok": review_data_counts["ok"],
+            "partial": review_data_counts["partial"],
+            "insufficient_data": review_data_counts["insufficient_data"],
+        },
+        comparison_status="unavailable",
+        new_since_previous_snapshot=None,
+        problem=problem,
+    )
 
 
 @router.get("/{case_id}", response_model=CaseDetailResponse)

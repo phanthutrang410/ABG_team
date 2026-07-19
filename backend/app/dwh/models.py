@@ -411,6 +411,7 @@ class MlTermSnapshot(Base):
     contributing_factors_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     # Internal only — never project to public API / agent context.
     model_score: Mapped[Optional[Decimal]] = mapped_column(Numeric(6, 4), nullable=True)
+    artifact_sha256: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     explain_schema_version: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     agent_explain_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     evidence_fingerprint: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)

@@ -46,6 +46,11 @@ class AdvisorHandoffDraftBundle(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     advisor_ref: str = Field(min_length=1)
+    # Human-facing name for the routing pseudonym, resolved server-side from the
+    # authenticated advisor directory (auth_account.display_name where
+    # advisor_scope == advisor_ref). None when no account maps to the ref.
+    # Shown only to ban_quan_ly on this endpoint; never a student attribute.
+    advisor_display_name: Optional[str] = None
     case_count: int = Field(ge=0)
     cases: List[HandoffDraftCaseLine] = Field(default_factory=list)
     draft: AdvisorHandoffDraft

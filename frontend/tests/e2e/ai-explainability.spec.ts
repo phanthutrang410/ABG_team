@@ -1,5 +1,14 @@
 import { expect, test } from "@playwright/test";
-import { caseListOk, json, mockCaseDetail, mockCaseList, reviewCase, useDemoSession } from "./support";
+import {
+  caseListOk,
+  json,
+  mockCaseDetail,
+  mockCaseList,
+  mockReviewOverviewSummary,
+  reviewCase,
+  reviewOverviewSummaryOk,
+  useDemoSession,
+} from "./support";
 
 test.beforeEach(async ({ page }) => {
   await useDemoSession(page, "quanly", "ban_quan_ly");
@@ -90,11 +99,20 @@ test("trợ lý điều hướng trả lời từ đúng dữ liệu đang hiể
     ...caseListOk,
     items: [reviewCase, { ...reviewCase, case_id: "case_pseudo_002", student_ref: "stu_pseudo_002", review_priority_band: "uu_tien_som" }],
   });
+  await mockReviewOverviewSummary(page, {
+    ...reviewOverviewSummaryOk,
+    review_case_count: 2,
+    review_student_count: 2,
+    limited_review_case_count: 2,
+    priority_band_counts: { uu_tien_som: 1, can_ra_soat: 1 },
+    case_state_counts: { ...reviewOverviewSummaryOk.case_state_counts, pending_review: 2 },
+    review_data_state_counts: { ok: 0, partial: 2, insufficient_data: 0 },
+  });
   await page.goto("/overview");
 
   await page.getByLabel("Hỏi nhanh EduSignal AI").fill("Có bao nhiêu trường hợp ưu tiên?");
   await page.getByRole("button", { name: "Gửi câu hỏi" }).click();
 
-  await expect(page.getByText("Hiện có 1 trường hợp ở mức Ưu tiên sớm (trên tổng 2 tín hiệu).", { exact: true })).toBeVisible();
-  await expect(page.getByText("Trợ lý điều hướng trả lời dựa trên dữ liệu đang hiển thị.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Hiện có 1 case ở mức Ưu tiên sớm (trên tổng 2 case trong danh sách rà soát).", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Trợ lý điều hướng \(demo\).*dữ liệu đang hiển thị/)).toBeVisible();
 });

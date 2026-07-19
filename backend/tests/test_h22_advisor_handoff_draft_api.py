@@ -57,8 +57,8 @@ def _record(
     grades = [
         NormalizedTermGrade(term_code="20241", course_ref="c1", credits=3.0, final_grade=9.0),
         NormalizedTermGrade(term_code="20241", course_ref="c2", credits=3.0, final_grade=8.5),
-        NormalizedTermGrade(term_code="20251", course_ref="c1", credits=3.0, final_grade=4.0),
-        NormalizedTermGrade(term_code="20251", course_ref="c2", credits=3.0, final_grade=3.5),
+        NormalizedTermGrade(term_code="20251", course_ref="c1", credits=3.0, final_grade=4.0, grade_status="Không đạt"),
+        NormalizedTermGrade(term_code="20251", course_ref="c2", credits=3.0, final_grade=3.5, grade_status="Không đạt"),
     ]
     return NormalizedStudentRecord(
         student_ref=student_ref,
