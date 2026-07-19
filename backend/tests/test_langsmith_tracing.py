@@ -174,7 +174,7 @@ def test_run_turn_still_works_with_tracing_hooks() -> None:
         principal,
         model=None,
     )
-    assert response.status is TurnStatus.OK
+    assert response.status is TurnStatus.UNAVAILABLE
     # Provider-off keeps deterministic cards but must not fabricate an action.
     assert response.selected_capability is None
     assert response.ui_actions

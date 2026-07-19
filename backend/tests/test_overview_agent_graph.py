@@ -151,7 +151,7 @@ def test_overview_tool_emits_selected_capability(
 def test_overview_hallucinated_tool_clarifies_zero_selected() -> None:
     model = ScriptedModel([_route("tool", "run_workflow")])
     response = run_turn(_req(question="Mở gì cũng được"), _LEADER, model=model)
-    assert response.status == TurnStatus.OK
+    assert response.status == TurnStatus.UNAVAILABLE
     assert response.selected_capability is None
     assert response.ui_actions != []
     assert model.calls == 1
@@ -205,7 +205,7 @@ def test_overview_forbidden_send_approve_transition_zero_effect(question: str) -
 def test_overview_provider_unavailable_still_returns_cards() -> None:
     model = FailingModel()
     response = run_turn(_req(question="Tóm tắt Overview"), _LEADER, model=model)
-    assert response.status == TurnStatus.OK
+    assert response.status == TurnStatus.UNAVAILABLE
     assert response.selected_capability is None
     assert response.ui_actions != []
     assert {a.key for a in response.ui_actions} == set(_OVERVIEW_CAPS)
@@ -284,12 +284,13 @@ def test_out_of_scope_person_and_hometown_guardrail() -> None:
         "ai quê Hải Phòng",
     ):
         response = run_turn(_req(question=q), _LEADER, model=model)
-        assert response.status == TurnStatus.OK
+        assert response.status == TurnStatus.REFUSED
+        assert response.refusal_reason == TurnRefusalReason.SENSITIVE_DATA
         assert response.selected_capability is None
-        assert response.evidence_refs == ["route:out_of_scope_topic"]
-        assert "quê quán" in response.answer_vi or "cá nhân" in response.answer_vi
+        assert response.evidence_refs == []
+        assert "tra cứu" in response.answer_vi
         assert "comparison_status" not in response.answer_vi
-        assert {a.key for a in response.ui_actions} == set(_OVERVIEW_CAPS)
+        assert response.ui_actions == []
     assert model.calls == 0
 
 

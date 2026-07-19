@@ -129,7 +129,9 @@ export function AgentDrawer() {
           )}
         </div>
 
-        {lastUiActions.length > 0 && latestAssistant?.status === "ok" && (
+        {lastUiActions.length > 0
+          && (latestAssistant?.status === "ok" || latestAssistant?.status === "unavailable")
+          && (
           <div style={actionsRow} aria-label="Hành động gợi ý">
             {lastUiActions.map((action) => (
               <button

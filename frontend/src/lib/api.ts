@@ -364,7 +364,7 @@ const AGENT_REFUSAL_REASONS = new Set([
   "unsafe_inference_requested",
 ]);
 
-function isAgentTurnResponse(body: unknown): body is AgentTurnResponse {
+export function isAgentTurnResponse(body: unknown): body is AgentTurnResponse {
   if (!body || typeof body !== "object") return false;
   const b = body as Record<string, unknown>;
   if (

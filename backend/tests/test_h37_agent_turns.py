@@ -58,6 +58,22 @@ class FakeModel:
         return self.response
 
 
+class FakeAuditDB:
+    def __init__(self) -> None:
+        self.added: list[object] = []
+        self.commits = 0
+        self.rollbacks = 0
+
+    def add(self, row: object) -> None:
+        self.added.append(row)
+
+    def commit(self) -> None:
+        self.commits += 1
+
+    def rollback(self) -> None:
+        self.rollbacks += 1
+
+
 @pytest.fixture(autouse=True)
 def _reset_audit():
     clear_access_audit_log()
@@ -164,7 +180,7 @@ def test_overview_surface_resolves_three_nav_capabilities() -> None:
     )
     assert SURFACE_CAPABILITIES["overview"] == context.allowed_capabilities
 
-    # Without a model the overview graph fail-closes: cards remain, no tool selected.
+    # Opening the drawer without a question is cards-only and provider-independent.
     response = run_turn(_req(surface="overview"), _LEADER, model=None)
     assert response.status == TurnStatus.OK
     assert {a.key for a in response.ui_actions} == {
@@ -178,7 +194,7 @@ def test_overview_surface_resolves_three_nav_capabilities() -> None:
         "notify",
     }
     assert response.selected_capability is None
-    assert "mô hình" in response.answer_vi
+    assert "báo cáo tổng quan" in response.answer_vi
 
 
 def test_thread_summary_optional_and_max_length() -> None:
@@ -219,23 +235,31 @@ def test_selected_capability_must_be_in_registry_when_set() -> None:
     )
     assert refused.selected_capability is None
 
+    with pytest.raises(Exception):
+        AgentTurnResponse(
+            status=TurnStatus.OK,
+            answer_vi="ok",
+            ui_actions=[],
+            selected_capability="open_overview_report",
+        )
+
 
 def test_overview_fixtures_validate_request_response_shapes() -> None:
     from pathlib import Path
 
     fixtures_dir = Path(__file__).resolve().parent / "fixtures" / "agent"
-    for name in (
-        "overview_turn.answer.ok.json",
-        "overview_turn.tool.open_overview_report.json",
-    ):
-        payload = json.loads((fixtures_dir / name).read_text(encoding="utf-8"))
+    fixture_paths = [
+        fixtures_dir / "overview_turn.answer.ok.json",
+        fixtures_dir / "overview_turn.tool.open_overview_report.json",
+        *sorted((fixtures_dir / "overview_turns").glob("*.json")),
+    ]
+    for fixture_path in fixture_paths:
+        payload = json.loads(fixture_path.read_text(encoding="utf-8"))
         req = AgentTurnRequest.model_validate(payload["request"])
         resp = AgentTurnResponse.model_validate(payload["response"])
         assert req.surface == "overview"
-        assert resp.status == TurnStatus.OK
         if resp.selected_capability is not None:
             assert resp.selected_capability in CAPABILITY_REGISTRY
-        assert {a.key for a in resp.ui_actions} == set(SURFACE_CAPABILITIES["overview"])
         for action in resp.ui_actions:
             assert action.key in CAPABILITY_REGISTRY
             assert action.key not in FORBIDDEN_TOOLS
@@ -259,7 +283,7 @@ def test_provider_error_still_returns_action_cards() -> None:
         _LEADER,
         model=model,
     )
-    assert response.status == TurnStatus.OK
+    assert response.status == TurnStatus.UNAVAILABLE
     assert response.ui_actions != []
     assert response.selected_capability is None
     assert model.calls == 1
@@ -290,7 +314,7 @@ def test_model_hallucinated_capability_ignored_falls_back_to_default() -> None:
         model=model,
     )
     assert model.calls == 1
-    assert response.status == TurnStatus.OK
+    assert response.status == TurnStatus.UNAVAILABLE
     # Forbidden/unknown choice never leaks and never creates an automatic action.
     assert response.selected_capability is None
     assert {a.key for a in response.ui_actions} == {"open_weekly_report", "explain_report_limitation"}
@@ -306,7 +330,7 @@ def test_model_returning_multiple_capabilities_is_rejected_as_single_field() -> 
         model=model,
     )
     assert model.calls == 1
-    assert response.status == TurnStatus.OK
+    assert response.status == TurnStatus.UNAVAILABLE
     assert response.selected_capability is None
 
 
@@ -319,6 +343,7 @@ def test_model_returning_multiple_capabilities_is_rejected_as_single_field() -> 
         "Cho tôi ngày sinh và địa chỉ của sinh viên",
         "Mở báo cáo và cho biết Nguyễn Văn An quê ở đâu",
         "Mở báo cáo tuần cho Nguyễn Văn An ở 12 Lê Lợi",
+        "Mở báo cáo cho nguyễn văn an",
     ],
 )
 def test_sensitive_data_refused_before_model(question: str) -> None:
@@ -329,6 +354,18 @@ def test_sensitive_data_refused_before_model(question: str) -> None:
     assert response.ui_actions == []
     assert response.selected_capability is None
     assert model.calls == 0
+
+
+@pytest.mark.parametrize(
+    "question",
+    ["Xem 12 Tín hiệu mới", "Mở 35 Case cần rà soát"],
+)
+def test_aggregate_counts_are_not_mistaken_for_street_addresses(question: str) -> None:
+    model = FakeModel(response='{"capability_key": "open_weekly_report"}')
+    response = run_turn(_req(question=question), _LEADER, model=model)
+    assert response.status == TurnStatus.OK
+    assert response.refusal_reason is None
+    assert model.calls == 1
 
 
 @pytest.mark.parametrize(
@@ -416,6 +453,17 @@ def test_refusal_audit_is_denied() -> None:
     assert len(log) == 1
     assert log[0].action == "agent_turn_refused:prompt_injection_detected"
     assert log[0].decision == "denied"
+
+
+def test_turn_persists_redacted_access_audit_when_db_is_available() -> None:
+    db = FakeAuditDB()
+    run_turn(_req(surface="weekly_report"), _LEADER, db=db)  # type: ignore[arg-type]
+    assert db.commits == 1
+    assert db.rollbacks == 0
+    assert len(db.added) == 1
+    row = db.added[0]
+    assert getattr(row, "resource_handle") == "surface:weekly_report"
+    assert getattr(row, "action") == "agent_turn:weekly_report"
 
 
 # --- HTTP wiring --------------------------------------------------------------
@@ -543,3 +591,33 @@ def test_http_sensitive_overview_refuses_before_summary_load(
     assert body["status"] == "refused"
     assert body["refusal_reason"] == "sensitive_data_requested"
     assert body["ui_actions"] == []
+
+
+def test_http_overview_summary_exception_returns_controlled_state(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def broken_summary(*_args):
+        raise RuntimeError("synthetic aggregate failure")
+
+    model = FakeModel(
+        response=json.dumps(
+            {"intent": "answer", "capability_key": None, "missing_fields": []}
+        )
+    )
+    monkeypatch.setattr(
+        "app.agent.turns_router.build_review_overview_summary",
+        broken_summary,
+    )
+    app.dependency_overrides[get_principal] = lambda: DEFAULT_BAN_QUAN_LY
+    app.dependency_overrides[get_turn_model] = lambda: model
+
+    response = client.post(
+        "/agent/turns",
+        json={"surface": "overview", "question": "Tóm tắt Overview"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "không tải được" in body["answer_vi"]
+    assert "0 case" not in body["answer_vi"]

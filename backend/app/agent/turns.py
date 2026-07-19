@@ -243,8 +243,12 @@ _SENSITIVE_LOOKUP_PATTERN = re.compile(
     r"(?i)\b(mssv|student[ _-]?id|sđt|so dien thoai|số điện thoại|"
     r"email\s+(của|cua)|ngày sinh|ngay sinh|địa chỉ|dia chi|"
     r"quê(?:\s+quán|\s+ở|\s+đâu)?|que(?:\s+quan|\s+o|\s+dau)?|"
-    r"tiểu sử|tieu su|thông tin cá nhân|thong tin ca nhan|"
-    r"là\s+(?:ai|thằng nào|người nào)|la\s+(?:ai|thang nao|nguoi nao))\b"
+    r"tiểu sử|tieu su|thông tin cá nhân|thong tin ca nhan)\b"
+)
+_THIRD_PARTY_LOOKUP_PATTERN = re.compile(
+    r"(?i)\b(?:thằng|thang|đứa|dua|ông|ong|cô|chị|chi|anh|sinh\s+viên|sinh\s+vien)"
+    r"\s+[a-zà-ỹđ]{2,}(?:\s+[a-zà-ỹđ]{2,}){0,3}"
+    r"\s+(?:là|la)\s+(?:ai|thằng\s+nào|thang\s+nao|người\s+nào|nguoi\s+nao)\b"
 )
 # A likely full Vietnamese personal name. Requiring at least three components
 # catches lower-case names too without treating ordinary two-word phrases as a
@@ -283,6 +287,7 @@ def _scan_forbidden(text: Optional[str]) -> Optional[TurnRefusalReason]:
         _EMAIL_PATTERN.search(text)
         or _PHONE_PATTERN.search(text)
         or _SENSITIVE_LOOKUP_PATTERN.search(text)
+        or _THIRD_PARTY_LOOKUP_PATTERN.search(text)
         or _PERSON_NAME_CONTEXT_PATTERN.search(text)
         or _STREET_ADDRESS_PATTERN.search(text)
     ):
