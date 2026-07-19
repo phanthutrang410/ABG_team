@@ -1,0 +1,6 @@
+{
+  "commands": [
+    "set -euo pipefail",
+    "docker exec silent-shield-api python -c \"import json, urllib.request; pw='demo123'\nfor u in ('quanly','gvcn','demo'):\n  req=urllib.request.Request('http://127.0.0.1:8000/auth/login', data=json.dumps({'username':u,'password':pw}).encode(), headers={'Content-Type':'application/json'}, method='POST')\n  with urllib.request.urlopen(req) as resp:\n    body=json.load(resp)\n  print(u, 'login_ok', body.get('active_role'), body.get('roles'))\nprint('demo123_ok_all_three')\""
+  ]
+}
