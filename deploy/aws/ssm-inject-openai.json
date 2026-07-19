@@ -1,0 +1,30 @@
+{
+  "commands": [
+    "set -euo pipefail",
+    "REGION=ap-southeast-1",
+    "PARAM_KEY=/silent-shield/live/OPENAI_API_KEY",
+    "PARAM_MODEL=/silent-shield/live/OPENAI_MODEL",
+    "PARAM_BASE=/silent-shield/live/OPENAI_BASE_URL",
+    "OPENAI_API_KEY=$(aws ssm get-parameter --name \"$PARAM_KEY\" --with-decryption --query Parameter.Value --output text --region \"$REGION\")",
+    "OPENAI_MODEL=$(aws ssm get-parameter --name \"$PARAM_MODEL\" --with-decryption --query Parameter.Value --output text --region \"$REGION\")",
+    "OPENAI_BASE_URL=$(aws ssm get-parameter --name \"$PARAM_BASE\" --with-decryption --query Parameter.Value --output text --region \"$REGION\" 2>/dev/null || echo https://api.openai.com)",
+    "test -n \"$OPENAI_API_KEY\"",
+    "test -n \"$OPENAI_MODEL\"",
+    "IMAGE=$(docker inspect silent-shield-api --format '{{.Config.Image}}')",
+    "docker inspect silent-shield-api --format '{{range .Config.Env}}{{println .}}{{end}}' > /tmp/silent-shield-api.env",
+    "grep -v '^OPENAI_API_KEY=' /tmp/silent-shield-api.env | grep -v '^OPENAI_MODEL=' | grep -v '^OPENAI_BASE_URL=' > /tmp/silent-shield-api.env.tmp || true",
+    "mv /tmp/silent-shield-api.env.tmp /tmp/silent-shield-api.env",
+    "printf 'OPENAI_API_KEY=%s\\n' \"$OPENAI_API_KEY\" >> /tmp/silent-shield-api.env",
+    "printf 'OPENAI_MODEL=%s\\n' \"$OPENAI_MODEL\" >> /tmp/silent-shield-api.env",
+    "printf 'OPENAI_BASE_URL=%s\\n' \"$OPENAI_BASE_URL\" >> /tmp/silent-shield-api.env",
+    "unset OPENAI_API_KEY OPENAI_MODEL OPENAI_BASE_URL",
+    "docker rm -f silent-shield-api",
+    "docker run -d --name silent-shield-api --restart unless-stopped --network silent-shield-net -p 8000:8000 --env-file /tmp/silent-shield-api.env \"$IMAGE\"",
+    "rm -f /tmp/silent-shield-api.env",
+    "sleep 5",
+    "docker ps --filter name=silent-shield-api --format '{{.Names}} {{.Image}} {{.Status}}'",
+    "curl -sS http://127.0.0.1:8000/health",
+    "echo",
+    "docker inspect silent-shield-api --format '{{range .Config.Env}}{{println .}}{{end}}' | sed -E 's/(PASSWORD|SECRET|KEY|TOKEN|DATABASE_URL|OPENAI_API_KEY|FPT_API_KEY)=.*/\\1=SET/' | grep -E '^(OPENAI_|APP_ENV|LINKED_)' || true"
+  ]
+}

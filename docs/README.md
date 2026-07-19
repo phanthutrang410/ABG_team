@@ -78,6 +78,8 @@ docs/
 | 11 | [Advisor-batch mail draft](04-engineering/11-advisor-batch-mail-draft.md) | FR-12: `GET /advisor-handoff-drafts` (H22 Done); G06 FE Copy/`mailto:` |
 | 12 | [Agent runtime integration & hardening — lịch sử](04-engineering/12-agent-runtime-integration-plan.md) | H23–H26 Done (backend HTTP; mocked FPT); không phải provider/Global Agent target |
 | 13 | [Weekly snapshot + Global Agent target architecture](04-engineering/13-weekly-snapshot-global-agent-architecture.md) | OpenAI target, mock feed tuần, durable delta/report, global shell, tool/RBAC và backlog H28a–H38/D6 |
+| 15b | [Agent eval scorecard (offline)](04-engineering/15-agent-eval-scorecard.md) | 6 metric slide-ready; disclaimer offline — khác `15-ml-eval-synthetic` |
+| 17 | [Báo cáo 50 test case agent eval](04-engineering/17-agent-eval-50-report.md) | Danh sách SS-01…50 + score task/tool/grounding/latency/cost; evidence T05/slide |
 
 ## Thứ tự ưu tiên khi có mâu thuẫn
 

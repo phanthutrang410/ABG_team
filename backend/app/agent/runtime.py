@@ -32,6 +32,11 @@ from app.agent.schemas import (
     RefusalReason,
 )
 from app.agent.stub import explain as explain_stub
+from app.agent.tracing import (
+    redact_explanation_inputs,
+    redact_explanation_outputs,
+    trace_agent_run,
+)
 from app.config import Settings, get_settings
 from app.dwh.importer import SEMESTER_SOURCE_ID
 
@@ -101,6 +106,11 @@ def _openai_key_configured(settings: Settings) -> bool:
     return bool(str(secret or "").strip())
 
 
+@trace_agent_run(
+    "case_explanation",
+    process_inputs=redact_explanation_inputs,
+    process_outputs=redact_explanation_outputs,
+)
 def run_explanation(
     case_id: str,
     command: AgentCommand,

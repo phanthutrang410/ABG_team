@@ -177,12 +177,11 @@ def list_review_cases(
     return CaseListResponse(items=items, state="ok", problem=None)
 
 
-@router.get("/summary", response_model=ReviewOverviewSummary)
-def get_review_overview_summary(
-    principal: Principal = Depends(require_roles("ban_quan_ly")),
-    db: Session = Depends(get_db),
+def build_review_overview_summary(
+    principal: Principal,
+    db: Session,
 ) -> ReviewOverviewSummary:
-    """Organization snapshot denominator separated from the scoped review queue.
+    """Build the trusted organization aggregate for HTTP and Agent consumers.
 
     ``case_state=new_signal`` is reported only as a workflow-state count.  It is
     never projected as a temporal "new since last snapshot" metric; that field
@@ -329,6 +328,15 @@ def get_review_overview_summary(
         new_since_previous_snapshot=None,
         problem=problem,
     )
+
+
+@router.get("/summary", response_model=ReviewOverviewSummary)
+def get_review_overview_summary(
+    principal: Principal = Depends(require_roles("ban_quan_ly")),
+    db: Session = Depends(get_db),
+) -> ReviewOverviewSummary:
+    """Organization snapshot denominator separated from the scoped review queue."""
+    return build_review_overview_summary(principal, db)
 
 
 @router.get("/{case_id}", response_model=CaseDetailResponse)

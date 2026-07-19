@@ -381,14 +381,16 @@ export type AgentTurnSurface =
   | "advisor_drafts"
   | "overview";
 
-export type AgentTurnStatus = "ok" | "refused";
+export type AgentTurnStatus = "ok" | "refused" | "unavailable";
 
 /** Machine-readable turn refusal — zero side effects when set. */
 export type AgentTurnRefusalReason =
   | "forbidden_tool_requested"
   | "out_of_scope_surface"
   | "prompt_injection_detected"
-  | "arbitrary_url_or_sql_requested";
+  | "arbitrary_url_or_sql_requested"
+  | "sensitive_data_requested"
+  | "unsafe_inference_requested";
 
 /** Overview nav allowlist only (Workstream B). Unknown keys must be rejected by FE. */
 export type AgentRouteKey = "overview.report" | "analysis.reviews" | "notify";
@@ -404,7 +406,7 @@ export type AgentTurnRequest = {
   resource_handle?: string | null;
   question?: string | null;
   locale: "vi";
-  /** FE-derived structured facts only (≤800); never raw history dump / PII. */
+  /** Deprecated compatibility field; backend accepts but ignores it. */
   thread_summary?: string | null;
 };
 
@@ -415,4 +417,21 @@ export type AgentTurnResponse = {
   ui_actions: AgentUIAction[];
   refusal_reason: AgentTurnRefusalReason | null;
   selected_capability: string | null;
+};
+
+/** SSE phases from POST /agent/turns/stream (status events). */
+export type AgentTurnStreamPhase =
+  | "guardrails"
+  | "context"
+  | "route"
+  | "answer"
+  | "tool"
+  | "clarify"
+  | "output_guard";
+
+export type AgentTurnStreamHandlers = {
+  onStatus?: (phase: AgentTurnStreamPhase | string) => void;
+  onDelta?: (text: string) => void;
+  onDone?: (response: AgentTurnResponse) => void;
+  onError?: (messageVi: string) => void;
 };

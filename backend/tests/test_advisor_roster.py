@@ -12,7 +12,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.auth.principal import Principal, get_principal
-from app.cases.store import InMemoryCaseStore, store as global_store
+from app.cases.store import InMemoryCaseStore
 from app.config import get_settings
 from app.database import get_db
 from app.dwh.importer import import_semester
@@ -91,14 +91,6 @@ def roster_client(roster_db_url: str, monkeypatch: pytest.MonkeyPatch):
             db.close()
 
     mem = InMemoryCaseStore()
-    # Patch module-level store used by roster builder
-    import app.cases.advisor_roster as roster_mod
-    import app.cases.advisor_roster_router as roster_router_mod
-
-    previous = global_store
-    monkeypatch.setattr(roster_mod, "store", mem, raising=False)
-    # router imports store at call time via build_advisor_roster(..., store)
-    # build uses store from advisor_roster_router → cases.store
     monkeypatch.setattr("app.cases.advisor_roster_router.store", mem)
 
     app.dependency_overrides[get_db] = _override_db

@@ -1,0 +1,7 @@
+{
+  "commands": [
+    "set -euo pipefail",
+    "docker exec silent-shield-api sh -c 'python -c \"import app.agent.overview_graph as m; print(m.__file__)\"'",
+    "docker exec silent-shield-api sh -c 'ls -la /app/app/agent/overview_graph.py /app/app/agent/prompts/overview_system_v1.md 2>/dev/null || ls -la $(python -c \"import app.agent.overview_graph as m, os; print(os.path.dirname(m.__file__))\")'"
+  ]
+}

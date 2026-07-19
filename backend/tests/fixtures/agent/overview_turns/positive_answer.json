@@ -1,18 +1,17 @@
 {
   "id": "OV-ANS-01",
-  "description": "Tiny eval — positive grounded answer (no tool). selected_capability null; cards still listed for care navigation.",
+  "description": "Tiny eval — deterministic grounded Overview answer; no machine-field prose and no selected tool.",
   "expected_route": "answer",
   "request": {
     "surface": "overview",
     "resource_handle": null,
     "question": "Tóm tắt tín hiệu trên Overview giúp tôi.",
-    "locale": "vi",
-    "thread_summary": "User asked for overview summary; no tool requested yet."
+    "locale": "vi"
   },
   "response": {
     "status": "ok",
-    "answer_vi": "Trên Overview hiện có tín hiệu tổng hợp có thể so sánh được theo packet server. Phần dữ liệu thiếu hoặc cũ được đánh dấu insufficient_data/stale — không suy diễn thành ổn định. Anh/chị có thể dùng thẻ bên dưới nếu muốn mở báo cáo, danh sách rà soát hoặc bản nháp GVCN.",
-    "evidence_refs": ["overview:facts"],
+    "answer_vi": "Em đang hỗ trợ trên màn Overview. Các con số chi tiết (tổng sinh viên, số case trong danh sách tổng quan) sẽ hiện khi dữ liệu tổng hợp đã sẵn sàng — em không tự bịa số. So sánh với tuần trước hiện chưa sẵn sàng. Anh/chị có thể mở báo cáo tổng quan, danh sách rà soát, hoặc bản nháp thông báo GVCN bằng các thẻ bên dưới.",
+    "evidence_refs": ["route:answer", "review_overview:organization"],
     "ui_actions": [
       {
         "key": "open_overview_report",

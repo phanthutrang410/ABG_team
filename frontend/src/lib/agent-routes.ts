@@ -4,7 +4,7 @@
  * model-invented URLs.
  */
 
-import type { AgentRouteKey } from "@/lib/types";
+import type { AgentRouteKey, AgentUIAction } from "@/lib/types";
 
 /** Query that OverviewHeader watches to open ReportModal after navigate. */
 export const OVERVIEW_REPORT_QUERY = "report";
@@ -16,21 +16,36 @@ const ROUTE_KEY_HREFS: Record<AgentRouteKey, string> = {
   notify: "/notify",
 };
 
-/** Capabilities that auto-navigate when selected for a turn. */
-export const NAV_CAPABILITIES: ReadonlySet<string> = new Set([
-  "open_overview_report",
-  "open_review_list",
-  "open_advisor_drafts",
-]);
-
-const CAPABILITY_TO_ROUTE_KEY: Record<string, AgentRouteKey> = {
-  open_overview_report: "overview.report",
-  open_review_list: "analysis.reviews",
-  open_advisor_drafts: "notify",
+const SUPPORTED_ACTIONS: Record<
+  string,
+  { label_vi: string; route_key: AgentRouteKey }
+> = {
+  open_overview_report: {
+    label_vi: "Xem báo cáo tổng quan",
+    route_key: "overview.report",
+  },
+  open_review_list: {
+    label_vi: "Xem danh sách rà soát",
+    route_key: "analysis.reviews",
+  },
+  open_advisor_drafts: {
+    label_vi: "Soạn thông báo cho GVCN (bản nháp)",
+    route_key: "notify",
+  },
 };
 
 export function isAgentRouteKey(value: string): value is AgentRouteKey {
   return Object.prototype.hasOwnProperty.call(ROUTE_KEY_HREFS, value);
+}
+
+/** Exact shipped action registry; rejects dead, relabelled, or mismatched cards. */
+export function isSupportedAgentAction(action: AgentUIAction): boolean {
+  const expected = SUPPORTED_ACTIONS[action.key];
+  return Boolean(
+    expected
+    && expected.route_key === action.route_key
+    && expected.label_vi === action.label_vi,
+  );
 }
 
 /** Resolve href for an allowlisted route_key; null if unknown (reject). */
@@ -50,12 +65,6 @@ export function navigateAgentRouteKey(router: RouterPush, routeKey: string): boo
   if (!href) return false;
   router.push(href);
   return true;
-}
-
-/** Map selected_capability → allowlisted route_key when it is a nav tool. */
-export function routeKeyForCapability(capability: string | null | undefined): AgentRouteKey | null {
-  if (!capability || !NAV_CAPABILITIES.has(capability)) return null;
-  return CAPABILITY_TO_ROUTE_KEY[capability] ?? null;
 }
 
 /** Page → surface for POST /agent/turns (deny-by-default server registry). */

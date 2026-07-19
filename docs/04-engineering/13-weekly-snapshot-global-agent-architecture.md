@@ -264,6 +264,7 @@ POST /me/agent-briefings/{briefing_id}/shown
 POST /me/agent-briefings/{briefing_id}/acknowledge
 GET /advisor-handoff-drafts?report_id={report_id}
 POST /agent/turns
+POST /agent/turns/stream
 ```
 
 Tất cả scope do backend suy từ session. GVCN không được gửi `advisor_ref` hay `source_id` để mở rộng scope; Ban quản lý có filter hợp lệ nhưng backend vẫn áp organization scope.
@@ -358,45 +359,105 @@ API data không được dùng để huấn luyện theo mặc định, nhưng a
 
 Adversarial/red-team tests và human review trước hành động thực tế là release gate, không phải mục hậu kiểm tùy chọn; xem [OpenAI safety best practices](https://developers.openai.com/api/docs/guides/safety-best-practices) và ranh giới chặt hơn trong Ethics của dự án.
 
-### 11.2 Agent turn contract
+### 11.2 Agent turn contract hiện hành
 
-Request public tối thiểu:
+`POST /agent/turns` nhận đúng body Pydantic bên dưới; trường ngoài schema bị từ chối:
 
 ```json
 {
-  "message": "Cho tôi xem các tín hiệu mới tuần này",
-  "locale": "vi",
-  "page_context": {
-    "surface": "dashboard",
-    "resource_handle": null
-  }
+  "surface": "overview",
+  "resource_handle": null,
+  "question": "Tóm tắt tín hiệu trên Overview giúp tôi.",
+  "locale": "vi"
 }
 ```
 
-Server thực hiện:
+`surface` là chuỗi bắt buộc nhưng chỉ role × surface có trong allowlist mới được xử lý.
+`resource_handle` và `question` có thể là `null`; `locale` hiện chỉ nhận `vi`.
+`thread_summary` vẫn được chấp nhận tạm thời để tương thích client cũ nhưng backend bỏ qua hoàn
+toàn: nó không đi vào guardrail, trusted context hay model prompt. Browser hiện hành không gửi
+trường này.
 
-```text
-authenticate → resolve role/scope → input guard → resolve safe page context
-→ derive allowed capability IDs → optional one OpenAI tool decision
-→ execute one read/draft-preview tool → semantic output guard
-→ return controlled copy + evidence refs + allowlisted UI action
-```
-
-Response:
+Response Pydantic hiện hành:
 
 ```json
 {
   "status": "ok",
-  "message_vi": "Có 9 tín hiệu mới trong báo cáo tuần đã khóa.",
-  "evidence_refs": [{"kind": "weekly_report", "handle": "<report-id>"}],
-  "cards": [{"capability_id": "filter_new_detections", "label_vi": "Xem 9 tín hiệu mới"}],
-  "ui_action": null,
-  "requires_human_approval": false,
-  "limitations_vi": null
+  "answer_vi": "Em đang hỗ trợ trên màn Overview. Anh/chị có thể dùng các thẻ bên dưới để mở phần đã được cấp quyền.",
+  "evidence_refs": ["route:answer", "review_overview:organization"],
+  "ui_actions": [
+    {
+      "key": "open_overview_report",
+      "label_vi": "Xem báo cáo tổng quan",
+      "route_key": "overview.report"
+    }
+  ],
+  "refusal_reason": null,
+  "selected_capability": null
 }
 ```
 
-Không dùng OpenAI Conversations persistence ở phase đầu. Ứng dụng giữ state theo session ngắn, không memory xuyên case; route/role change reset context. Long-running weekly processing thuộc workflow worker, không dùng model background task.
+Contract khóa các bất biến sau:
+
+- `status ∈ {ok, refused, unavailable}`;
+- `refused` luôn có `refusal_reason`, không có `ui_actions` và
+  `selected_capability=null`; reason code hiện gồm `forbidden_tool_requested`,
+  `out_of_scope_surface`, `prompt_injection_detected`, `arbitrary_url_or_sql_requested`,
+  `sensitive_data_requested` và `unsafe_inference_requested`;
+- `unavailable` có `refusal_reason=null`, `selected_capability=null`; các capability card
+  deterministic đã được cấp quyền vẫn có thể được trả để người dùng tự điều hướng;
+- mỗi `ui_actions[]` phải khớp chính xác `key`, `label_vi` và `route_key` trong registry;
+  `selected_capability`, nếu có, phải trỏ tới một card đã được trả;
+- evidence chỉ là reference do server cấp, không echo `resource_handle` chưa được trusted
+  resolver xác thực.
+
+### 11.3 Bounded routing DAG: phần đã chạy và phần đích
+
+Runtime hiện hành dùng **bounded routing DAG**, không dùng ReAct lặp tự do:
+
+```text
+authenticate → resolve role/scope → input guard → resolve trusted/safe context
+→ derive allowed capability IDs → tối đa một structured model route
+→ deterministic backend render → output guard → controlled response
+```
+
+- Không có vòng `observe → re-plan`, provider retry ẩn, chain-of-thought public hay model call
+  thứ hai để viết lại prose; mỗi turn có tối đa một model call và một capability decision.
+- Slice **đã triển khai cho Overview của Ban quản lý** tải aggregate đã authorize từ review
+  summary, chiếu thành facts tối thiểu, cho model chỉ route, rồi backend render câu trả lời và
+  capability cards. Browser không gửi facts hay lịch sử hội thoại thô.
+- Các surface ngoài Overview hiện mới có role × surface allowlist, route decision và template/card
+  deterministic. `resource_handle` của chúng chưa được trusted resolver load/authorize và chưa có
+  read hoặc draft-preview executor trong Agent turn.
+- Kiến trúc **đích** cho non-Overview sẽ thêm resolver theo từng resource type và tối đa một
+  executor read-only/draft-preview đã scope server-side trước bước render. Phần đích này không được
+  suy diễn là đã có, và cũng không mở capability write/send/approve/assign/transition.
+- Route/case/role đổi phải reset transient UI thread; navigation chỉ xảy ra khi người dùng hoặc UI
+  dùng đúng card backend đã cấp, không tái tạo route từ model output.
+
+Phần hardening contract này không thay đổi trạng thái Sprint và không được dùng để claim `G07`
+hoặc `T05` đã Done.
+
+### 11.4 SSE contract hiện hành
+
+`POST /agent/turns/stream` nhận cùng `AgentTurnRequest` và trả `text/event-stream` với các event:
+
+| Event | Data JSON | Quy tắc |
+|:--|:--|:--|
+| `status` | `{"phase":"guardrails|context|route|answer|tool|clarify|output_guard"}` | Chỉ là tên phase, không chứa prompt, facts hay chain-of-thought |
+| `delta` | `{"text":"..."}` | Chỉ phát cho response `status=ok`; text là các đoạn cắt từ `answer_vi` đã qua output guard |
+| `done` | Toàn bộ `AgentTurnResponse` | Event cuối của turn thành công, refused hoặc unavailable |
+| `error` | `{"code":"unavailable","message_vi":"..."}` | Fail-closed khi runtime lỗi trước lúc phát frame; không lộ exception/stack và không phát `done` sau đó |
+
+Đây là **buffered/faux-token SSE**: backend chạy xong bounded DAG và output guard trước, sau đó mới
+phát lại các phase và chia câu trả lời thành `delta`. Nó không stream token trực tiếp từ OpenAI,
+không giảm provider time-to-first-token và không làm thay đổi giới hạn một model call. Lỗi
+auth/schema từ dependency vẫn theo HTTP error contract; lỗi context/runtime bên trong handler
+được ghi log server và kết thúc bằng đúng một event `error` có kiểm soát.
+
+Không dùng OpenAI Conversations persistence ở phase đầu. Ứng dụng giữ state theo session ngắn,
+không memory xuyên case; route/role change reset context. Long-running weekly processing thuộc
+workflow worker, không dùng model background task.
 
 ## 12. Notify page và mail draft
 

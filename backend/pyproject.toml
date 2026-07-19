@@ -28,6 +28,9 @@ dev = [
 ml = [
   "scikit-learn>=1.5,<1.7",
 ]
+observability = [
+  "langsmith>=0.3.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

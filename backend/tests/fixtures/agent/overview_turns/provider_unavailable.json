@@ -1,18 +1,17 @@
 {
   "id": "OV-PROV-01",
-  "description": "Tiny eval — provider unavailable / missing key: fail-closed template, status remains ok (no unavailable on AgentTurnResponse), capability cards still returned so care UI can navigate.",
+  "description": "Tiny eval — provider unavailable / missing key: fail closed without auto-selection; safe capability cards remain available.",
   "expected_route": "provider_unavailable",
   "request": {
     "surface": "overview",
     "resource_handle": null,
     "question": "Tóm tắt tín hiệu trên Overview giúp tôi.",
-    "locale": "vi",
-    "thread_summary": null
+    "locale": "vi"
   },
   "response": {
-    "status": "ok",
-    "answer_vi": "Mô hình tạm thời không phản hồi. Anh/chị vẫn có thể dùng các thẻ điều hướng bên dưới để mở báo cáo tổng quan, danh sách rà soát hoặc bản nháp thông báo GVCN — hệ thống care/report không phụ thuộc LLM.",
-    "evidence_refs": ["capability:open_overview_report"],
+    "status": "unavailable",
+    "answer_vi": "Trợ lý tạm thời không kết nối được mô hình. Anh/chị vẫn có thể dùng các thẻ điều hướng bên dưới để mở báo cáo tổng quan, danh sách rà soát hoặc bản nháp thông báo.",
+    "evidence_refs": ["route:provider_unavailable"],
     "ui_actions": [
       {
         "key": "open_overview_report",
@@ -31,6 +30,6 @@
       }
     ],
     "refusal_reason": null,
-    "selected_capability": "open_overview_report"
+    "selected_capability": null
   }
 }

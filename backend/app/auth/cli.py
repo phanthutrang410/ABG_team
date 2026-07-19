@@ -31,9 +31,6 @@ from app.database import get_session_factory, init_schemas
 from app.dwh.partition_demo import ADVISOR_REFS
 
 SEED_ORG_SCOPE = "org-demo"
-# Legacy single-advisor scope kept only for historical fixtures; seed remaps
-# gvcn/demo onto the first demo partition so they never see all 460.
-LEGACY_ADVISOR_SCOPE = "a-240eb01d2805"
 DEFAULT_LECTURER_SCOPE = ADVISOR_REFS[0]
 
 # (username, actor_id, display_name, roles, advisor_scope)
