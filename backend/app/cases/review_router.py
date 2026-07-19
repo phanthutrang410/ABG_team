@@ -20,7 +20,6 @@ from app.auth.rbac import (
     principal_can_view_care_case,
     server_source_id,
 )
-from app.cases.class_scope import build_class_scope_map
 from app.cases.review_projection import (
     is_snapshot_stale,
     project_list_items,
@@ -70,23 +69,15 @@ def _detail_error(
     )
 
 
-def _filter_visible(
-    principal: Principal,
-    items: List[ReviewCase],
-    class_map: Optional[dict] = None,
-) -> List[ReviewCase]:
+def _filter_visible(principal: Principal, items: List[ReviewCase]) -> List[ReviewCase]:
     visible: List[ReviewCase] = []
     for item in items:
         snap = store.get(item.case_id)
         advisor_ref = snap.advisor_ref if snap else None
-        student_class_scope = (
-            class_map.get(item.student_ref) if class_map is not None else None
-        )
         if principal_can_view_care_case(
             principal,
             case_advisor_ref=advisor_ref,
             case_state=item.case_state,
-            student_class_scope=student_class_scope,
         ):
             visible.append(item)
     return visible
@@ -155,14 +146,7 @@ def list_review_cases(
         calculated_at=calculated_at,
         session=db,
     )
-    # Class-roster overlay is resolved over the FULL roster (every student in the
-    # snapshot), not only the flagged items, so class boundaries stay stable.
-    class_map = (
-        build_class_scope_map(r.student_ref for r in records)
-        if principal.active_role == "gvcn"
-        else None
-    )
-    items = _filter_visible(principal, items, class_map)
+    items = _filter_visible(principal, items)
     audit(
         principal,
         action="review_cases.list",
@@ -407,16 +391,6 @@ def get_review_case(
             problem=IntegrationProblem(code="not_found", reason_codes=["student_not_found"]),
         )
 
-    # Resolve the class-roster overlay scope for this student (gvcn only). Built
-    # over the full snapshot roster so the split matches the list endpoint.
-    student_class_scope: Optional[str] = None
-    if principal.active_role == "gvcn":
-        try:
-            all_refs = [r.student_ref for r in list_normalized_students(db, source_id)]
-            student_class_scope = build_class_scope_map(all_refs).get(student_ref)
-        except Exception:
-            student_class_scope = None  # fail closed to legacy handoff scope
-
     calculated_at = datetime.now(timezone.utc)
     if record.coverage.status == "insufficient":
         case = project_review_case(
@@ -431,7 +405,6 @@ def get_review_case(
             principal,
             case_advisor_ref=snap.advisor_ref if snap else None,
             case_state=case.case_state,
-            student_class_scope=student_class_scope,
         ):
             audit(
                 principal,
@@ -490,7 +463,6 @@ def get_review_case(
             principal,
             case_advisor_ref=snap.advisor_ref if snap else None,
             case_state=case.case_state,
-            student_class_scope=student_class_scope,
         )
     ):
         audit(

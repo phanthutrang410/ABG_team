@@ -1,7 +1,27 @@
 {
   "commands": [
     "set -euo pipefail",
-    "docker exec silent-shield-api python -c \"from app.config import get_settings; from app.database import init_schemas, get_session_factory; from app.auth.cli import seed_accounts; get_settings.cache_clear(); pw=get_settings().auth_seed_password.get_secret_value(); assert pw.strip(), 'empty_seed'; init_schemas(); Session=get_session_factory(); db=Session(); print('auth_seeded', seed_accounts(db, pw)); db.close()\"",
-    "curl -sS http://127.0.0.1:8000/health; echo"
+    "REGION=ap-southeast-1",
+    "PARAM=/silent-shield/d460/AUTH_SEED_PASSWORD",
+    "echo '=== fetch AUTH_SEED_PASSWORD from Parameter Store (SecureString) ==='",
+    "AUTH_SEED_PASSWORD=$(aws ssm get-parameter --name \"$PARAM\" --with-decryption --query Parameter.Value --output text --region \"$REGION\")",
+    "test -n \"$AUTH_SEED_PASSWORD\"",
+    "echo '=== ensure container env has AUTH_SEED_PASSWORD (no echo of secret) ==='",
+    "docker inspect silent-shield-api --format '{{range .Config.Env}}{{println .}}{{end}}' > /tmp/silent-shield-api.env",
+    "grep -v '^AUTH_SEED_PASSWORD=' /tmp/silent-shield-api.env > /tmp/silent-shield-api.env.tmp || true",
+    "mv /tmp/silent-shield-api.env.tmp /tmp/silent-shield-api.env",
+    "printf 'AUTH_SEED_PASSWORD=%s\\n' \"$AUTH_SEED_PASSWORD\" >> /tmp/silent-shield-api.env",
+    "IMAGE=$(docker inspect silent-shield-api --format '{{.Config.Image}}')",
+    "docker rm -f silent-shield-api",
+    "docker run -d --name silent-shield-api --restart unless-stopped --network silent-shield-net -p 8000:8000 --env-file /tmp/silent-shield-api.env \"$IMAGE\"",
+    "rm -f /tmp/silent-shield-api.env",
+    "unset AUTH_SEED_PASSWORD",
+    "sleep 5",
+    "echo '=== python -m app.auth.cli seed ==='",
+    "docker exec silent-shield-api python -m app.auth.cli seed",
+    "echo '=== health ==='",
+    "curl -sS http://127.0.0.1:8000/health; echo",
+    "echo '=== auth smoke (login quanly → Cookie header → /review-cases) ==='",
+    "docker exec silent-shield-api python -c \"import json, urllib.request; from app.config import get_settings; get_settings.cache_clear(); pw=get_settings().auth_seed_password.get_secret_value(); assert pw.strip(), 'empty_seed'; req=urllib.request.Request('http://127.0.0.1:8000/auth/login', data=json.dumps({'username':'quanly','password':pw}).encode(), headers={'Content-Type':'application/json'}, method='POST');\nwith urllib.request.urlopen(req) as resp:\n  login=json.load(resp); cookie=(resp.headers.get('Set-Cookie') or '').split(';',1)[0]\nprint('login_ok', {k:login.get(k) for k in ('account_id','active_role','roles')}); cases=json.load(urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8000/review-cases', headers={'Cookie':cookie}))); print('list_state', cases.get('state'), 'n', len(cases.get('items') or []))\""
   ]
 }

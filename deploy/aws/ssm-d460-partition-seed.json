@@ -1,0 +1,13 @@
+{
+  "commands": [
+    "set -euo pipefail",
+    "REGION=ap-southeast-1",
+    "echo '=== partition-advisor-demo ==='",
+    "docker exec silent-shield-api python -m app.dwh.cli partition-advisor-demo",
+    "echo '=== auth seed (AUTH_SEED_PASSWORD + AUTH_LECTURER_SEEDS from container env) ==='",
+    "docker exec silent-shield-api python -m app.auth.cli seed",
+    "echo '=== roster smoke (4 scopes × 115) ==='",
+    "docker exec silent-shield-api python -c \"import json, urllib.request; from app.config import get_settings; from app.dwh.partition_demo import ADVISOR_REFS, CHUNK_SIZE; get_settings.cache_clear(); pw=get_settings().auth_seed_password.get_secret_value(); lect=json.loads(get_settings().auth_lecturer_seeds.get_secret_value() or '[]'); pw_by={i['username']:i['password'] for i in lect};\nusers=[('duy.bk',ADVISOR_REFS[0]),('hoang.nv',ADVISOR_REFS[1]),('trang.pt',ADVISOR_REFS[2]),('giang.nt',ADVISOR_REFS[3])]; seen=set()\nfor u,expect in users:\n  login_pw=pw_by.get(u) or pw\n  req=urllib.request.Request('http://127.0.0.1:8000/auth/login', data=json.dumps({'username':u,'password':login_pw}).encode(), headers={'Content-Type':'application/json'}, method='POST')\n  with urllib.request.urlopen(req) as resp:\n    body=json.load(resp); cookie=(resp.headers.get('Set-Cookie') or '').split(';',1)[0]\n  roster=json.load(urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8000/advisor/roster', headers={'Cookie':cookie})))\n  assert roster.get('state')=='ok', roster\n  assert len(roster.get('classes') or [])==1\n  n=roster['classes'][0]['student_count']\n  refs={s['student_ref'] for s in roster['classes'][0]['students']}\n  assert n==CHUNK_SIZE and len(refs)==CHUNK_SIZE\n  assert refs.isdisjoint(seen)\n  seen |= refs\n  print(u, 'roster_ok', n)\nassert len(seen)==CHUNK_SIZE*4\nprint('all_lecturer_rosters_disjoint_ok')\"",
+    "curl -sS http://127.0.0.1:8000/health; echo"
+  ]
+}

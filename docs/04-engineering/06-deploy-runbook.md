@@ -101,7 +101,8 @@ Equivalent CLI steps (from `backend/`):
 python -c "from app.dwh.migrate import upgrade_head; from app.config import get_settings; upgrade_head(get_settings().database_url)"
 python -m app.dwh.cli import-semester
 python -m app.dwh.cli import-attendance
-python -m app.auth.cli seed          # requires AUTH_SEED_PASSWORD
+python -m app.dwh.cli partition-advisor-demo   # 4×115 overlay; does not change package hash
+python -m app.auth.cli seed          # AUTH_SEED_PASSWORD (+ optional AUTH_LECTURER_SEEDS)
 python -m app.dwh.cli materialize-ml
 python -m app.dwh.cli rollup-attendance-week
 python -m app.dwh.cli readiness

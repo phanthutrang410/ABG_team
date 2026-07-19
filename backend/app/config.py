@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # H29 target provider
     openai_api_key: SecretStr = SecretStr("")
     openai_base_url: str = "https://api.openai.com"
-    openai_model: str = "gpt-4.1-mini"
+    openai_model: str = "gpt-5.4-nano"
     openai_max_output_tokens: int = Field(default=512, ge=1, le=512)
     openai_max_response_bytes: int = Field(default=16 * 1024, ge=1, le=16 * 1024)
     # Legacy H23–H26 FPT settings (inactive path after H29; kept for historical tests)
@@ -50,6 +50,8 @@ class Settings(BaseSettings):
 
     # H39a — auth seed password (CLI only; never log/commit plaintext)
     auth_seed_password: SecretStr = SecretStr("")
+    # Optional JSON array: [{"username":"duy.bk","password":"..."}, ...]
+    auth_lecturer_seeds: SecretStr = SecretStr("")
 
     # Decision #27 — MVP linked semester↔attendance namespace (H08 join).
     # Empty / pending → Mode B (no join). Active handle enables join on same student_ref.

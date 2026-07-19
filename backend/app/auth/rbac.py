@@ -63,27 +63,7 @@ def principal_can_view_care_case(
     case_advisor_ref: Optional[str],
     case_state: Optional[str],
     case_org: str = DEFAULT_CASE_ORG_SCOPE,
-    student_class_scope: Optional[str] = None,
 ) -> bool:
-    """Care/review visibility for the current principal.
-
-    ``student_class_scope`` is the class-roster overlay scope for the case's
-    student (``app.cases.class_scope``). When it matches a ``gvcn`` principal's
-    ``advisor_scope`` the case is visible in ANY state — the lecturer owns the
-    whole class roster. Callers that do not resolve the overlay (e.g. the
-    ``/cases`` workflow API) pass ``None`` and keep the legacy handoff semantics:
-    a ``gvcn`` then only sees cases assigned to them in a post-handoff state.
-    """
-    # Roster overlay path: a lecturer sees every case for a student in their own
-    # class, regardless of case state or whether a case has been assigned yet.
-    if (
-        principal.active_role == "gvcn"
-        and student_class_scope
-        and principal.org_scope == case_org
-        and principal.advisor_scope
-        and principal.advisor_scope == student_class_scope
-    ):
-        return True
     if not can_access_case(principal, case_advisor_ref, case_org):
         return False
     if principal.active_role == "gvcn":

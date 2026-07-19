@@ -1,0 +1,25 @@
+{
+  "commands": [
+    "set -euo pipefail",
+    "REGION=ap-southeast-1",
+    "PARAM_SEED=/silent-shield/d460/AUTH_SEED_PASSWORD",
+    "PARAM_LECT=/silent-shield/d460/AUTH_LECTURER_SEEDS",
+    "IMAGE=$(docker inspect silent-shield-api --format '{{.Config.Image}}')",
+    "docker inspect silent-shield-api --format '{{range .Config.Env}}{{println .}}{{end}}' > /tmp/silent-shield-api.env",
+    "AUTH_SEED_PASSWORD=$(aws ssm get-parameter --name \"$PARAM_SEED\" --with-decryption --query Parameter.Value --output text --region \"$REGION\")",
+    "AUTH_LECTURER_SEEDS=$(aws ssm get-parameter --name \"$PARAM_LECT\" --with-decryption --query Parameter.Value --output text --region \"$REGION\")",
+    "python3 -c \"import json,sys; json.loads(sys.argv[1]); print('lecturer_json_ok')\" \"$AUTH_LECTURER_SEEDS\"",
+    "grep -v '^AUTH_SEED_PASSWORD=' /tmp/silent-shield-api.env | grep -v '^AUTH_LECTURER_SEEDS=' > /tmp/silent-shield-api.env.tmp || true",
+    "mv /tmp/silent-shield-api.env.tmp /tmp/silent-shield-api.env",
+    "printf 'AUTH_SEED_PASSWORD=%s\\n' \"$AUTH_SEED_PASSWORD\" >> /tmp/silent-shield-api.env",
+    "printf 'AUTH_LECTURER_SEEDS=%s\\n' \"$AUTH_LECTURER_SEEDS\" >> /tmp/silent-shield-api.env",
+    "unset AUTH_SEED_PASSWORD AUTH_LECTURER_SEEDS",
+    "docker rm -f silent-shield-api",
+    "docker run -d --name silent-shield-api --restart unless-stopped --network silent-shield-net -p 8000:8000 --env-file /tmp/silent-shield-api.env \"$IMAGE\"",
+    "rm -f /tmp/silent-shield-api.env",
+    "sleep 5",
+    "docker exec silent-shield-api python -m app.auth.cli seed",
+    "docker exec silent-shield-api python -c \"import json, urllib.request; from app.config import get_settings; from app.dwh.partition_demo import ADVISOR_REFS, CHUNK_SIZE; get_settings.cache_clear(); pw=get_settings().auth_seed_password.get_secret_value(); lect=json.loads(get_settings().auth_lecturer_seeds.get_secret_value() or '[]'); pw_by={i['username']:i['password'] for i in lect};\nusers=[('duy.bk',ADVISOR_REFS[0]),('hoang.nv',ADVISOR_REFS[1]),('trang.pt',ADVISOR_REFS[2]),('giang.nt',ADVISOR_REFS[3])]; seen=set()\nfor u,_ in users:\n  login_pw=pw_by.get(u) or pw\n  req=urllib.request.Request('http://127.0.0.1:8000/auth/login', data=json.dumps({'username':u,'password':login_pw}).encode(), headers={'Content-Type':'application/json'}, method='POST')\n  with urllib.request.urlopen(req) as resp:\n    body=json.load(resp); cookie=(resp.headers.get('Set-Cookie') or '').split(';',1)[0]\n  roster=json.load(urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8000/advisor/roster', headers={'Cookie':cookie})))\n  assert roster.get('state')=='ok', roster\n  n=roster['classes'][0]['student_count']\n  refs={s['student_ref'] for s in roster['classes'][0]['students']}\n  assert n==CHUNK_SIZE and refs.isdisjoint(seen)\n  seen |= refs\n  print(u, 'roster_ok', n)\nassert len(seen)==CHUNK_SIZE*4\nprint('all_lecturer_rosters_disjoint_ok')\"",
+    "curl -sS http://127.0.0.1:8000/health; echo"
+  ]
+}

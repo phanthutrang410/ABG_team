@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { GlobalAgentProvider } from "@/components/GlobalAgentProvider";
 import { SessionProvider } from "@/lib/session";
 
 export const metadata: Metadata = {
@@ -12,7 +13,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi">
       <body>
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider>
+          {/* Provider above AppShell remounts so thread survives route changes. */}
+          <GlobalAgentProvider>{children}</GlobalAgentProvider>
+        </SessionProvider>
       </body>
     </html>
   );

@@ -42,7 +42,7 @@ python -m app.dwh.cli readiness
 
 ```text
 LINKED_NAMESPACE_APPROVAL=approval:mvp-linked-v59-att:v1:acfb7d80dc3a
-AUTH_SEED_PASSWORD=<operator secret — SSM /silent-shield/d460/AUTH_SEED_PASSWORD>
+AUTH_SEED_PASSWORD=demo123
 ```
 
 ## Deferred

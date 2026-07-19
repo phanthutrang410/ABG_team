@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import threading
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 from urllib import error, request
 from urllib.parse import urlparse
 
@@ -69,7 +69,7 @@ def assert_no_forbidden_request_keys(body: dict[str, Any]) -> None:
 class OpenAIResponsesClient:
     api_key: str
     base_url: str = DEFAULT_BASE_URL
-    model: str = "gpt-4.1-mini"
+    model: str = "gpt-5.4-nano"
     timeout_seconds: float = 30.0
     max_output_tokens: int = 512
     max_concurrent: int = DEFAULT_MAX_CONCURRENT
@@ -128,6 +128,43 @@ class OpenAIResponsesClient:
         )
 
     def complete(self, *, system: str, user: str) -> str:
+        return self._complete_raw(system=system, user=user, text_format=None)
+
+    def complete_json(
+        self,
+        *,
+        system: str,
+        user: str,
+        schema: dict[str, Any],
+        name: str = "result",
+    ) -> dict[str, Any]:
+        """Responses API structured JSON (store=false). Returns a parsed object."""
+        if not isinstance(schema, dict) or not schema:
+            raise ModelUnavailable("JSON schema is required")
+        text_format = {
+            "format": {
+                "type": "json_schema",
+                "name": name[:64] or "result",
+                "strict": True,
+                "schema": schema,
+            }
+        }
+        raw = self._complete_raw(system=system, user=user, text_format=text_format)
+        try:
+            payload = json.loads(raw)
+        except (ValueError, TypeError) as exc:
+            raise ModelUnavailable("OpenAI JSON response is not valid JSON") from exc
+        if not isinstance(payload, dict):
+            raise ModelUnavailable("OpenAI JSON response must be an object")
+        return payload
+
+    def _complete_raw(
+        self,
+        *,
+        system: str,
+        user: str,
+        text_format: Optional[dict[str, Any]],
+    ) -> str:
         if not self.api_key.strip():
             raise ModelUnavailable("OPENAI_API_KEY is not configured")
 
@@ -141,6 +178,8 @@ class OpenAIResponsesClient:
                 {"role": "user", "content": user},
             ],
         }
+        if text_format is not None:
+            body_obj["text"] = text_format
         assert_no_forbidden_request_keys(body_obj)
         if body_obj.get("store") is not False:
             raise ModelUnavailable("OpenAI store must be false")
