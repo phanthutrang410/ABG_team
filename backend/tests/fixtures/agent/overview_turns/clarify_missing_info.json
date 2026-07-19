@@ -1,0 +1,36 @@
+{
+  "id": "OV-CLR-01",
+  "description": "Tiny eval — clarify missing destination; no tool guess; cards remain for care click.",
+  "expected_route": "clarify",
+  "request": {
+    "surface": "overview",
+    "resource_handle": null,
+    "question": "Mở giúp tôi cái kia.",
+    "locale": "vi",
+    "thread_summary": "Prior turn mentioned several destinations; user referent unclear."
+  },
+  "response": {
+    "status": "ok",
+    "answer_vi": "Anh/chị muốn mở mục nào: báo cáo tổng quan, danh sách rà soát, hay bản nháp thông báo GVCN?",
+    "evidence_refs": [],
+    "ui_actions": [
+      {
+        "key": "open_overview_report",
+        "label_vi": "Xem báo cáo tổng quan",
+        "route_key": "overview.report"
+      },
+      {
+        "key": "open_review_list",
+        "label_vi": "Xem danh sách rà soát",
+        "route_key": "analysis.reviews"
+      },
+      {
+        "key": "open_advisor_drafts",
+        "label_vi": "Soạn thông báo cho GVCN (bản nháp)",
+        "route_key": "notify"
+      }
+    ],
+    "refusal_reason": null,
+    "selected_capability": null
+  }
+}

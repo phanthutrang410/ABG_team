@@ -5,10 +5,12 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AppShell, useSetTopbarInfo } from "@/components/AppShell";
 import { BandBadge, CaseStateBadge } from "@/components/badges";
 import { CaseDetailDialog } from "@/components/CaseDetailPage";
+import { useGlobalAgent } from "@/components/GlobalAgentProvider";
 import { ReportModal } from "@/components/ReportModal";
 import { ThresholdPanel } from "@/components/ThresholdPanel";
 import { WeeklyBriefingPanel } from "@/components/WeeklyBriefingPanel";
 import { fetchReviewCases, fetchReviewOverviewSummary } from "@/lib/api";
+import { OVERVIEW_REPORT_QUERY, OVERVIEW_REPORT_VALUE } from "@/lib/agent-routes";
 import { FACTOR_LABEL } from "@/lib/factors";
 import { splitAccountName, useSession } from "@/lib/session";
 import {
@@ -261,11 +263,18 @@ function OverviewHeader({
   onOpenCase: (caseId: string) => void;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { account } = useSession();
   const { name: shortName } = splitAccountName(account?.name ?? "thầy/cô");
   const items = useMemo(() => (response && response.state !== "error" ? response.items : []), [response]);
-  // Tool 1 — modal "Báo cáo tổng thể" (plan.md §3.2); mở tại chỗ, không rời trang.
+  // Tool 1 — modal "Báo cáo tổng thể"; also opened via agent route_key overview.report (?report=1).
   const [reportOpen, setReportOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get(OVERVIEW_REPORT_QUERY) !== OVERVIEW_REPORT_VALUE) return;
+    setReportOpen(true);
+    router.replace("/overview", { scroll: false });
+  }, [searchParams, router]);
 
   // Fetch đang chạy thật → hiển thị trạng thái "đang phân tích" (không phải hiệu ứng giả).
   if (loading) {
@@ -472,8 +481,8 @@ function OverviewHeader({
             </div>
           </div>
 
-          {/* Ô hỏi nhanh — rule-based trên dữ liệu đã tải, KHÔNG gọi model (chat LLM là task lane Agent) */}
-          <AiQuickChat counts={overviewCounts} setTab={setTab} />
+          {/* Launcher — mở Global Agent drawer (POST /agent/turns); 3 tool cards bên dưới vẫn click-navigate trực tiếp */}
+          <AiAgentLauncher />
         </div>
       </div>
 
@@ -531,12 +540,7 @@ function formatAnalyzedAt(iso: string): string {
   return sameDay ? `${time} hôm nay` : `${time} • ${d.toLocaleDateString("vi-VN")}`;
 }
 
-/* ---------- Hỏi nhanh EduSignal — rule-based intent router (demo) ----------
- * KHÔNG gọi LLM: khớp từ khóa → trả lời bằng số đã tính từ response + nút điều hướng
- * tới trang có thật. Không nhận diện được → nói thẳng, không bịa câu trả lời.
- * Chat tự do cần agent API (H24) — task lane Agent, ngoài scope UI này. */
-
-type QuickAnswer = { a: string; action?: { label: string; tab: Tab } };
+/* ---------- Launcher mở Global Agent drawer (thay mock AiQuickChat) ---------- */
 
 type OverviewCounts = {
   totalStudents: number;
@@ -550,115 +554,33 @@ type OverviewCounts = {
   limitedReviewCases: number;
 };
 
-function routeIntent(q: string, c: OverviewCounts): QuickAnswer {
-  const s = q.toLowerCase();
-  const has = (re: RegExp) => re.test(s);
-
-  if (has(/ưu tiên|uu tien/)) {
-    return {
-      a: `Hiện có ${c.earlyPriority} case ở mức Ưu tiên sớm (trên tổng ${c.reviewCases} case trong danh sách rà soát).`,
-      action: { label: "Mở danh sách rà soát", tab: "reviews" },
-    };
-  }
-  if (has(/tại sao|tai sao|vì sao|vi sao|giải thích|giai thich|ly do|lý do/)) {
-    return {
-      a: "Lý do gợi ý của từng trường hợp (yếu tố đóng góp, độ phủ dữ liệu) nằm trong trang chi tiết case — mở danh sách tín hiệu rồi chọn case cần xem.",
-      action: { label: "Mở danh sách rà soát", tab: "reviews" },
-    };
-  }
-  if (has(/mới|moi/)) {
-    return {
-      a: `Có ${c.workflowNew} case đang ở trạng thái Tín hiệu mới. Chưa có snapshot so sánh nên không thể kết luận đây là số mới phát sinh trong kỳ.`,
-      action: { label: "Mở danh sách rà soát", tab: "reviews" },
-    };
-  }
-  if (has(/duyệt|duyet/)) {
-    return {
-      a: `Có ${c.pending} case đang chờ duyệt.`,
-      action: { label: "Mở danh sách rà soát", tab: "reviews" },
-    };
-  }
-  if (has(/sinh viên|sinh vien|\bsv\b|lớp|lop/)) {
-    const note = has(/lớp|lop/) ? " Lọc theo lớp/khoa chưa có API — hiện tra cứu được theo mã SV." : "";
-    return {
-      a: `Snapshot có ${c.totalStudents} sinh viên; ${c.reviewStudents} sinh viên có case trong danh sách rà soát.${note}`,
-      action: { label: "Mở danh sách rà soát", tab: "reviews" },
-    };
-  }
-  if (has(/dashboard|thống kê|thong ke|biểu đồ|bieu do|số liệu|so lieu|kpi/)) {
-    return { a: "Toàn bộ KPI, biểu đồ và việc cần làm nằm ở trang Dashboard.", action: { label: "Mở Dashboard", tab: "analytics" } };
-  }
-  if (has(/ngưỡng|nguong|threshold/)) {
-    return { a: "Cấu hình ngưỡng phân band hiện hành nằm ở trang Ngưỡng.", action: { label: "Mở trang Ngưỡng", tab: "threshold" } };
-  }
-  if (has(/tín hiệu|tin hieu|theo dõi|theo doi|hỗ trợ|ho tro/)) {
-    return {
-      a: `Tổng quan hiện tại: ${c.reviewCases} case cần rà soát trên ${c.totalStudents} sinh viên · ${c.pending} chờ duyệt · ${c.active} đang theo dõi/hỗ trợ.`,
-      action: { label: "Mở danh sách rà soát", tab: "reviews" },
-    };
-  }
-  return {
-    a: "Tôi chưa hỗ trợ câu này trong bản demo. Thử hỏi về: trường hợp ưu tiên, trạng thái case, case chờ duyệt, danh sách rà soát, dashboard hoặc ngưỡng.",
-  };
-}
-
-function AiQuickChat({ counts, setTab }: { counts: OverviewCounts; setTab: (t: Tab) => void }) {
-  const [q, setQ] = useState("");
-  const [exchange, setExchange] = useState<{ q: string; answer: QuickAnswer } | null>(null);
-
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    const text = q.trim();
-    if (!text) return;
-    setExchange({ q: text, answer: routeIntent(text, counts) });
-    setQ("");
-  }
+function AiAgentLauncher() {
+  const { openDrawer, launcherRef, busy } = useGlobalAgent();
 
   return (
     <div className="space-y-3">
-      {exchange && (
-        <>
-          {/* Bubble người dùng (phải) */}
-          <div className="flex justify-end">
-            <div className="bg-[#dc2626] text-white text-sm rounded-2xl rounded-tr-md px-5 py-3 max-w-[85%] shadow-sm">
-              {exchange.q}
-            </div>
-          </div>
-          {/* Bubble AI trả lời (trái) */}
-          <div className="bg-white rounded-2xl rounded-tl-md shadow-sm border border-[#fbeaea] px-5 py-4 max-w-[92%]">
-            <p className="text-sm text-slate-600">{exchange.answer.a}</p>
-            {exchange.answer.action && (
-              <button
-                onClick={() => setTab(exchange.answer.action!.tab)}
-                className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#dc2626] hover:text-[#b91c1c] group"
-              >
-                {exchange.answer.action.label}
-                <Icon path={iconPaths.arrowRight} className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
-            )}
-          </div>
-        </>
-      )}
-
-      <form onSubmit={submit} className="flex items-center gap-2 bg-white border border-[#fbd7d7] rounded-full pl-5 pr-2 py-2 shadow-sm focus-within:border-[#dc2626] transition-colors">
+      <button
+        type="button"
+        ref={(el) => {
+          launcherRef.current = el;
+        }}
+        onClick={openDrawer}
+        disabled={busy}
+        className="w-full flex items-center gap-3 bg-white border border-[#fbd7d7] rounded-full pl-5 pr-2 py-2 shadow-sm hover:border-[#dc2626] transition-colors text-left"
+        aria-label="Hỏi EduSignal AI"
+      >
         <span className="text-base shrink-0" aria-hidden>🤖</span>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Hỏi EduSignal AI… (vd: có bao nhiêu trường hợp ưu tiên hôm nay?)"
-          aria-label="Hỏi nhanh EduSignal AI"
-          className="flex-1 min-w-0 bg-transparent text-sm outline-none placeholder:text-slate-400"
-        />
-        <button
-          type="submit"
-          className="shrink-0 w-9 h-9 rounded-full bg-[#dc2626] hover:bg-[#b91c1c] text-white flex items-center justify-center transition-colors"
-          aria-label="Gửi câu hỏi"
+        <span className="flex-1 min-w-0 text-sm text-slate-400">
+          Hỏi EduSignal AI… (vd: mở báo cáo, danh sách rà soát, soạn mail)
+        </span>
+        <span
+          className="shrink-0 h-9 px-4 rounded-full bg-[#dc2626] hover:bg-[#b91c1c] text-white text-sm font-semibold flex items-center justify-center transition-colors"
         >
-          <Icon path={iconPaths.arrowRight} className="w-4 h-4" />
-        </button>
-      </form>
+          Hỏi
+        </span>
+      </button>
       <p className="text-[11px] text-slate-400 pl-2">
-        Trợ lý điều hướng (demo) — trả lời được tính từ dữ liệu đang hiển thị, chưa gọi model AI.
+        Trợ lý AI chỉ giải thích và điều hướng trong phạm vi được cấp — không chẩn đoán, không tự gửi.
       </p>
     </div>
   );

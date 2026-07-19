@@ -1,0 +1,34 @@
+{
+  "description": "Contract fixture — overview surface tool example (open_overview_report → overview.report).",
+  "request": {
+    "surface": "overview",
+    "resource_handle": null,
+    "question": "Mở báo cáo tổng quan giúp tôi.",
+    "locale": "vi",
+    "thread_summary": null
+  },
+  "response": {
+    "status": "ok",
+    "answer_vi": "Anh/chị có thể mở báo cáo tổng quan để xem tóm tắt tín hiệu và giới hạn dữ liệu hiện có.",
+    "evidence_refs": ["capability:open_overview_report"],
+    "ui_actions": [
+      {
+        "key": "open_overview_report",
+        "label_vi": "Xem báo cáo tổng quan",
+        "route_key": "overview.report"
+      },
+      {
+        "key": "open_review_list",
+        "label_vi": "Xem danh sách rà soát",
+        "route_key": "analysis.reviews"
+      },
+      {
+        "key": "open_advisor_drafts",
+        "label_vi": "Soạn thông báo cho GVCN (bản nháp)",
+        "route_key": "notify"
+      }
+    ],
+    "refusal_reason": null,
+    "selected_capability": "open_overview_report"
+  }
+}

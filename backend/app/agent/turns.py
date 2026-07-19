@@ -1,14 +1,20 @@
 """H37 — Global Agent backend turn + strict capability registry.
 
-``run_turn`` is the whole decision surface for ``POST /agent/turns``:
-resolve a safe page context from ``surface``, derive the (deny-by-default)
-allowed capability set, optionally ask an injected :class:`TextModel` to
-pick **at most one** capability (one call, one JSON field — never a list,
-never a raw tool/URL/SQL string), and render a deterministic Vietnamese
-answer from a fixed template. The model never drives navigation directly —
-``ui_actions`` are always the backend-issued capability catalog for the
-surface, exactly like ``app.weekly.briefing`` action cards, so a chosen
-capability that fails validation has zero effect on what is returned.
+``run_turn`` is the whole decision surface for ``POST /agent/turns``.
+Non-overview surfaces keep the H37 template path: resolve a safe page context
+from ``surface``, derive the (deny-by-default) allowed capability set,
+optionally ask an injected :class:`TextModel` to pick **at most one**
+capability (one call, one JSON field — never a list, never a raw tool/URL/SQL
+string), and render a deterministic Vietnamese answer from a fixed template.
+
+Surface ``overview`` uses the in-house AgentGraph (``overview_graph``):
+guardrails → context packet → route → answer|tool|clarify → output guard,
+bounded to ≤2 model calls and ≤1 tool decision.
+
+The model never drives navigation directly — ``ui_actions`` are always the
+backend-issued capability catalog for the surface, exactly like
+``app.weekly.briefing`` action cards, so a chosen capability that fails
+validation has zero effect on what is returned.
 
 Forbidden effects (Ethics §8 / target architecture §§10-11) — ``run_workflow``,
 ``send_mail``, ``transition``, ``approve``, ``assign``, and any arbitrary
@@ -31,7 +37,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from app.agent.model import ModelUnavailable, TextModel
 from app.auth.principal import Principal, record_access_event
 
-Surface = Literal["weekly_report", "case_analysis", "advisor_drafts"]
+Surface = Literal["weekly_report", "case_analysis", "advisor_drafts", "overview"]
 
 #: Strict capability registry (target architecture §11) — nothing outside
 #: this frozenset may ever be returned as a ``ui_actions[].key`` or chosen
@@ -41,6 +47,8 @@ CAPABILITY_REGISTRY: frozenset[str] = frozenset(
         "open_weekly_report",
         "open_case_analysis",
         "open_advisor_drafts",
+        "open_overview_report",
+        "open_review_list",
         "explain_report_limitation",
         "copy_draft_preview",
     }
@@ -58,6 +66,7 @@ SURFACE_CAPABILITIES: Dict[str, Tuple[str, ...]] = {
     "weekly_report": ("open_weekly_report", "explain_report_limitation"),
     "case_analysis": ("open_case_analysis", "explain_report_limitation"),
     "advisor_drafts": ("open_advisor_drafts", "copy_draft_preview"),
+    "overview": ("open_overview_report", "open_review_list", "open_advisor_drafts"),
 }
 assert all(cap in CAPABILITY_REGISTRY for caps in SURFACE_CAPABILITIES.values() for cap in caps)
 
@@ -65,6 +74,8 @@ _ROUTE_KEYS: Dict[str, str] = {
     "open_weekly_report": "reports.weekly",
     "open_case_analysis": "reports.weekly.case",
     "open_advisor_drafts": "notify",
+    "open_overview_report": "overview.report",
+    "open_review_list": "analysis.reviews",
     "explain_report_limitation": "reports.weekly.limitation",
     "copy_draft_preview": "notify.copy",
 }
@@ -73,6 +84,8 @@ _LABELS_VI: Dict[str, str] = {
     "open_weekly_report": "Xem báo cáo tuần",
     "open_case_analysis": "Xem phân tích case",
     "open_advisor_drafts": "Soạn thông báo cho GVCN (bản nháp)",
+    "open_overview_report": "Xem báo cáo tổng quan",
+    "open_review_list": "Xem danh sách rà soát",
     "explain_report_limitation": "Xem giới hạn dữ liệu báo cáo",
     "copy_draft_preview": "Copy nội dung bản nháp",
 }
@@ -86,6 +99,12 @@ _ANSWER_TEMPLATES_VI: Dict[str, str] = {
     ),
     "open_advisor_drafts": (
         "Anh/chị có thể mở bản nháp thông báo cho GVCN — vẫn cần con người duyệt trước khi gửi."
+    ),
+    "open_overview_report": (
+        "Anh/chị có thể mở báo cáo tổng quan để xem tóm tắt tín hiệu và giới hạn dữ liệu hiện có."
+    ),
+    "open_review_list": (
+        "Anh/chị có thể mở danh sách rà soát để xem các case đang chờ ưu tiên xem xét."
     ),
     "explain_report_limitation": (
         "Báo cáo tuần chỉ hiển thị tổng hợp có thể so sánh được; dữ liệu thiếu hoặc cũ sẽ được "
@@ -218,6 +237,8 @@ class AgentTurnRequest(BaseModel):
     resource_handle: Optional[str] = Field(default=None, max_length=200)
     question: Optional[str] = Field(default=None, max_length=500)
     locale: Literal["vi"] = "vi"
+    #: Optional FE-derived structured facts only (≤800 chars) — not a raw history dump.
+    thread_summary: Optional[str] = Field(default=None, max_length=800)
 
 
 class UIAction(BaseModel):
@@ -244,6 +265,8 @@ class AgentTurnResponse(BaseModel):
     evidence_refs: List[str] = Field(default_factory=list)
     ui_actions: List[UIAction] = Field(default_factory=list)
     refusal_reason: Optional[TurnRefusalReason] = None
+    #: Capability chosen for this turn (nullable). When set, must be in registry.
+    selected_capability: Optional[str] = None
 
     @model_validator(mode="after")
     def _check_invariants(self) -> "AgentTurnResponse":
@@ -252,8 +275,14 @@ class AgentTurnResponse(BaseModel):
                 raise ValueError("refused status requires a refusal_reason")
             if self.ui_actions:
                 raise ValueError("refused status must carry zero ui_actions (zero effect)")
+            if self.selected_capability is not None:
+                raise ValueError("refused status must not carry selected_capability")
         if self.status is TurnStatus.OK and self.refusal_reason is not None:
             raise ValueError("refusal_reason must be null unless status is 'refused'")
+        if self.selected_capability is not None and self.selected_capability not in CAPABILITY_REGISTRY:
+            raise ValueError(
+                f"selected_capability {self.selected_capability!r} not in CAPABILITY_REGISTRY"
+            )
         for action in self.ui_actions:
             if action.key in FORBIDDEN_TOOLS:
                 raise ValueError(f"forbidden tool leaked into ui_actions: {action.key!r}")
@@ -318,9 +347,18 @@ def run_turn(
     principal: Principal,
     *,
     model: Optional[TextModel] = None,
+    overview_facts: Optional[Dict[str, object]] = None,
 ) -> AgentTurnResponse:
-    """Guardrail scan -> safe context -> allowed capabilities -> one tool decision."""
-    refusal = _scan_forbidden(request.question) or _scan_forbidden(request.resource_handle)
+    """Guardrail scan -> safe context -> allowed capabilities -> one tool decision.
+
+    Surface ``overview`` uses the in-house AgentGraph (bounded ReAct). Other
+    surfaces keep the H37 template tool-choice path.
+    """
+    refusal = (
+        _scan_forbidden(request.question)
+        or _scan_forbidden(request.resource_handle)
+        or _scan_forbidden(request.thread_summary)
+    )
     if refusal is not None:
         record_access_event(
             actor_id=principal.actor_id,
@@ -334,6 +372,7 @@ def run_turn(
             evidence_refs=[],
             ui_actions=[],
             refusal_reason=refusal,
+            selected_capability=None,
         )
 
     context = resolve_safe_context(request.surface)
@@ -350,6 +389,19 @@ def run_turn(
             evidence_refs=[],
             ui_actions=[],
             refusal_reason=TurnRefusalReason.OUT_OF_SCOPE,
+            selected_capability=None,
+        )
+
+    if context.surface == "overview":
+        # Lazy import avoids circular import with overview_graph → turns helpers.
+        from app.agent.overview_graph import run_overview_graph
+
+        return run_overview_graph(
+            request,
+            principal,
+            model=model,
+            allowed_capabilities=context.allowed_capabilities,
+            facts=overview_facts,
         )
 
     chosen = _choose_capability(model, context.allowed_capabilities)
@@ -373,4 +425,5 @@ def run_turn(
         evidence_refs=evidence_refs,
         ui_actions=ui_actions,
         refusal_reason=None,
+        selected_capability=chosen,
     )

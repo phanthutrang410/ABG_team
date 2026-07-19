@@ -1,0 +1,34 @@
+{
+  "description": "Contract fixture — overview surface happy answer (selected_capability null when no tool).",
+  "request": {
+    "surface": "overview",
+    "resource_handle": null,
+    "question": "Tóm tắt tín hiệu trên Overview giúp tôi.",
+    "locale": "vi",
+    "thread_summary": "User asked for overview summary; no tool requested yet."
+  },
+  "response": {
+    "status": "ok",
+    "answer_vi": "Trên Overview, trợ lý chỉ giải thích tín hiệu tổng hợp server đã cấp — không bịa số liệu ngoài context packet. So sánh với snapshot tuần trước chưa sẵn sàng (comparison_status=unavailable). Giới hạn dữ liệu: weekly_comparison_unavailable, aggregate_only, no_client_case_payload. Dữ liệu thiếu hoặc cũ được đánh dấu insufficient_data/stale, không suy diễn thành \"ổn định\".",
+    "evidence_refs": ["route:answer", "facts:overview_packet"],
+    "ui_actions": [
+      {
+        "key": "open_overview_report",
+        "label_vi": "Xem báo cáo tổng quan",
+        "route_key": "overview.report"
+      },
+      {
+        "key": "open_review_list",
+        "label_vi": "Xem danh sách rà soát",
+        "route_key": "analysis.reviews"
+      },
+      {
+        "key": "open_advisor_drafts",
+        "label_vi": "Soạn thông báo cho GVCN (bản nháp)",
+        "route_key": "notify"
+      }
+    ],
+    "refusal_reason": null,
+    "selected_capability": null
+  }
+}

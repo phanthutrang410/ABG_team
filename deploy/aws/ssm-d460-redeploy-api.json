@@ -4,12 +4,20 @@
     "REGION=ap-southeast-1",
     "ACCOUNT=058264284502",
     "IMAGE=${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/silent-shield-api:d460",
+    "PARAM_SEED=/silent-shield/d460/AUTH_SEED_PASSWORD",
+    "PARAM_LECT=/silent-shield/d460/AUTH_LECTURER_SEEDS",
     "aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com",
     "docker pull $IMAGE",
     "docker inspect silent-shield-api --format '{{range .Config.Env}}{{println .}}{{end}}' > /tmp/silent-shield-api.env",
     "grep -q '^LINKED_NAMESPACE_APPROVAL=' /tmp/silent-shield-api.env || echo 'LINKED_NAMESPACE_APPROVAL=approval:mvp-linked-v59-att:v1:acfb7d80dc3a' >> /tmp/silent-shield-api.env",
     "grep -q '^APP_ENV=' /tmp/silent-shield-api.env || echo 'APP_ENV=demo' >> /tmp/silent-shield-api.env",
-    "if [ -n \"${AUTH_SEED_PASSWORD:-}\" ]; then grep -v '^AUTH_SEED_PASSWORD=' /tmp/silent-shield-api.env > /tmp/silent-shield-api.env.tmp || true; mv /tmp/silent-shield-api.env.tmp /tmp/silent-shield-api.env; echo \"AUTH_SEED_PASSWORD=${AUTH_SEED_PASSWORD}\" >> /tmp/silent-shield-api.env; fi",
+    "AUTH_SEED_PASSWORD=$(aws ssm get-parameter --name \"$PARAM_SEED\" --with-decryption --query Parameter.Value --output text --region \"$REGION\")",
+    "AUTH_LECTURER_SEEDS=$(aws ssm get-parameter --name \"$PARAM_LECT\" --with-decryption --query Parameter.Value --output text --region \"$REGION\")",
+    "grep -v '^AUTH_SEED_PASSWORD=' /tmp/silent-shield-api.env | grep -v '^AUTH_LECTURER_SEEDS=' > /tmp/silent-shield-api.env.tmp || true",
+    "mv /tmp/silent-shield-api.env.tmp /tmp/silent-shield-api.env",
+    "printf 'AUTH_SEED_PASSWORD=%s\\n' \"$AUTH_SEED_PASSWORD\" >> /tmp/silent-shield-api.env",
+    "printf 'AUTH_LECTURER_SEEDS=%s\\n' \"$AUTH_LECTURER_SEEDS\" >> /tmp/silent-shield-api.env",
+    "unset AUTH_SEED_PASSWORD AUTH_LECTURER_SEEDS",
     "docker rm -f silent-shield-api",
     "docker run -d --name silent-shield-api --restart unless-stopped --network silent-shield-net -p 8000:8000 --env-file /tmp/silent-shield-api.env $IMAGE",
     "rm -f /tmp/silent-shield-api.env",
@@ -18,6 +26,6 @@
     "curl -sS http://127.0.0.1:8000/health",
     "echo",
     "curl -sS -o /dev/null -w 'review_cases_anon_http=%{http_code}\\n' http://127.0.0.1:8000/review-cases",
-    "curl -sS -o /dev/null -w 'auth_login_http=%{http_code}\\n' -X POST http://127.0.0.1:8000/auth/login -H 'Content-Type: application/json' -d '{}'"
+    "curl -sS -o /dev/null -w 'advisor_roster_anon_http=%{http_code}\\n' http://127.0.0.1:8000/advisor/roster"
   ]
 }

@@ -287,6 +287,27 @@ export type AuthMeResponse = {
   active_role: string | null;
 };
 
+/** GET /advisor/roster — server-scoped class list (pseudonymous). */
+export type AdvisorRosterStudent = {
+  student_ref: string;
+  class_code: string | null;
+  cohort: string | null;
+  case_id: string | null;
+  case_state: CaseState | null;
+};
+
+export type AdvisorRosterClass = {
+  roster_class_label: string;
+  student_count: number;
+  students: AdvisorRosterStudent[];
+};
+
+export type AdvisorRosterResponse = {
+  state: "ok" | "empty" | "error";
+  classes: AdvisorRosterClass[];
+  problem?: { code?: string; message?: string } | null;
+};
+
 export const ROLE_LABEL: Record<Role, string> = {
   ban_quan_ly: "Ban quản lý học tập",
   gvcn: "Giảng viên chủ nhiệm",
@@ -350,4 +371,48 @@ export type AgentExplanation = {
   draft_message: DraftMessage | null;
   model_version: string | null;
   disclaimer_vi: string;
+};
+
+/* ---------- Global Agent turn (H37) — mirror backend app/agent/turns.py ---------- */
+
+export type AgentTurnSurface =
+  | "weekly_report"
+  | "case_analysis"
+  | "advisor_drafts"
+  | "overview";
+
+export type AgentTurnStatus = "ok" | "refused";
+
+/** Machine-readable turn refusal — zero side effects when set. */
+export type AgentTurnRefusalReason =
+  | "forbidden_tool_requested"
+  | "out_of_scope_surface"
+  | "prompt_injection_detected"
+  | "arbitrary_url_or_sql_requested";
+
+/** Overview nav allowlist only (Workstream B). Unknown keys must be rejected by FE. */
+export type AgentRouteKey = "overview.report" | "analysis.reviews" | "notify";
+
+export type AgentUIAction = {
+  key: string;
+  label_vi: string;
+  route_key: string;
+};
+
+export type AgentTurnRequest = {
+  surface: string;
+  resource_handle?: string | null;
+  question?: string | null;
+  locale: "vi";
+  /** FE-derived structured facts only (≤800); never raw history dump / PII. */
+  thread_summary?: string | null;
+};
+
+export type AgentTurnResponse = {
+  status: AgentTurnStatus;
+  answer_vi: string;
+  evidence_refs: string[];
+  ui_actions: AgentUIAction[];
+  refusal_reason: AgentTurnRefusalReason | null;
+  selected_capability: string | null;
 };

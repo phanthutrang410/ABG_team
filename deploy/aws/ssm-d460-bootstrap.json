@@ -8,6 +8,7 @@
     "echo '=== import semester + attendance ==='",
     "docker exec silent-shield-api python -m app.dwh.cli import-semester",
     "docker exec silent-shield-api python -m app.dwh.cli import-attendance",
+    "docker exec silent-shield-api python -m app.dwh.cli partition-advisor-demo",
     "docker exec silent-shield-api python -m app.dwh.cli readiness",
     "echo '=== materialize + rollup ==='",
     "docker exec silent-shield-api python -m app.dwh.cli materialize-ml",
@@ -15,7 +16,7 @@
     "echo '=== counts ==='",
     "docker exec silent-shield-api python -c \"from sqlalchemy import create_engine, func, select; from sqlalchemy.orm import Session; from app.config import get_settings; from app.dwh.models import MlTermSnapshot, AttendanceWeek, AttendanceEvent, StudentDimension; eng=create_engine(get_settings().database_url);\nwith Session(eng) as s:\n  print({'ml': int(s.scalar(select(func.count()).select_from(MlTermSnapshot)) or 0), 'week': int(s.scalar(select(func.count()).select_from(AttendanceWeek)) or 0), 'week_stu': int(s.scalar(select(func.count(func.distinct(AttendanceWeek.student_ref)))) or 0), 'att_events': int(s.scalar(select(func.count()).select_from(AttendanceEvent).where(AttendanceEvent.source_id=='mvp-attendance-over-time')) or 0), 'sem_stu': int(s.scalar(select(func.count()).select_from(StudentDimension).where(StudentDimension.source_id=='v59-empty-program-students')) or 0)})\"",
     "echo '=== auth seed ==='",
-    "docker exec silent-shield-api python -c \"from app.config import get_settings; from app.database import init_schemas, get_session_factory; from app.auth.cli import seed_accounts; get_settings.cache_clear(); pw=get_settings().auth_seed_password.get_secret_value().strip();\nimport sys\nif not pw:\n  print('auth_seed_skipped_empty'); sys.exit(0)\ninit_schemas(); Session=get_session_factory(); db=Session();\ntry:\n  print('auth_seeded', seed_accounts(db, pw))\nfinally:\n  db.close()\"",
+    "docker exec silent-shield-api python -m app.auth.cli seed",
     "curl -sS http://127.0.0.1:8000/health; echo"
   ]
 }
