@@ -6,6 +6,7 @@ Idempotent sequence for a target DATABASE_URL:
   alembic upgrade head
   → import-semester
   → import-attendance
+  → partition-advisor-demo (4×115 overlay)
   → auth seed (optional)
   → materialize-ml
   → rollup-attendance-week
@@ -36,6 +37,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="D460 bootstrap: import + materialize 460")
     parser.add_argument("--database-url", default=None)
     parser.add_argument("--skip-auth-seed", action="store_true")
+    parser.add_argument("--skip-partition", action="store_true")
     parser.add_argument("--skip-materialize", action="store_true")
     parser.add_argument("--skip-rollup", action="store_true")
     args = parser.parse_args(argv)
@@ -51,6 +53,29 @@ def main(argv: list[str] | None = None) -> int:
 
     sem = import_semester(database_url)
     att = import_attendance(database_url)
+
+    partition_detail = None
+    if not args.skip_partition:
+        from app.dwh.partition_demo import partition_advisor_assignments
+
+        engine_part = create_engine(database_url)
+        try:
+            with Session(engine_part) as session:
+                part = partition_advisor_assignments(session)
+                if part.status == "partitioned":
+                    session.commit()
+                else:
+                    session.rollback()
+                partition_detail = {
+                    "status": part.status,
+                    "counts_by_advisor": part.counts_by_advisor,
+                    "total_students": part.total_students,
+                    "manifest_sha256": part.manifest_sha256,
+                    "reason_codes": list(part.reason_codes),
+                }
+        finally:
+            engine_part.dispose()
+
     report = readiness_report(database_url)
 
     auth_detail = None
@@ -65,9 +90,16 @@ def main(argv: list[str] | None = None) -> int:
             if not password.strip():
                 auth_detail = {"status": "skipped", "detail": "AUTH_SEED_PASSWORD empty"}
             else:
+                from app.auth.cli import parse_lecturer_passwords
+
+                lecturer_passwords = parse_lecturer_passwords(
+                    settings.auth_lecturer_seeds.get_secret_value()
+                )
                 db = get_session_factory()()
                 try:
-                    touched = seed_accounts(db, password)
+                    touched = seed_accounts(
+                        db, password, lecturer_passwords=lecturer_passwords
+                    )
                     auth_detail = {"status": "seeded", "usernames": touched}
                 finally:
                     db.close()
@@ -120,6 +152,7 @@ def main(argv: list[str] | None = None) -> int:
             "snapshot_sha256": att.snapshot_sha256,
             "row_counts": att.row_counts,
         },
+        "advisor_partition": partition_detail,
         "readiness": report,
         "auth_seed": auth_detail,
         "materialize_ml": None

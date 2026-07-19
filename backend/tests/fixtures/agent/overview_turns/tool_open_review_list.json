@@ -1,0 +1,36 @@
+{
+  "id": "OV-TOOL-02",
+  "description": "Tiny eval — tool open_review_list → analysis.reviews.",
+  "expected_route": "tool",
+  "request": {
+    "surface": "overview",
+    "resource_handle": null,
+    "question": "Cho tôi xem danh sách case cần rà soát.",
+    "locale": "vi",
+    "thread_summary": null
+  },
+  "response": {
+    "status": "ok",
+    "answer_vi": "Anh/chị có thể mở danh sách rà soát để xem các case đang chờ ưu tiên xem xét.",
+    "evidence_refs": ["capability:open_review_list"],
+    "ui_actions": [
+      {
+        "key": "open_overview_report",
+        "label_vi": "Xem báo cáo tổng quan",
+        "route_key": "overview.report"
+      },
+      {
+        "key": "open_review_list",
+        "label_vi": "Xem danh sách rà soát",
+        "route_key": "analysis.reviews"
+      },
+      {
+        "key": "open_advisor_drafts",
+        "label_vi": "Soạn thông báo cho GVCN (bản nháp)",
+        "route_key": "notify"
+      }
+    ],
+    "refusal_reason": null,
+    "selected_capability": "open_review_list"
+  }
+}

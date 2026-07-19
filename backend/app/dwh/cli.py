@@ -3,6 +3,7 @@
 Usage (from backend/):
   python -m app.dwh.cli import-attendance
   python -m app.dwh.cli import-semester
+  python -m app.dwh.cli partition-advisor-demo
   python -m app.dwh.cli readiness
   python -m app.dwh.cli materialize-ml [--source-id …]
   python -m app.dwh.cli rollup-attendance-week [--source-id …]
@@ -33,6 +34,7 @@ from app.dwh.attendance_week_rollup import (
 )
 from app.dwh.importer import SEMESTER_SOURCE_ID, import_attendance, import_semester, readiness_report
 from app.dwh.ml_materializer import materialize_ml_term_snapshot
+from app.dwh.partition_demo import partition_advisor_assignments
 from app.dwh.weekly_workflow import run_weekly_from_bytes
 
 
@@ -90,6 +92,16 @@ def main(argv: list[str] | None = None) -> int:
         help=f"Attendance source_id (default: {DEFAULT_ATTENDANCE_SOURCE_ID})",
     )
 
+    p_part = sub.add_parser(
+        "partition-advisor-demo",
+        help="Overlay advisor_assignment into 4×115 demo scopes (no package hash change)",
+    )
+    p_part.add_argument(
+        "--source-id",
+        default=SEMESTER_SOURCE_ID,
+        help=f"Semester source_id (default: {SEMESTER_SOURCE_ID})",
+    )
+
     p_weekly = sub.add_parser("weekly", help="H31 weekly workflow CLI")
     weekly_sub = p_weekly.add_subparsers(dest="weekly_command", required=True)
     p_run = weekly_sub.add_parser("run", help="Stage/promote approved artifact bytes")
@@ -105,6 +117,27 @@ def main(argv: list[str] | None = None) -> int:
         result = import_attendance(database_url, data_path=args.path)
     elif args.command == "import-semester":
         result = import_semester(database_url, source_path=args.path)
+    elif args.command == "partition-advisor-demo":
+        factory = _session_factory(database_url)
+        with factory() as session:
+            part = partition_advisor_assignments(session, source_id=args.source_id)
+            if part.status == "partitioned":
+                session.commit()
+            else:
+                session.rollback()
+        _print_result(
+            {
+                "status": part.status,
+                "source_id": part.source_id,
+                "scope_source": part.scope_source,
+                "counts_by_advisor": part.counts_by_advisor,
+                "total_students": part.total_students,
+                "manifest_sha256": part.manifest_sha256,
+                "reason_codes": list(part.reason_codes),
+                "detail": part.detail,
+            }
+        )
+        return 0 if part.status == "partitioned" else 1
     elif args.command == "readiness":
         _print_result(readiness_report(database_url))
         return 0

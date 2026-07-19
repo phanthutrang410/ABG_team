@@ -6,61 +6,209 @@ import { AdvisorDemoBanner } from "@/components/AdvisorDemoBanner";
 import { AdvisorUnavailable } from "@/components/AdvisorUnavailable";
 import { QueuePagination } from "@/components/QueuePagination";
 import { useSetTopbarInfo } from "@/components/AppShell";
+import { fetchAdvisorRoster } from "@/lib/api";
 import { generateAdvisorDemoClasses, paginateAdvisorQueue } from "@/lib/advisor-demo";
 import { isAdvisorLocalDemoEnabled } from "@/lib/advisor-routing";
 import { useAdvisorDemoSnapshot } from "@/lib/use-advisor-demo";
-import type { CaseState } from "@/lib/types";
+import type { AdvisorRosterClass, CaseState } from "@/lib/types";
 
 type RosterFilter = "all" | "with_case" | "without_case";
 
+type RosterStudentView = {
+  student_ref: string;
+  class_code: string;
+  case_id: string | null;
+  case_state: CaseState | null;
+};
+
+type RosterClassView = {
+  class_code: string;
+  students: RosterStudentView[];
+};
+
 export function AdvisorClassesWorkspace({ accountId }: { accountId: string }) {
-  if (!isAdvisorLocalDemoEnabled()) {
+  if (isAdvisorLocalDemoEnabled()) {
+    return <AdvisorClassesLocalDemo accountId={accountId} />;
+  }
+  return <AdvisorClassesServerWorkspace />;
+}
+
+function AdvisorClassesServerWorkspace() {
+  const [classes, setClasses] = useState<RosterClassView[]>([]);
+  const [loadState, setLoadState] = useState<"loading" | "ok" | "empty" | "error">("loading");
+  const [selectedCode, setSelectedCode] = useState("");
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<RosterFilter>("all");
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    const ac = new AbortController();
+    void (async () => {
+      const body = await fetchAdvisorRoster(ac.signal);
+      if (ac.signal.aborted) return;
+      if (body.state === "error") {
+        setLoadState("error");
+        setClasses([]);
+        return;
+      }
+      if (body.state === "empty" || body.classes.length === 0) {
+        setLoadState("empty");
+        setClasses([]);
+        return;
+      }
+      const mapped = body.classes.map(mapServerClass);
+      setClasses(mapped);
+      setSelectedCode(mapped[0]?.class_code ?? "");
+      setLoadState("ok");
+    })();
+    return () => ac.abort();
+  }, []);
+
+  if (loadState === "loading") {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-sm text-slate-500 shadow-sm">
+        Đang tải danh sách lớp phụ trách…
+      </div>
+    );
+  }
+  if (loadState === "error") {
     return <AdvisorUnavailable surface="Lớp & sinh viên" />;
   }
+  if (loadState === "empty") {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <p className="font-semibold text-slate-700">Chưa có sinh viên trong phạm vi của bạn</p>
+        <p className="mt-1 text-sm text-slate-400">
+          Roster chỉ hiện sinh viên được gán cố vấn học tập cho tài khoản đang đăng nhập.
+        </p>
+      </div>
+    );
+  }
 
-  return <AdvisorClassesLocalDemo accountId={accountId} />;
+  return (
+    <AdvisorClassesPanel
+      classes={classes}
+      selectedCode={selectedCode}
+      onSelectCode={setSelectedCode}
+      query={query}
+      onQuery={setQuery}
+      filter={filter}
+      onFilter={setFilter}
+      page={page}
+      onPage={setPage}
+      banner={null}
+      subtitle="Danh sách giả danh trong phạm vi lớp được phân công"
+    />
+  );
 }
 
 function AdvisorClassesLocalDemo({ accountId }: { accountId: string }) {
   const { cases, variant } = useAdvisorDemoSnapshot(accountId);
   const classes = useMemo(
-    () => generateAdvisorDemoClasses(accountId, variant, cases),
+    () =>
+      generateAdvisorDemoClasses(accountId, variant, cases).map((item) => ({
+        class_code: item.class_code,
+        students: item.students.map((student) => ({
+          student_ref: student.student_ref,
+          class_code: student.class_code,
+          case_id: student.case_id,
+          case_state: student.case_state,
+        })),
+      })),
     [accountId, cases, variant],
   );
   const [selectedCode, setSelectedCode] = useState("K66-CNTT-A");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<RosterFilter>("all");
   const [page, setPage] = useState(1);
+
+  return (
+    <AdvisorClassesPanel
+      classes={classes}
+      selectedCode={selectedCode}
+      onSelectCode={setSelectedCode}
+      query={query}
+      onQuery={setQuery}
+      filter={filter}
+      onFilter={setFilter}
+      page={page}
+      onPage={setPage}
+      banner={
+        <AdvisorDemoBanner detail="Roster này được sinh cục bộ để duyệt UI. Mỗi sinh viên chỉ có mã giả danh và trạng thái bàn giao tối thiểu." />
+      }
+      subtitle="Danh sách giả danh trong phạm vi lớp demo"
+      latest={cases.reduce((value, item) => (item.updated_at > value ? item.updated_at : value), "")}
+    />
+  );
+}
+
+function mapServerClass(item: AdvisorRosterClass): RosterClassView {
+  return {
+    class_code: item.roster_class_label,
+    students: item.students.map((student) => ({
+      student_ref: student.student_ref,
+      class_code: student.class_code ?? item.roster_class_label,
+      case_id: student.case_id,
+      case_state: student.case_state,
+    })),
+  };
+}
+
+function AdvisorClassesPanel({
+  classes,
+  selectedCode,
+  onSelectCode,
+  query,
+  onQuery,
+  filter,
+  onFilter,
+  page,
+  onPage,
+  banner,
+  subtitle,
+  latest = null,
+}: {
+  classes: RosterClassView[];
+  selectedCode: string;
+  onSelectCode: (code: string) => void;
+  query: string;
+  onQuery: (value: string) => void;
+  filter: RosterFilter;
+  onFilter: (value: RosterFilter) => void;
+  page: number;
+  onPage: (page: number) => void;
+  banner: ReactNode;
+  subtitle: string;
+  latest?: string | null;
+}) {
   const selectedClass = classes.find((item) => item.class_code === selectedCode) ?? classes[0];
-  const latest = cases.reduce((value, item) => item.updated_at > value ? item.updated_at : value, "");
   const assignedCount = selectedClass?.students.filter((student) => student.case_id).length ?? 0;
 
   const visibleStudents = (selectedClass?.students ?? []).filter((student) => {
     const matchesQuery = student.student_ref.toLowerCase().includes(query.trim().toLowerCase());
-    const matchesFilter = filter === "all"
-      || (filter === "with_case" && student.case_id !== null)
-      || (filter === "without_case" && student.case_id === null);
+    const matchesFilter =
+      filter === "all" ||
+      (filter === "with_case" && student.case_id !== null) ||
+      (filter === "without_case" && student.case_id === null);
     return matchesQuery && matchesFilter;
   });
 
-  // Switching class or narrowing the roster can shrink the list; reset to page 1 so the view never strands.
   useEffect(() => {
-    setPage(1);
-  }, [selectedCode, query, filter]);
+    onPage(1);
+  }, [selectedCode, query, filter, onPage]);
 
   const pageInfo = paginateAdvisorQueue(visibleStudents, page);
-
   useSetTopbarInfo(latest || null, assignedCount);
 
   return (
     <div className="space-y-5">
-      <AdvisorDemoBanner detail="Roster này được sinh cục bộ để duyệt UI. Mỗi sinh viên chỉ có mã giả danh và trạng thái bàn giao tối thiểu." />
+      {banner}
 
       <section className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="px-1 pb-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Lớp phụ trách</p>
-            <p className="mt-1 text-sm text-slate-500">Kỳ học demo 20251</p>
+            <p className="mt-1 text-sm text-slate-500">Phạm vi cố vấn học tập</p>
           </div>
           <div className="space-y-2">
             {classes.map((item) => {
@@ -70,15 +218,21 @@ function AdvisorClassesLocalDemo({ accountId }: { accountId: string }) {
                 <button
                   key={item.class_code}
                   type="button"
-                  onClick={() => setSelectedCode(item.class_code)}
+                  onClick={() => onSelectCode(item.class_code)}
                   className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${active ? "border-red-200 bg-red-50" : "border-slate-100 bg-slate-50 hover:border-slate-200"}`}
                 >
-                  <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${active ? "bg-white text-red-600 ring-1 ring-red-200" : "bg-white text-slate-400 ring-1 ring-slate-200"}`}>
+                  <span
+                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${active ? "bg-white text-red-600 ring-1 ring-red-200" : "bg-white text-slate-400 ring-1 ring-slate-200"}`}
+                  >
                     <GradCapIcon />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className={`block font-semibold ${active ? "text-red-700" : "text-slate-800"}`}>{item.class_code}</span>
-                    <span className="mt-0.5 block text-xs text-slate-500">{item.students.length} sinh viên · {withCase} case được giao</span>
+                    <span className={`block font-semibold ${active ? "text-red-700" : "text-slate-800"}`}>
+                      {item.class_code}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-slate-500">
+                      {item.students.length} sinh viên · {withCase} case được giao
+                    </span>
                   </span>
                   <span
                     aria-hidden
@@ -91,8 +245,13 @@ function AdvisorClassesLocalDemo({ accountId }: { accountId: string }) {
             })}
           </div>
           <div className="mt-4 flex items-start gap-2 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-500">
-            <span aria-hidden className="mt-0.5 flex-shrink-0 text-slate-400"><ShieldIcon /></span>
-            <span>Không có case không đồng nghĩa sinh viên “an toàn”. Trang này không xếp hạng hoặc suy diễn mức rủi ro.</span>
+            <span aria-hidden className="mt-0.5 flex-shrink-0 text-slate-400">
+              <ShieldIcon />
+            </span>
+            <span>
+              Không có case không đồng nghĩa sinh viên “an toàn”. Trang này không xếp hạng hoặc suy diễn
+              mức rủi ro.
+            </span>
           </div>
         </aside>
 
@@ -105,16 +264,20 @@ function AdvisorClassesLocalDemo({ accountId }: { accountId: string }) {
                 </span>
                 <div>
                   <h2 className="text-2xl font-bold leading-tight">{selectedClass?.class_code}</h2>
-                  <p className="mt-1 text-sm text-red-50">Danh sách giả danh trong phạm vi lớp demo</p>
+                  <p className="mt-1 text-sm text-red-50">{subtitle}</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
                 <span className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm">
-                  <span className="text-red-600"><UsersIcon /></span>
+                  <span className="text-red-600">
+                    <UsersIcon />
+                  </span>
                   {selectedClass?.students.length ?? 0} sinh viên
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm">
-                  <span className="text-red-600"><BriefcaseIcon /></span>
+                  <span className="text-red-600">
+                    <BriefcaseIcon />
+                  </span>
                   {assignedCount} có case được giao
                 </span>
               </div>
@@ -126,18 +289,32 @@ function AdvisorClassesLocalDemo({ accountId }: { accountId: string }) {
               <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                 <label className="relative block min-w-0 flex-1 xl:max-w-md">
                   <span className="sr-only">Tìm theo mã sinh viên giả danh</span>
-                  <span aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><SearchIcon /></span>
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                  >
+                    <SearchIcon />
+                  </span>
                   <input
                     value={query}
-                    onChange={(event) => setQuery(event.target.value)}
+                    onChange={(event) => onQuery(event.target.value)}
                     placeholder="Tìm mã sinh viên giả danh…"
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-800 outline-none transition focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
                   />
                 </label>
                 <div className="flex flex-wrap gap-2" aria-label="Lọc roster">
-                  <FilterButton active={filter === "all"} onClick={() => setFilter("all")}>Tất cả</FilterButton>
-                  <FilterButton active={filter === "with_case"} onClick={() => setFilter("with_case")}>Có case được giao</FilterButton>
-                  <FilterButton active={filter === "without_case"} onClick={() => setFilter("without_case")}>Chưa có case</FilterButton>
+                  <FilterButton active={filter === "all"} onClick={() => onFilter("all")}>
+                    Tất cả
+                  </FilterButton>
+                  <FilterButton active={filter === "with_case"} onClick={() => onFilter("with_case")}>
+                    Có case được giao
+                  </FilterButton>
+                  <FilterButton
+                    active={filter === "without_case"}
+                    onClick={() => onFilter("without_case")}
+                  >
+                    Chưa có case
+                  </FilterButton>
                 </div>
               </div>
             </div>
@@ -157,10 +334,17 @@ function AdvisorClassesLocalDemo({ accountId }: { accountId: string }) {
                     <tr key={student.student_ref} className="hover:bg-slate-50/70">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-500" aria-hidden>S</span>
+                          <span
+                            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-500"
+                            aria-hidden
+                          >
+                            S
+                          </span>
                           <div>
-                            <p className="font-mono text-sm font-bold text-slate-800">{student.student_ref}</p>
-                            <p className="mt-1 text-xs text-slate-400">Mã giả danh demo</p>
+                            <p className="font-mono text-sm font-bold text-slate-800">
+                              {student.student_ref}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-400">Mã giả danh</p>
                           </div>
                         </div>
                       </td>
@@ -169,13 +353,16 @@ function AdvisorClassesLocalDemo({ accountId }: { accountId: string }) {
                         <RosterStatusBadge state={student.case_state} />
                       </td>
                       <td className="px-5 py-4 text-right">
-                        {student.case_id
-                          ? (
-                            <Link href="/advisor#cases" className="inline-flex items-center gap-1 text-sm font-semibold text-red-600 no-underline hover:text-red-700">
-                              Mở hàng đợi <span aria-hidden>→</span>
-                            </Link>
-                          )
-                          : <span className="text-xs text-slate-300">Không có thao tác</span>}
+                        {student.case_id ? (
+                          <Link
+                            href="/advisor#cases"
+                            className="inline-flex items-center gap-1 text-sm font-semibold text-red-600 no-underline hover:text-red-700"
+                          >
+                            Mở hàng đợi <span aria-hidden>→</span>
+                          </Link>
+                        ) : (
+                          <span className="text-xs text-slate-300">Không có thao tác</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -196,7 +383,7 @@ function AdvisorClassesLocalDemo({ accountId }: { accountId: string }) {
                 page={pageInfo.page}
                 totalPages={pageInfo.totalPages}
                 noun="sinh viên"
-                onChange={setPage}
+                onChange={onPage}
               />
             )}
           </section>
@@ -206,7 +393,15 @@ function AdvisorClassesLocalDemo({ accountId }: { accountId: string }) {
   );
 }
 
-function FilterButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+function FilterButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
   return (
     <button
       type="button"
@@ -220,7 +415,11 @@ function FilterButton({ active, onClick, children }: { active: boolean; onClick:
 
 const ROSTER_STATUS: Record<string, { label: string; cls: string; icon: ReactNode }> = {
   assigned: { label: "Đã bàn giao", cls: "bg-emerald-50 text-emerald-700", icon: <CheckCircleIcon /> },
-  follow_up_in_progress: { label: "Đang hỗ trợ", cls: "bg-emerald-50 text-emerald-700", icon: <HeadsetIcon /> },
+  follow_up_in_progress: {
+    label: "Đang hỗ trợ",
+    cls: "bg-emerald-50 text-emerald-700",
+    icon: <HeadsetIcon />,
+  },
   monitoring: { label: "Đang theo dõi", cls: "bg-sky-50 text-sky-700", icon: <EyeIcon /> },
   resolved: { label: "Đã xử lý", cls: "bg-emerald-50 text-emerald-700", icon: <CheckCircleIcon /> },
   none: { label: "Chưa có case được giao", cls: "bg-slate-100 text-slate-500", icon: <CircleIcon /> },
@@ -230,13 +429,13 @@ function RosterStatusBadge({ state }: { state: CaseState | null }) {
   const meta = ROSTER_STATUS[state ?? "none"] ?? ROSTER_STATUS.none;
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${meta.cls}`}>
-      <span aria-hidden className="flex">{meta.icon}</span>
+      <span aria-hidden className="flex">
+        {meta.icon}
+      </span>
       {meta.label}
     </span>
   );
 }
-
-/* ---------- Icons (line style, inherit currentColor) ---------- */
 
 const iconSvg = {
   fill: "none",

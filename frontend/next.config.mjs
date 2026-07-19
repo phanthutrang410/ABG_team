@@ -94,6 +94,10 @@ const nextConfig = {
         destination: `${backendUrl}/advisor-handoff-drafts/:path*`,
       },
       {
+        source: "/advisor/roster",
+        destination: `${backendUrl}/advisor/roster`,
+      },
+      {
         source: "/weekly-reports/:path*",
         destination: `${backendUrl}/weekly-reports/:path*`,
       },

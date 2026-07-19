@@ -11,9 +11,13 @@ from app.agent.model import ModelUnavailable
 from app.agent.turns import (
     CAPABILITY_REGISTRY,
     FORBIDDEN_TOOLS,
+    SURFACE_CAPABILITIES,
     AgentTurnRequest,
+    AgentTurnResponse,
     TurnRefusalReason,
     TurnStatus,
+    UIAction,
+    resolve_safe_context,
     run_turn,
 )
 from app.agent.turns_router import get_turn_model
@@ -130,9 +134,99 @@ def test_arbitrary_url_and_sql_refused() -> None:
 
 def test_capability_registry_never_exposes_forbidden_tools() -> None:
     assert FORBIDDEN_TOOLS.isdisjoint(CAPABILITY_REGISTRY)
-    for surface in ("weekly_report", "case_analysis", "advisor_drafts"):
+    for surface in ("weekly_report", "case_analysis", "advisor_drafts", "overview"):
         response = run_turn(_req(surface=surface), _LEADER)
         for action in response.ui_actions:
+            assert action.key in CAPABILITY_REGISTRY
+            assert action.key not in FORBIDDEN_TOOLS
+
+
+# --- overview surface contract ----------------------------------------------
+
+
+def test_overview_surface_resolves_three_nav_capabilities() -> None:
+    context = resolve_safe_context("overview")
+    assert context is not None
+    assert context.allowed_capabilities == (
+        "open_overview_report",
+        "open_review_list",
+        "open_advisor_drafts",
+    )
+    assert SURFACE_CAPABILITIES["overview"] == context.allowed_capabilities
+
+    # Without a model the overview graph fail-closes: cards remain, no tool selected.
+    response = run_turn(_req(surface="overview"), _LEADER, model=None)
+    assert response.status == TurnStatus.OK
+    assert {a.key for a in response.ui_actions} == {
+        "open_overview_report",
+        "open_review_list",
+        "open_advisor_drafts",
+    }
+    assert {a.route_key for a in response.ui_actions} == {
+        "overview.report",
+        "analysis.reviews",
+        "notify",
+    }
+    assert response.selected_capability is None
+    assert "mô hình" in response.answer_vi
+
+
+def test_thread_summary_optional_and_max_length() -> None:
+    ok = AgentTurnRequest(surface="overview", thread_summary="x" * 800)
+    assert ok.thread_summary is not None and len(ok.thread_summary) == 800
+
+    with pytest.raises(Exception):
+        AgentTurnRequest(surface="overview", thread_summary="x" * 801)
+
+    response = run_turn(
+        _req(surface="overview", thread_summary="Prior ask: mở danh sách rà soát."),
+        _LEADER,
+        model=None,
+    )
+    assert response.status == TurnStatus.OK
+
+
+def test_selected_capability_must_be_in_registry_when_set() -> None:
+    with pytest.raises(Exception):
+        AgentTurnResponse(
+            status=TurnStatus.OK,
+            answer_vi="ok",
+            ui_actions=[
+                UIAction(
+                    key="open_overview_report",
+                    label_vi="Xem báo cáo tổng quan",
+                    route_key="overview.report",
+                )
+            ],
+            selected_capability="run_workflow",
+        )
+
+    refused = AgentTurnResponse(
+        status=TurnStatus.REFUSED,
+        answer_vi="từ chối",
+        refusal_reason=TurnRefusalReason.OUT_OF_SCOPE,
+        selected_capability=None,
+    )
+    assert refused.selected_capability is None
+
+
+def test_overview_fixtures_validate_request_response_shapes() -> None:
+    from pathlib import Path
+
+    fixtures_dir = Path(__file__).resolve().parent / "fixtures" / "agent"
+    for name in (
+        "overview_turn.answer.ok.json",
+        "overview_turn.tool.open_overview_report.json",
+    ):
+        payload = json.loads((fixtures_dir / name).read_text(encoding="utf-8"))
+        req = AgentTurnRequest.model_validate(payload["request"])
+        resp = AgentTurnResponse.model_validate(payload["response"])
+        assert req.surface == "overview"
+        assert resp.status == TurnStatus.OK
+        if resp.selected_capability is not None:
+            assert resp.selected_capability in CAPABILITY_REGISTRY
+        assert {a.key for a in resp.ui_actions} == set(SURFACE_CAPABILITIES["overview"])
+        for action in resp.ui_actions:
             assert action.key in CAPABILITY_REGISTRY
             assert action.key not in FORBIDDEN_TOOLS
 

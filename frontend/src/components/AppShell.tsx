@@ -12,6 +12,8 @@ import {
 } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { AgentDrawer } from "@/components/AgentDrawer";
+import { useGlobalAgentOptional } from "@/components/GlobalAgentProvider";
 import { initialsFromName, roleHome, splitAccountName, useSession } from "@/lib/session";
 import { ROLE_LABEL, type Role, type SessionAccount } from "@/lib/types";
 
@@ -116,6 +118,7 @@ export function AppShell({ role, title, subtitle, children }: { role: Role; titl
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5, flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <AgentLauncherButton />
                 {topInfo && (
                   <button style={bellButton} title="Việc cần chú ý" aria-label={`${topInfo.alertCount} việc cần chú ý`}>
                     <BellIcon />
@@ -139,7 +142,30 @@ export function AppShell({ role, title, subtitle, children }: { role: Role; titl
           </main>
         </div>
       </div>
+      <AgentDrawer />
     </TopbarInfoSetter.Provider>
+  );
+}
+
+/** Topbar entry to Global Agent drawer — focus return target for Escape. */
+function AgentLauncherButton() {
+  const agent = useGlobalAgentOptional();
+  if (!agent) return null;
+  return (
+    <button
+      ref={(el) => {
+        agent.launcherRef.current = el;
+      }}
+      type="button"
+      onClick={agent.openDrawer}
+      style={agentLauncher}
+      aria-haspopup="dialog"
+      aria-expanded={agent.open}
+      title="Trợ lý AI — chỉ giải thích dữ liệu"
+      aria-label="Trợ lý AI — chỉ giải thích dữ liệu"
+    >
+      <RobotIcon />
+    </button>
   );
 }
 
@@ -356,6 +382,12 @@ const bellButton: CSSProperties = {
   color: "#475569",
   cursor: "pointer",
 };
+const agentLauncher: CSSProperties = {
+  ...bellButton,
+  color: "#dc2626",
+  background: "#fef2f2",
+  border: "1px solid #fecaca",
+};
 const bellDot: CSSProperties = {
   position: "absolute",
   top: 8,
@@ -443,6 +475,19 @@ function BellIcon() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
       <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </svg>
+  );
+}
+
+function RobotIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="5" y="8" width="14" height="11" rx="2.5" />
+      <path d="M12 8V5" />
+      <circle cx="12" cy="4" r="1" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="13" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="13" r="1.2" fill="currentColor" stroke="none" />
+      <path d="M9 16.5h6" />
     </svg>
   );
 }

@@ -1,7 +1,10 @@
 import type {
   AdvisorHandoffDraftListResponse,
+  AdvisorRosterResponse,
   AgentExplanation,
   AgentIntent,
+  AgentTurnRequest,
+  AgentTurnResponse,
   AuthMeResponse,
   CaseAction,
   CaseDetailResponse,
@@ -192,6 +195,26 @@ export async function fetchReviewCases(signal?: AbortSignal): Promise<CaseListRe
   }
 }
 
+/** GET /advisor/roster — server-scoped; fail-closed empty/error envelope. */
+export async function fetchAdvisorRoster(
+  signal?: AbortSignal,
+): Promise<AdvisorRosterResponse> {
+  const fail: AdvisorRosterResponse = {
+    state: "error",
+    classes: [],
+    problem: { code: "upstream_unavailable" },
+  };
+  try {
+    const res = await fetch(`${API_BASE}/advisor/roster`, { ...CREDENTIALS, signal });
+    if (!res.ok) return fail;
+    const body = (await res.json()) as AdvisorRosterResponse;
+    if (!body || typeof body.state !== "string" || !Array.isArray(body.classes)) return fail;
+    return body;
+  } catch {
+    return fail;
+  }
+}
+
 /**
  * Organization aggregate for /overview. null is fail-closed: the caller must
  * not derive the roster denominator from the review-case list.
@@ -293,6 +316,45 @@ export async function fetchFairnessReport(signal?: AbortSignal): Promise<Fairnes
     const res = await fetch(`${API_BASE}/fairness/report`, { ...CREDENTIALS, signal });
     if (!res.ok) return null;
     return (await res.json()) as FairnessReport;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * H37 — POST /agent/turns (Global Agent). Cookie session; browser only sends
+ * surface / optional handle / question / thread_summary — never raw case context.
+ * null = transport/parse failure → UI fail-closed copy.
+ */
+export async function postAgentTurn(
+  payload: Omit<AgentTurnRequest, "locale"> & { locale?: "vi" },
+  signal?: AbortSignal,
+): Promise<AgentTurnResponse | null> {
+  try {
+    const res = await fetch(`${API_BASE}/agent/turns`, {
+      ...CREDENTIALS,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        surface: payload.surface,
+        resource_handle: payload.resource_handle ?? null,
+        question: payload.question ?? null,
+        locale: payload.locale ?? "vi",
+        thread_summary: payload.thread_summary ?? null,
+      } satisfies AgentTurnRequest),
+      signal,
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as AgentTurnResponse;
+    if (
+      !body
+      || (body.status !== "ok" && body.status !== "refused")
+      || typeof body.answer_vi !== "string"
+      || !Array.isArray(body.ui_actions)
+    ) {
+      return null;
+    }
+    return body;
   } catch {
     return null;
   }
